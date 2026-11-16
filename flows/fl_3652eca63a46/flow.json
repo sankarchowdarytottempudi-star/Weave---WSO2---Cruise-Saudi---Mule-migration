@@ -1,0 +1,159 @@
+{
+ "createdAt": "2026-11-16T14:01:11.620Z",
+ "deployment": {
+  "deployedAt": "2026-11-16T14:01:27.932Z",
+  "deployedBy": "dev-tester",
+  "gateway": {
+   "apiId": "f4308a91-ba3e-44bc-92f8-84207a10d5b2",
+   "context": "/e2e-1116140106-health-check",
+   "status": "published",
+   "url": "https://13.140.56.229:30243/e2e-1116140106-health-check/v1",
+   "version": "v1"
+  },
+  "revision": 3,
+  "runtimeUrl": "http://127.0.0.1:8790/run/e2e-1116140106-health-check/v1",
+  "status": "deployed"
+ },
+ "description": "Created by the end-to-end check. Safe to delete.",
+ "edges": [
+  {
+   "from": "n_qqc0xs",
+   "fromPort": "out",
+   "id": "e_qk3xqn",
+   "to": "n_5v50gh"
+  },
+  {
+   "from": "n_5v50gh",
+   "fromPort": "out",
+   "id": "e_6ecvb8",
+   "to": "n_wliiil"
+  },
+  {
+   "from": "n_wliiil",
+   "fromPort": "out",
+   "id": "e_9p20kr",
+   "to": "n_8yls1i"
+  }
+ ],
+ "id": "fl_3652eca63a46",
+ "name": "e2e-1116140106-health-check",
+ "nodes": [
+  {
+   "config": {
+    "methods": [
+     "GET"
+    ],
+    "path": "/check"
+   },
+   "id": "n_qqc0xs",
+   "name": "HTTP Listener",
+   "position": {
+    "x": 60,
+    "y": 80
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "bodyMode": "none",
+    "connection": "cx_b6cbad1d9e88",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [],
+    "method": "GET",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "variable",
+    "resultVar": "backend",
+    "retries": 0,
+    "retryDelayMs": 500,
+    "timeoutMs": 30000,
+    "url": "/health/ready"
+   },
+   "id": "n_5v50gh",
+   "name": "HTTP Request",
+   "position": {
+    "x": 360,
+    "y": 80
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "input": "{ \"customer\": { \"name\": $request.query.name }, \"backend\": $vars.backend }",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "id": "r_4363v4",
+       "kind": "direct",
+       "source": "backend.status",
+       "target": "service.state"
+      },
+      {
+       "comment": "e2e: true when the backend reports UP",
+       "expr": "backend.status = \"UP\"",
+       "id": "r_ycyqmk",
+       "kind": "expr",
+       "target": "service.healthy"
+      },
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "If customer.name has exactly two words, join them with _, otherwise keep it as is",
+        "expr": "$count($split($trim(customer.name), /\\s+/)) = 2 ? $join($split($trim(customer.name), /\\s+/), \"_\") : customer.name"
+       },
+       "id": "r_ade2rz",
+       "instruction": "add the _ inbetween if name came as two words(customer.name)",
+       "kind": "instruction",
+       "target": "customerName"
+      }
+     ]
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_wliiil",
+   "name": "Transform (Map)",
+   "position": {
+    "x": 660,
+    "y": 80
+   },
+   "type": "transform.map"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_8yls1i",
+   "name": "Respond",
+   "position": {
+    "x": 960,
+    "y": 80
+   },
+   "type": "respond"
+  }
+ ],
+ "origin": {
+  "kind": "blank"
+ },
+ "revision": 3,
+ "settings": {
+  "basePath": "/e2e-1116140106-health-check/v1",
+  "gateway": {
+   "publish": true,
+   "security": "oauth2",
+   "throttlingPolicy": "Unlimited",
+   "version": "v1"
+  },
+  "logPayloads": true,
+  "timeoutMs": 60000
+ },
+ "slug": "e2e-1116140106-health-check",
+ "tags": [],
+ "updatedAt": "2026-11-16T14:01:25.828Z",
+ "updatedBy": "dev-tester"
+}
