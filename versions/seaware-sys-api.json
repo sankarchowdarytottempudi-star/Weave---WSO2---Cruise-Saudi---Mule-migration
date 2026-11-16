@@ -1,7 +1,13 @@
 {
  "api": "seaware-sys-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:18Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:10db5723cc273f7ff375ceeb6fa0296ee7bf092df0480445bec7e6b2536bd968",
+ "version": 2,
+ "at": "2026-11-16T11:35:09Z",
+ "summary": {
+  "files": 0,
+  "changed": []
+ }
 }
