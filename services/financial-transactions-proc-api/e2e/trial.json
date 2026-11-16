@@ -1,0 +1,10 @@
+{
+  "about": "Payment chain timing: telr status, Seaware login, search, lock, transaction, store, logout (delays = live p50).",
+  "settings": {},
+  "cases": [
+    {"op": "POST /process-payment", "name": "paid order", "body": {"orderRef": "TELR-REF-1", "bookingNumber": "12345"},
+     "expectStatus": 200, "expectCalls": ["telrSysApi", "seawareSysApi"]},
+    {"op": "POST /process-payment", "name": "paid order, slow logout", "scenario": "slow logout",
+     "body": {"orderRef": "TELR-REF-1", "bookingNumber": "12345"}, "expectStatus": 200}
+  ]
+}

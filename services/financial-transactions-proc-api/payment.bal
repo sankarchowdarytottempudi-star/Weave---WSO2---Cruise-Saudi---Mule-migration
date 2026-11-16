@@ -122,20 +122,28 @@ isolated function failureCodeOf(Outcome outcome) returns string {
 }
 
 isolated function runPayment(Attempt attempt, int retriesLeft) returns Outcome {
+    // The Seaware login does not depend on the Telr answer, so it starts at the same time
+    // (speed only: the decisions below are taken in the old order, Telr first).
+    Attempt & readonly frozen = attempt.cloneReadOnly();
+    future<Session|Stop> sessionStarted = start openSession(frozen);
     json|Stop telr = telrOrderStatus(attempt);
     if telr is Stop {
+        discardSession(frozen, sessionStarted);
         return outcomeOf(telr);
     }
     string bookingNumber = attempt.input.bookingNumber;
     if !core:bookingMatches(telr, bookingNumber) || core:telrStatusTextOf(telr) != "Paid" {
+        discardSession(frozen, sessionStarted);
         return {status: 400, message: core:validationOf(telr, bookingNumber, ())};
     }
-    Session|Stop session = openSession(attempt);
-    if session is Stop {
-        return outcomeOf(session);
+    Session|Stop|error session = wait sessionStarted;
+    if session is error {
+        return outcomeOf(session is Stop ? session : stop(502, session.message(), commons:BAD_GATEWAY));
     }
     Outcome|Stop result = payWithSession(attempt, telr, session);
-    closeSession(attempt, session);
+    // The logout does not change the answer; it runs after the answer is on its way
+    Session & readonly used = session.cloneReadOnly();
+    future<()> _ = start closeSession(frozen, used);
     if result is Outcome {
         return result;
     }
@@ -233,6 +241,15 @@ isolated function openSession(Attempt attempt) returns Session|Stop {
         return stop(502, "The Seaware login did not return a session", commons:BAD_GATEWAY);
     }
     return {token, own: true};
+}
+
+# A session opened for a payment that stopped before using it: its logout runs in the background.
+isolated function discardSession(Attempt & readonly attempt, future<Session|Stop> started) {
+    Session|Stop|error session = wait started;
+    if session is Session {
+        Session & readonly used = session.cloneReadOnly();
+        future<()> _ = start closeSession(attempt, used);
+    }
 }
 
 isolated function closeSession(Attempt attempt, Session session) {

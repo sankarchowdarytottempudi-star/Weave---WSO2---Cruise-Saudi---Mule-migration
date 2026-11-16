@@ -1,7 +1,17 @@
 {
  "api": "financial-transactions-proc-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:16Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:d9cdf7a61e30e8b9b52a028353c065cada86807c45ed47839aa03ecc635e67bd",
+ "version": 2,
+ "at": "2026-11-16T12:43:36Z",
+ "summary": {
+  "files": 3,
+  "changed": [
+   "services/financial-transactions-proc-api/e2e/standin.py",
+   "services/financial-transactions-proc-api/e2e/trial.json",
+   "services/financial-transactions-proc-api/payment.bal"
+  ]
+ }
 }
