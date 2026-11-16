@@ -1,7 +1,13 @@
 {
  "api": "cms-proc-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:15Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:c4f895b4e82b0f6360d220f8c18dd012292eb41a3c32ad6b7c59058e9d96b5e2",
+ "version": 2,
+ "at": "2026-11-16T16:14:19Z",
+ "summary": {
+  "files": 0,
+  "changed": []
+ }
 }
