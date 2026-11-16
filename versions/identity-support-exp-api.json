@@ -1,7 +1,13 @@
 {
  "api": "identity-support-exp-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:16Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:3537aa529e3be111a977dadd9cd6ea807b60a9eae99d38d49765e6de4df0b09f",
+ "version": 2,
+ "at": "2026-11-16T12:29:51Z",
+ "summary": {
+  "files": 0,
+  "changed": []
+ }
 }
