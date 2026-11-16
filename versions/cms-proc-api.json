@@ -3,13 +3,19 @@
  "by": "deploy_one.sh on the server",
  "what": "deployed",
  "results": {},
- "image": "sha256:41af9a5659f9864b783e9737023118c0418cf65c7276637a6628fb383fd95b77",
- "version": 5,
- "at": "2026-11-16T16:48:59Z",
+ "image": "sha256:16bb300a248dd4842f326670617a941d91fb97d0edddd1f0fe5fb1cc563cc4bc",
+ "version": 6,
+ "at": "2026-11-16T17:09:28Z",
  "summary": {
-  "files": 1,
+  "files": 7,
   "changed": [
-   "deploy/vm/values/cms-proc-api.yaml"
+   "deploy/settings-templates/cms-proc-api.toml",
+   "services/cms-proc-api/Dependencies.toml",
+   "services/cms-proc-api/cache.bal",
+   "services/cms-proc-api/service.bal",
+   "services/cms-proc-api/state.bal",
+   "services/cms-proc-api/tests/Config.toml",
+   "services/cms-proc-api/tests/cache_test.bal"
   ]
  }
 }

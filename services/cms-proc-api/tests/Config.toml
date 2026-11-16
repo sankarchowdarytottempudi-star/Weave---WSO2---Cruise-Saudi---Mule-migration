@@ -1,0 +1,7 @@
+[aroya.cms_proc_api]
+httpPort = 19881
+contentCacheSeconds = 2
+contentCacheGraceSeconds = 2
+
+[aroya.cms_proc_api.stateRedis]
+enabled = false

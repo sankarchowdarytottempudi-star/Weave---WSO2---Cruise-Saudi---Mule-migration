@@ -27,7 +27,8 @@ function init() returns error? {
     if unset.length() > 0 {
         log:printWarn("Strapi path settings without a value; requests that need them answer 500", names = unset);
     }
-    log:printInfo("cms-proc-api starting", env = env, basePath = basePath, cms = cms.url, strapi = strapi.url);
+    log:printInfo("cms-proc-api starting", env = env, basePath = basePath, cms = cms.url, strapi = strapi.url,
+            contentCache = contentCacheState());
 }
 
 // Same connection rules as commons:newDownstreamClient, and redirects are followed as the old
@@ -67,8 +68,11 @@ isolated service class ErrorRecordedApi {
     isolated resource function get descriptions/[string descType](http:Request req) returns http:Response {
         // Mule: an error goes to Global_Error_Handler - the CMS's own status and body, or 500 with the
         // old error body when the CMS cannot be reached (was 502 with a body of its own here)
-        http:Response|http:ClientError r = cmsClient->get(cmsDescPath + "/" + descType);
-        return relay(r, commons:correlationIdOf(req), "The CMS source");
+        final string address = cmsDescPath + "/" + descType;
+        return cachedRelay("d:" + address, isolated function() returns http:Response|http:ClientError {
+                    return cmsClient->get(address);
+                },
+                commons:correlationIdOf(req), "The CMS source");
     }
 
     // GET {basePath}/images/{type}/{code}  ->  Jease images/{type}/{code}
@@ -159,8 +163,9 @@ isolated function content(http:Request req, string slug, string? categoryType) r
         });
         return out;
     }
-    string address = target.query == "" ? collection : collection + "?" + target.query;
-    return relay(fetch(address), correlationId, "The content source");
+    final string address = target.query == "" ? collection : collection + "?" + target.query;
+    return cachedRelay("c:" + address, isolated function() returns http:Response|http:ClientError => fetch(address),
+            correlationId, "The content source");
 }
 
 // One GET to Strapi. Repeated only when a retry count is set and the failure is one of the

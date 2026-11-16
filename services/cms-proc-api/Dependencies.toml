@@ -17,9 +17,11 @@ dependencies = [
 	{org = "ballerina", name = "lang.runtime"},
 	{org = "ballerina", name = "log"},
 	{org = "ballerina", name = "test"},
+	{org = "ballerina", name = "time"},
 	{org = "ballerina", name = "url"},
 	{org = "ballerinai", name = "observe"},
-	{org = "ballerinax", name = "prometheus"}
+	{org = "ballerinax", name = "prometheus"},
+	{org = "ballerinax", name = "redis"}
 ]
 modules = [
 	{org = "aroya", packageName = "cms_proc_api", moduleName = "cms_proc_api"},
@@ -326,6 +328,9 @@ version = "2.8.4"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
+modules = [
+	{org = "ballerina", packageName = "time", moduleName = "time"}
+]
 
 [[package]]
 org = "ballerina"
@@ -415,5 +420,8 @@ version = "3.4.1"
 dependencies = [
 	{org = "ballerina", name = "crypto"},
 	{org = "ballerina", name = "jballerina.java"}
+]
+modules = [
+	{org = "ballerinax", packageName = "redis", moduleName = "redis"}
 ]
 

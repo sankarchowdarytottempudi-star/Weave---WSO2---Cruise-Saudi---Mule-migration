@@ -51,3 +51,8 @@ errorTopic = "<kept on the server>"
 auditTopic = "<kept on the server>"
 errorEnabled = "<kept on the server>"
 auditEnabled = "<kept on the server>"
+
+[aroya.cms_proc_api.stateRedis]
+enabled = "<kept on the server>"
+host = "<kept on the server>"
+port = "<kept on the server>"
