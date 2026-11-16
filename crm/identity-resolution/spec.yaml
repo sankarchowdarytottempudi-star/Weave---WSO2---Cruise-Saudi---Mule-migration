@@ -1,0 +1,137 @@
+# Zoho CRM configuration for AROYA Direct Guest Identity Resolution, Phase 1 (plan v2.1, 16 Nov 2026).
+# Additive only: new fields and modules are created when absent; existing fields are never renamed,
+# changed or deleted. Workflows and webhooks are created INACTIVE until the integration is live.
+specVersion: 1.0.0
+planVersion: "2.1"
+guestModule: Contacts          # the module the migrated services write guests to (code: /crm/v*/Contacts)
+existingGuestFields:           # used, never changed
+  firstName: First_Name
+  lastName: Last_Name
+  dateOfBirth: Date_of_Birth
+  email: Email
+  phone: Mobile                # Phone also exists; identity workflow watches both
+  phoneAlt: Phone
+  globalId: Global_Guest_ID    # existing field; becomes a projection written only by the integration
+  loyaltyId: Aroya_Loyalty_ID  # existing field; idem
+  sourceSystem: Source_System
+  sourceClientId: Client_ID
+
+picklists:
+  identityStatus: [PENDING_IDENTITY, IDENTITY_REUSED_CERTAIN, NEW_IDENTITY_CREATED, NEW_IDENTITY_PENDING_REVIEW,
+                   MULTIPLE_IDENTITY_CONFLICT, PAIR_REPAIR_REQUIRED, REVIEW_DECISION_PREPARED, REVIEW_DATA_CHANGED,
+                   CONFIRMED_SAME_PERSON, CONFIRMED_DIFFERENT_PERSON, HOUSEHOLD_RELATIONSHIP, EXCLUDED_NON_DIRECT,
+                   IDENTITY_PROCESSING_FAILED]
+  decisionType: [CERTAIN_PHONE, CERTAIN_EMAIL, FOUR_FIELD, NEW, MULTIPLE_IDENTITY, PAIR_REPAIR, MANUAL]
+  updateSource: [SOURCE, USER, IDENTITY_SERVICE, MIGRATION]
+  guestIdentityStatus: [ACTIVE, PROVISIONAL, RETIRED, ALIAS, BLOCKED]
+  pairIntegrity: [COMPLETE, INCOMPLETE, CONFLICT]
+  createdByProcess: [BASELINE, CERTAIN, NEW, REVIEW, MANUAL]
+  reviewCaseType: [MULTIPLE_IDENTITY_CONFLICT, FOUR_FIELD_REVIEW, PAIR_REPAIR, SHADOW_CANDIDATE]
+  reviewCaseStatus: [REVIEW_OPEN, REVIEW_DECISION_PREPARED, REVIEW_DATA_CHANGED, REVIEW_CRM_UPDATE_PENDING,
+                     REVIEW_COMMITTED, REVIEW_FAILED, DEFERRED]
+  reviewPriority: [HIGH, NORMAL, LOW]
+  reviewerAction: [CONFIRM_SAME_PERSON, CONFIRM_DIFFERENT_PERSON, CONFIRM_HOUSEHOLD, DEFER, REVERSE_DECISION]
+
+modules:
+  - apiName: Guest_Identities
+    singular: Guest Identity
+    plural: Guest Identities
+    fields:
+      - {label: Global ID, apiName: Global_ID, type: text, length: 40, unique: true}
+      - {label: Loyalty ID, apiName: Loyalty_ID, type: text, length: 40, unique: true}
+      - {label: Identity Status, apiName: Identity_Status, type: picklist, values: guestIdentityStatus}
+      - {label: Pair Integrity Status, apiName: Pair_Integrity_Status, type: picklist, values: pairIntegrity}
+      - {label: Surviving Identity, apiName: Surviving_Identity, type: lookup, module: Guest_Identities}
+      - {label: Created By Process, apiName: Created_By_Process, type: picklist, values: createdByProcess}
+      - {label: Rule Version, apiName: Rule_Version, type: text, length: 20}
+      - {label: Retired Time, apiName: Retired_Time, type: datetime}
+  - apiName: Identity_Review_Cases
+    singular: Identity Review Case
+    plural: Identity Review Cases
+    fields:
+      - {label: Case Type, apiName: Case_Type, type: picklist, values: reviewCaseType}
+      - {label: Case Status, apiName: Case_Status, type: picklist, values: reviewCaseStatus}
+      - {label: Priority, apiName: Priority, type: picklist, values: reviewPriority}
+      - {label: Incoming Guest, apiName: Incoming_Guest, type: lookup, module: Contacts}
+      - {label: Provisional Identity, apiName: Provisional_Identity, type: lookup, module: Guest_Identities}
+      - {label: Selected Identity, apiName: Selected_Identity, type: lookup, module: Guest_Identities}
+      - {label: Candidate Count, apiName: Candidate_Count, type: integer}
+      - {label: Rule Version, apiName: Rule_Version, type: text, length: 20}
+      - {label: Reason Codes, apiName: Reason_Codes, type: textarea}
+      - {label: Assigned Reviewer, apiName: Assigned_Reviewer, type: userlookup}
+      - {label: SLA Due, apiName: SLA_Due, type: datetime}
+      - {label: Follow Up Date, apiName: Follow_Up_Date, type: date}
+      - {label: Python Case ID, apiName: Python_Case_ID, type: text, length: 60, unique: true}
+  - apiName: Identity_Decision_History
+    singular: Identity Decision
+    plural: Identity Decision History
+    fields:
+      - {label: Guest, apiName: Guest, type: lookup, module: Contacts}
+      - {label: Guest Identity, apiName: Guest_Identity, type: lookup, module: Guest_Identities}
+      - {label: Review Case, apiName: Review_Case, type: lookup, module: Identity_Review_Cases}
+      - {label: Decision ID, apiName: Decision_ID, type: text, length: 60, unique: true}
+      - {label: Decision Type, apiName: Decision_Type, type: picklist, values: decisionType}
+      - {label: Reviewer Action, apiName: Reviewer_Action, type: picklist, values: reviewerAction}
+      - {label: Reviewer, apiName: Reviewer, type: userlookup}
+      - {label: Rule Version, apiName: Rule_Version, type: text, length: 20}
+      - {label: Reason Codes, apiName: Reason_Codes, type: textarea}
+      - {label: Comment, apiName: Comment, type: textarea}
+      - {label: Correlation ID, apiName: Correlation_ID, type: text, length: 80}
+      - {label: Decided Time, apiName: Decided_Time, type: datetime}
+
+guestNewFields:                 # added to Contacts (§7.1)
+  - {label: Guest Identity, apiName: Guest_Identity, type: lookup, module: Guest_Identities}
+  - {label: Identity Status, apiName: Identity_Status, type: picklist, values: identityStatus}
+  - {label: Identity Decision Type, apiName: Identity_Decision_Type, type: picklist, values: decisionType}
+  - {label: Identity Review Case, apiName: Identity_Review_Case, type: lookup, module: Identity_Review_Cases}
+  - {label: Identity Rule Version, apiName: Identity_Rule_Version, type: text, length: 20}
+  - {label: Identity Reason Summary, apiName: Identity_Reason_Summary, type: textarea}
+  - {label: Identity Processed Time, apiName: Identity_Processed_Time, type: datetime}
+  - {label: Identity Source Record ID, apiName: Identity_Source_Record_ID, type: text, length: 120}
+  - {label: Identity Correlation ID, apiName: Identity_Correlation_ID, type: text, length: 80}
+  - {label: Identity Update Source, apiName: Identity_Update_Source, type: picklist, values: updateSource}
+  - {label: Identity Error Code, apiName: Identity_Error_Code, type: text, length: 60}
+
+# Global_Guest_ID and Aroya_Loyalty_ID become read-only for every profile except the integration user (§7.1).
+readOnlyForUsers: [Global_Guest_ID, Aroya_Loyalty_ID, Guest_Identity, Identity_Status, Identity_Decision_Type,
+                   Identity_Review_Case, Identity_Rule_Version, Identity_Reason_Summary, Identity_Processed_Time,
+                   Identity_Correlation_ID, Identity_Update_Source, Identity_Error_Code]
+
+profiles:                       # cloned from the org's "Standard" profile, then adjusted (§15.3)
+  - {name: Identity Reviewer, cloneFrom: Standard, permissions: {Identity_Review_Cases: [view, edit], Identity_Decision_History: [view], Guest_Identities: [view], Contacts: [view]}}
+  - {name: Identity Supervisor, cloneFrom: Standard, permissions: {Identity_Review_Cases: [view, edit, reassign], Identity_Decision_History: [view], Guest_Identities: [view], Contacts: [view]}}
+  - {name: Identity Audit, cloneFrom: Standard, permissions: {Identity_Review_Cases: [view], Identity_Decision_History: [view], Guest_Identities: [view], Contacts: [view]}}
+  # CRM Administrator: the existing Administrator profile; no business decision rights by default
+
+webhooks:                       # created INACTIVE / pointing at the placeholder until the integration is live
+  - name: Identity_Reevaluation_Requested
+    module: Contacts
+    method: POST
+    url: "${IDENTITY_WEBHOOK_URL}"          # Integration Service endpoint (placeholder)
+    bodyFields: [id, First_Name, Last_Name, Date_of_Birth, Mobile, Phone, Email, Source_System, Client_ID,
+                 Global_Guest_ID, Aroya_Loyalty_ID, Guest_Identity, Modified_Time]
+    headers: {X-Event-Type: GUEST_IDENTITY_REEVALUATION_REQUESTED, X-Schema-Version: "1.0"}
+  - name: Identity_Evaluation_Requested_Direct
+    module: Contacts
+    method: POST
+    url: "${IDENTITY_WEBHOOK_URL}"
+    bodyFields: [id, First_Name, Last_Name, Date_of_Birth, Mobile, Phone, Email, Source_System, Client_ID, Modified_Time]
+    headers: {X-Event-Type: GUEST_IDENTITY_EVALUATION_REQUESTED, X-Source-System: CRM_DIRECT, X-Schema-Version: "1.0"}
+
+workflows:                      # §7.3, loop-proof: only the five identity fields trigger; result fields never do
+  - name: Identity fields changed
+    module: Contacts
+    trigger: {on: edit, specificFieldsChanged: [First_Name, Last_Name, Date_of_Birth, Mobile, Phone, Email]}
+    action: {webhook: Identity_Reevaluation_Requested}
+    active: false
+  - name: Direct CRM guest created
+    module: Contacts
+    trigger: {on: create}
+    criteria: {Source_System: {notEquals: SEAWARE}}   # records created in CRM, not by the Seaware sync
+    action: {webhook: Identity_Evaluation_Requested_Direct}
+    active: false
+
+webTab:                         # created manually (Zoho has no public API for Web Tabs) — see README
+  name: Identity Review
+  url: "${WORKBENCH_URL}"
+  profiles: [Identity Reviewer, Identity Supervisor, Identity Audit, Administrator]
