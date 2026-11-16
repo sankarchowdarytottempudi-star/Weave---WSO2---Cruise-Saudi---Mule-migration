@@ -56,8 +56,10 @@ function itinerariesPassTheCallersQueryOn() {
     test:assertEquals(target("itineraries", "jeddah", rawQuery = "filters[code][$in][0]=A&filters[code][$in][1]=B",
             params = {}).query, "filters%5Bcode%5D%5B$in%5D=A&filters%5Bcode%5D%5B$in%5D=B&populate=*");
     test:assertEquals(target("itineraries", rawQuery = "locale=ar&populate=deep").query, "locale=ar&populate=deep");
-    // encodeURI encodes "%" too, exactly as the old flow did
-    test:assertEquals(target("itineraries", rawQuery = "name=a%20b").query, "name=a%2520b&populate=*");
+    // The query reaches the service percent-encoded when it comes through the WSO2 gateway (the old
+    // flow saw it raw), so it is decoded once and then encoded as the old flow's encodeURI did: an
+    // encoded space stays one encoded space instead of becoming %2520.
+    test:assertEquals(target("itineraries", rawQuery = "name=a%20b").query, "name=a%20b&populate=*");
 }
 
 @test:Config {}
@@ -126,4 +128,33 @@ function queryParametersAreReadAsTheOldApplicationReadThem() {
     test:assertEquals(firstParams("destination=red%20sea&x=a+b&flag&filters%5Ba%5D=1"),
         {"destination": "red sea", "x": "a b", "flag": "", "filters[a]": "1"});
     test:assertEquals(firstParams("bad=%ZZ"), {"bad": "%ZZ"});
+}
+
+// ---- pagination reaches Strapi whether the caller encodes the brackets or not (old flow read the query decoded)
+
+@test:Config {}
+function itinerariesPaginationEncodedAndRawGiveTheSameStrapiQuery() {
+    string encoded = "pagination%5Bpage%5D=1&pagination%5BpageSize%5D=10&site=website&locale=en";
+    string raw = "pagination[page]=1&pagination[pageSize]=10&site=website&locale=en";
+    Target a = contentTarget("itineraries", (), "/cms/content/itineraries", encoded, firstParams(encoded));
+    Target b = contentTarget("itineraries", (), "/cms/content/itineraries", raw, firstParams(raw));
+    test:assertEquals(a.query, b.query);
+    test:assertEquals(a.query, "pagination%5Bpage%5D=1&pagination%5BpageSize%5D=10&site=website&locale=en&populate=*");
+    test:assertFalse(a.query.includes("%25"), "no double encoding");
+}
+
+@test:Config {}
+function addonsQueryDecodedOnceToo() {
+    string encoded = "filters%5Bcode%5D%5B%24eq%5D=SPA&locale=en";
+    Target t = contentTarget("add-ons", (), "/cms/content/add-ons", encoded, firstParams(encoded));
+    test:assertFalse(t.query.includes("%25"), "no double encoding");
+}
+
+@test:Config {}
+function plainQueriesUnchanged() {
+    string q = "site=website&locale=en";
+    test:assertEquals(percentDecoded(q), q);
+    Target t = contentTarget("itineraries", (), "/cms/content/itineraries", q, firstParams(q));
+    test:assertEquals(t.query, "site=website&locale=en&populate=*");
+    test:assertEquals(percentDecoded("a%ZZb%2"), "a%ZZb%2");
 }

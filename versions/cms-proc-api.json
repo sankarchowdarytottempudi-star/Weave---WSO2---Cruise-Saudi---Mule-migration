@@ -3,11 +3,14 @@
  "by": "deploy_one.sh on the server",
  "what": "deployed",
  "results": {},
- "image": "sha256:c4f895b4e82b0f6360d220f8c18dd012292eb41a3c32ad6b7c59058e9d96b5e2",
- "version": 2,
- "at": "2026-11-16T16:14:19Z",
+ "image": "sha256:277037efb24404f9b082fef47daead34a5c97c893071a65c63b6d1c9e42f45f5",
+ "version": 3,
+ "at": "2026-11-16T16:39:11Z",
  "summary": {
-  "files": 0,
-  "changed": []
+  "files": 2,
+  "changed": [
+   "services/cms-proc-api/modules/core/content.bal",
+   "services/cms-proc-api/modules/core/tests/content_test.bal"
+  ]
  }
 }

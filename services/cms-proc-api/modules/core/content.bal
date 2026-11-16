@@ -91,6 +91,10 @@ public isolated function contentTarget(string slug, string? categoryType, string
         map<string> params) returns Target {
     string cat = categoryType ?: "";
     string locale = params["locale"] ?: "en";
+    // The old flow read the query string already decoded (Mule hands it on that way) and then ran
+    // encodeURI over it. A caller that percent-encodes the brackets (pagination%5Bpage%5D=1, what most
+    // HTTP clients send) must therefore end up exactly like one that writes them raw: decode once here.
+    string query0 = percentDecoded(rawQuery);
     match handlerOf(slug) {
         "cabin" => {
             return {pathKey: "cabin-categories", query: cat != ""
@@ -111,7 +115,7 @@ public isolated function contentTarget(string slug, string? categoryType, string
         }
         "itineraries" => {
             // The old flow passed the caller's own query on, and ran encodeURI over the whole of it.
-            string cleaned = withoutIndexes(rawQuery);
+            string cleaned = withoutIndexes(query0);
             string query = "populate=*&locale=" + locale;
             if cleaned != "" {
                 query = cleaned + (cleaned.includes("populate=") ? "" : "&populate=*");
@@ -126,7 +130,7 @@ public isolated function contentTarget(string slug, string? categoryType, string
             return {pathKey: "excursions", query: encodeUri(query, true)};
         }
         "addons" => {
-            string cleaned = withoutIndexes(rawQuery);
+            string cleaned = withoutIndexes(query0);
             string query = "populate=*&locale=" + locale;
             if cleaned != "" && cat == "" {
                 query = cleaned + (cleaned.includes("populate=") ? "" : "&populate=*");
@@ -254,6 +258,35 @@ isolated function pairs([string, string][] items) returns string {
         parts.push(encodeComponent(name) + "=" + encodeComponent(value));
     }
     return string:'join("&", ...parts);
+}
+
+# A query string with every %XX sequence decoded once ("+" is left as it is). Invalid sequences stay.
+#
+# + rawQuery - the query string as the caller sent it
+# + return - the decoded query string
+public isolated function percentDecoded(string rawQuery) returns string {
+    if !rawQuery.includes("%") {
+        return rawQuery;
+    }
+    byte[] src = rawQuery.toBytes();
+    byte[] out = [];
+    int i = 0;
+    while i < src.length() {
+        byte b = src[i];
+        if b == 37 && i + 2 < src.length() {
+            string|error hex = string:fromBytes(src.slice(i + 1, i + 3));
+            int|error v = hex is string ? int:fromHexString(hex) : hex;
+            if v is int {
+                out.push(<byte>v);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(b);
+        i += 1;
+    }
+    string|error text = string:fromBytes(out);
+    return text is string ? text : rawQuery;
 }
 
 // "[0]", "[12]" ... removed, as the old flow did with  replace /\[\d+\]/ with "".
