@@ -1,0 +1,301 @@
+{
+ "createdAt": "2026-11-16T18:07:27.183Z",
+ "deployment": {
+  "deployedAt": "2026-11-16T18:07:40.203Z",
+  "deployedBy": "dev-tester",
+  "gateway": {
+   "status": "skipped"
+  },
+  "revision": 2,
+  "runtimeUrl": "http://127.0.0.1:8790/run/e2e-1116180714-seaware-system/v1",
+  "status": "deployed"
+ },
+ "description": "Created by the end-to-end check. Safe to delete.",
+ "edges": [
+  {
+   "from": "n_esgv71",
+   "fromPort": "out",
+   "id": "e_bxegy2",
+   "to": "n_kpdv6u"
+  },
+  {
+   "from": "n_kpdv6u",
+   "fromPort": "out",
+   "id": "e_y1n348",
+   "to": "n_9qk25v"
+  },
+  {
+   "from": "n_9qk25v",
+   "fromPort": "out",
+   "id": "e_2c99up",
+   "to": "n_rr9avx"
+  },
+  {
+   "from": "n_rr9avx",
+   "fromPort": "out",
+   "id": "e_i1jlmn",
+   "to": "n_r1z0vw"
+  },
+  {
+   "from": "n_r1z0vw",
+   "fromPort": "out",
+   "id": "e_u8q68g",
+   "to": "n_9jsot4"
+  },
+  {
+   "from": "n_5a7k9c",
+   "fromPort": "out",
+   "id": "e_g291oo",
+   "to": "n_ww2x3y"
+  },
+  {
+   "from": "n_ww2x3y",
+   "fromPort": "out",
+   "id": "e_lkslmk",
+   "to": "n_jkqtp3"
+  },
+  {
+   "from": "n_jkqtp3",
+   "fromPort": "out",
+   "id": "e_3s93ju",
+   "to": "n_bxizfg"
+  }
+ ],
+ "id": "fl_6f5d72ea4fff",
+ "name": "e2e-1116180714-seaware-system",
+ "nodes": [
+  {
+   "config": {
+    "methods": [
+     "GET"
+    ],
+    "path": "/reference/:kind",
+    "summary": "Reference data straight from the system of record"
+   },
+   "id": "n_esgv71",
+   "name": "Get reference list",
+   "position": {
+    "x": 60,
+    "y": 60
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "expr": "(\n  $queries := {\n    \"ships\": \"query Ships { ships { key name } }\",\n    \"ports\": \"query Ports { ports { key name } }\",\n    \"destinations\": \"query Destinations { destinations { key name } }\",\n    \"currencies\": \"query Currencies { currencies { key name } }\"\n  };\n  { \"kind\": $request.params.kind, \"query\": $lookup($queries, $request.params.kind) }\n)",
+    "resultTarget": "payload"
+   },
+   "id": "n_kpdv6u",
+   "name": "Pick the query",
+   "position": {
+    "x": 360,
+    "y": 60
+   },
+   "type": "transform.expr"
+  },
+  {
+   "config": {
+    "rules": [
+     {
+      "expr": "$exists(query)",
+      "id": "c1",
+      "label": "Unknown reference kind. Use ships, ports, destinations or currencies"
+     }
+    ],
+    "status": 404
+   },
+   "id": "n_9qk25v",
+   "name": "Known kind",
+   "position": {
+    "x": 660,
+    "y": 60
+   },
+   "type": "logic.validate"
+  },
+  {
+   "config": {
+    "body": {
+     "query": "{{ $payload.query }}"
+    },
+    "bodyMode": "json",
+    "connection": "cx_e9623272f7f1",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [],
+    "method": "POST",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "variable",
+    "resultVar": "system",
+    "retries": 0,
+    "retryDelayMs": 500,
+    "timeoutMs": 30000,
+    "url": "/seaware-sys-api/v1/integration-tasks"
+   },
+   "id": "n_rr9avx",
+   "name": "Ask Seaware",
+   "position": {
+    "x": 960,
+    "y": 60
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "input": "$",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "id": "r_q450xa",
+       "kind": "direct",
+       "source": "kind",
+       "target": "kind"
+      },
+      {
+       "expr": "[$lookup($vars.system.data, kind).{ \"code\": key, \"name\": name }]",
+       "id": "r_h3mzuz",
+       "kind": "expr",
+       "target": "items"
+      },
+      {
+       "expr": "$count($lookup($vars.system.data, kind))",
+       "id": "r_07l3kp",
+       "kind": "expr",
+       "target": "count"
+      },
+      {
+       "id": "r_c1rwls",
+       "kind": "const",
+       "target": "layer",
+       "value": "system"
+      }
+     ]
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_r1z0vw",
+   "name": "Shape the list",
+   "position": {
+    "x": 1260,
+    "y": 60
+   },
+   "type": "transform.map"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_9jsot4",
+   "name": "Answer list",
+   "position": {
+    "x": 1560,
+    "y": 60
+   },
+   "type": "respond"
+  },
+  {
+   "config": {
+    "methods": [
+     "POST"
+    ],
+    "path": "/integration-tasks"
+   },
+   "id": "n_5a7k9c",
+   "name": "Run a read query",
+   "position": {
+    "x": 60,
+    "y": 189
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "rules": [
+     {
+      "expr": "$exists($request.body.query)",
+      "id": "c1",
+      "label": "query is required"
+     },
+     {
+      "expr": "$not($contains($lowercase($string($request.body.query)), \"mutation\"))",
+      "id": "c2",
+      "label": "only read queries are allowed here"
+     }
+    ],
+    "status": 400
+   },
+   "id": "n_ww2x3y",
+   "name": "Read only",
+   "position": {
+    "x": 360,
+    "y": 189
+   },
+   "type": "logic.validate"
+  },
+  {
+   "config": {
+    "body": {
+     "query": "{{ $request.body.query }}"
+    },
+    "bodyMode": "json",
+    "connection": "cx_e9623272f7f1",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [],
+    "method": "POST",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "payload",
+    "retries": 0,
+    "retryDelayMs": 500,
+    "timeoutMs": 30000,
+    "url": "/seaware-sys-api/v1/integration-tasks"
+   },
+   "id": "n_jkqtp3",
+   "name": "Forward to Seaware",
+   "position": {
+    "x": 660,
+    "y": 189
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_bxizfg",
+   "name": "Answer query",
+   "position": {
+    "x": 960,
+    "y": 189
+   },
+   "type": "respond"
+  }
+ ],
+ "origin": {
+  "kind": "blank"
+ },
+ "revision": 2,
+ "settings": {
+  "basePath": "/e2e-1116180714-seaware-system/v1",
+  "gateway": {
+   "publish": true,
+   "security": "oauth2",
+   "throttlingPolicy": "Unlimited",
+   "version": "v1"
+  },
+  "logPayloads": true,
+  "timeoutMs": 60000
+ },
+ "slug": "e2e-1116180714-seaware-system",
+ "tags": [],
+ "updatedAt": "2026-11-16T18:07:35.775Z",
+ "updatedBy": "dev-tester"
+}
