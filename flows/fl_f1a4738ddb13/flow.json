@@ -1,0 +1,244 @@
+{
+ "createdAt": "2026-11-16T18:24:23.735Z",
+ "deployment": {
+  "deployedAt": "2026-11-16T18:24:53.912Z",
+  "deployedBy": "dev-tester",
+  "gateway": {
+   "apiId": "87c4dd06-54cd-4ee5-b83d-c50da124acff",
+   "context": "/e2e-1116182308-reservation-manager",
+   "status": "published",
+   "url": "https://13.140.56.229:30243/e2e-1116182308-reservation-manager/v1",
+   "version": "v1"
+  },
+  "revision": 3,
+  "runtimeUrl": "http://127.0.0.1:8790/run/e2e-1116182308-reservation-manager/v1",
+  "status": "deployed"
+ },
+ "description": "Created by the end-to-end check. Safe to delete.",
+ "edges": [
+  {
+   "from": "n_uycfgz",
+   "fromPort": "out",
+   "id": "e_wgdlp9",
+   "to": "n_xjqu58"
+  },
+  {
+   "from": "n_xjqu58",
+   "fromPort": "out",
+   "id": "e_vt591u",
+   "to": "n_2rh6na"
+  },
+  {
+   "from": "n_2rh6na",
+   "fromPort": "out",
+   "id": "e_h6ksdb",
+   "to": "n_teevy4"
+  },
+  {
+   "from": "n_on2dri",
+   "fromPort": "out",
+   "id": "e_k84umb",
+   "to": "n_i5uqdh"
+  },
+  {
+   "from": "n_i5uqdh",
+   "fromPort": "out",
+   "id": "e_3g2j9s",
+   "to": "n_v9frsr"
+  }
+ ],
+ "id": "fl_f1a4738ddb13",
+ "name": "e2e-1116182308-reservation-manager",
+ "nodes": [
+  {
+   "config": {
+    "methods": [
+     "GET"
+    ],
+    "path": "/catalog/:kind"
+   },
+   "id": "n_uycfgz",
+   "name": "Catalog list",
+   "position": {
+    "x": 60,
+    "y": 60
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "bodyMode": "none",
+    "connection": "cx_31171530661c",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [],
+    "method": "GET",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "payload",
+    "retries": 0,
+    "retryDelayMs": 500,
+    "timeoutMs": 30000,
+    "url": "/e2e-1116182308-common-cache/v1/reference/{{ $request.params.kind }}"
+   },
+   "id": "n_xjqu58",
+   "name": "Ask the process layer",
+   "position": {
+    "x": 360,
+    "y": 60
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "input": "$",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Take kind and write it in title case",
+        "expr": "$titleCase(kind)"
+       },
+       "id": "r_raelj7",
+       "instruction": "kind in title case",
+       "kind": "instruction",
+       "target": "title"
+      },
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Take kind and convert it to upper case",
+        "expr": "$uppercase(kind)"
+       },
+       "id": "r_eml3z3",
+       "instruction": "kind in upper case",
+       "kind": "instruction",
+       "target": "code"
+      },
+      {
+       "id": "r_ll02lf",
+       "kind": "direct",
+       "source": "count",
+       "target": "total"
+      },
+      {
+       "id": "r_d4wy53",
+       "kind": "direct",
+       "source": "source",
+       "target": "servedFrom"
+      },
+      {
+       "expr": "[items.{ \"id\": code, \"label\": name }]",
+       "id": "r_vsjkdt",
+       "kind": "expr",
+       "target": "options"
+      }
+     ]
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_2rh6na",
+   "name": "Screen ready list",
+   "position": {
+    "x": 660,
+    "y": 60
+   },
+   "type": "transform.map"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_teevy4",
+   "name": "Answer catalog",
+   "position": {
+    "x": 960,
+    "y": 60
+   },
+   "type": "respond"
+  },
+  {
+   "config": {
+    "methods": [
+     "POST"
+    ],
+    "path": "/integration-tasks"
+   },
+   "id": "n_on2dri",
+   "name": "Run a read query",
+   "position": {
+    "x": 60,
+    "y": 189
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "body": {
+     "query": "{{ $request.body.query }}"
+    },
+    "bodyMode": "json",
+    "connection": "cx_31171530661c",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [],
+    "method": "POST",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "payload",
+    "retries": 0,
+    "retryDelayMs": 500,
+    "timeoutMs": 30000,
+    "url": "/e2e-1116182308-seaware-system/v1/integration-tasks"
+   },
+   "id": "n_i5uqdh",
+   "name": "Ask the system layer",
+   "position": {
+    "x": 360,
+    "y": 189
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_v9frsr",
+   "name": "Answer query",
+   "position": {
+    "x": 660,
+    "y": 189
+   },
+   "type": "respond"
+  }
+ ],
+ "origin": {
+  "kind": "blank"
+ },
+ "revision": 3,
+ "settings": {
+  "basePath": "/e2e-1116182308-reservation-manager/v1",
+  "gateway": {
+   "publish": true,
+   "security": "oauth2",
+   "throttlingPolicy": "Unlimited",
+   "version": "v1"
+  },
+  "logPayloads": true,
+  "timeoutMs": 60000
+ },
+ "slug": "e2e-1116182308-reservation-manager",
+ "tags": [],
+ "updatedAt": "2026-11-16T18:24:50.613Z",
+ "updatedBy": "dev-tester"
+}
