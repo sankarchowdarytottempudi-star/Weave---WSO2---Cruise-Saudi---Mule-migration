@@ -1,9 +1,10 @@
 image: { repository: cms-proc-api, tag: vm, pullPolicy: Never }
 imagePullSecrets: []
 service: { type: NodePort, nodePort: 30084 }
-autoscaling: { enabled: false }
-replicas: 1
+autoscaling: { enabled: true, minReplicas: 2, maxReplicas: 4, targetCPUUtilizationPercentage: 70 }
+replicas: 2
 serviceMonitor: { enabled: false }
 networkPolicy: { enabled: false }
 ingress: { enabled: false }
-resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { cpu: "1", memory: 768Mi } }
+resources: { requests: { cpu: 500m, memory: 512Mi }, limits: { cpu: "2", memory: 1Gi } }
+podDisruptionBudget: { minAvailable: 1 }

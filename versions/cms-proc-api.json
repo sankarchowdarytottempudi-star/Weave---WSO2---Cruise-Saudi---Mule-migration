@@ -3,13 +3,13 @@
  "by": "deploy_one.sh on the server",
  "what": "deployed",
  "results": {},
- "image": "sha256:bc5e5ae604d2375e5c99ddcaeda68913346eb0ae26f29ef57b700287b72f2681",
- "version": 4,
- "at": "2026-11-16T16:46:31Z",
+ "image": "sha256:41af9a5659f9864b783e9737023118c0418cf65c7276637a6628fb383fd95b77",
+ "version": 5,
+ "at": "2026-11-16T16:48:59Z",
  "summary": {
   "files": 1,
   "changed": [
-   "deploy/settings-templates/cms-proc-api.toml"
+   "deploy/vm/values/cms-proc-api.yaml"
   ]
  }
 }
