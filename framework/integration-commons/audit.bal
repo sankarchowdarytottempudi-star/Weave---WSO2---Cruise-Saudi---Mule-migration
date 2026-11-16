@@ -41,7 +41,7 @@ public type AuditSink isolated object {
 };
 
 # A sink that drops everything (Kafka disabled, tests).
-public isolated class NoopAuditSink {
+public isolated distinct class NoopAuditSink {
     *AuditSink;
 
     public isolated function audit(string correlationId, json request, json response) {

@@ -85,24 +85,25 @@ isolated function identityResult(json & readonly guest, IdentityContext & readon
 isolated function identityItem(map<json> & readonly guest, IdentityContext & readonly ctx) returns json|Stop {
     string correlationId = ctx.correlationId;
     boolean crm = core:channelAllowed(channelCheck, ctx.channel);
-    // Performance: the Seaware sign-in does not depend on the CRM ids, so it is opened while they are
-    // worked out. When the CRM step stops, the session is closed and the same stop is answered.
-    future<string|Stop> login = start seawareLogin(correlationId);
+    // Performance: the Seaware session (a kept one when there is one) and the Seaware client search do
+    // not depend on the CRM ids, so they run while the ids are worked out. Results are looked at in
+    // the order Mule ran them (CRM ids first), so every answer and every stop is the one it was.
+    future<[SeawareSession, json]|Stop> early = start sessionAndSearch(guest, correlationId);
     string globalId = "";
     string loyaltyId = "";
     if crm {
         [string, string]|Stop ids = crmIds(guest, correlationId);
         if ids is Stop {
-            string|Stop|error opened = wait login;
-            if opened is string {
-                future<()> _ = start seawareLogout(opened, correlationId);
+            [SeawareSession, json]|Stop|error opened = wait early;
+            if opened is [SeawareSession, json] {
+                sessionRelease(opened[0], false, correlationId);
             }
             return ids;
         }
         [globalId, loyaltyId] = ids;
     }
     // Mule writes "<loyalty id>|<guest id>" to the client's comments - "|" for the other channels.
-    [string, string?] [clientId, problem] = check seawareClientWith(login, guest, loyaltyId + "|" + globalId,
+    [string, string?] [clientId, problem] = check seawareClientAfter(early, guest, loyaltyId + "|" + globalId,
             correlationId);
     if !crm {
         return core:clientOnlyAnswerOf(clientId);
@@ -181,6 +182,79 @@ isolated function seawareClientWith(future<string|Stop> login, map<json> guest, 
     [string, string?]|Stop result = seawareClientIn(token, guest, ids, correlationId);
     future<()> _ = start seawareLogout(token, correlationId);
     return result;
+}
+
+# A Seaware session for one guest (a kept one, else a new one) and the guest's client search in it.
+#
+# + guest - The guest as sent
+# + correlationId - The request's correlation id
+# + return - [the session, Seaware's answer to the client search (`()` when the guest has nothing to
+# search by)]
+isolated function sessionAndSearch(map<json> & readonly guest, string correlationId) returns [SeawareSession, json]|Stop {
+    SeawareSession session = check sessionAcquire(correlationId);
+    if !core:hasClientSearch(guest) {
+        log:printWarn("Seaware client search skipped: the guest has no name, e-mail address or phone",
+                correlationId = correlationId);
+        return [session, ()];
+    }
+    json|Stop clients = seawareIn(session.token, core:clientsQueryOf(guest), "client search", correlationId);
+    if clients is Stop {
+        sessionRelease(session, false, correlationId);
+        return clients;
+    }
+    return [session, clients];
+}
+
+# The rest of the guest's Seaware client work once the CRM ids are known: update or create, in the
+# session opened for the search; the session is kept for the next request when everything went well.
+#
+# + early - The session and client search started before the CRM ids
+# + guest - The guest as sent
+# + ids - Loyalty id and global guest id, for the client comments
+# + correlationId - The request's correlation id
+# + return - [client id, Seaware's problem if any]
+isolated function seawareClientAfter(future<[SeawareSession, json]|Stop> early, map<json> guest, string ids,
+        string correlationId) returns [string, string?]|Stop {
+    [SeawareSession, json]|Stop|error got = wait early;
+    if got is Stop {
+        return got;
+    }
+    if got is error {
+        return stopWith(commons:BAD_GATEWAY, "Seaware did not open a session", correlationId);
+    }
+    [SeawareSession, json] [session, clients] = got;
+    [string, string?]|Stop result = seawareClientPlan(session.token, guest, clients, ids, correlationId);
+    sessionRelease(session, result !is Stop, correlationId);
+    return result;
+}
+
+# Puts a session back for the next request, or closes it (in the background) when it should not be
+# used again or no place is free.
+#
+# + session - The session
+# + healthy - Whether its last requests went well
+# + correlationId - The request's correlation id
+isolated function sessionRelease(SeawareSession session, boolean healthy, string correlationId) {
+    if !healthy || seawareSessionPoolSize <= 0 || !sessionKeep(session) {
+        future<()> _ = start seawareLogout(session.token, correlationId);
+    }
+}
+
+isolated function seawareClientPlan(string token, map<json> guest, json clients, string ids, string correlationId)
+        returns [string, string?]|Stop {
+    core:ClientPlan plan = core:clientPlanOf(guest, clients, ids);
+    if plan.kind == "none" {
+        return [plan.updateClient, ()];
+    }
+    json answer = check seawareIn(token, {"query": plan.query}, "client " + plan.kind, correlationId);
+    [string, string] [updated, created] = core:clientKeysOf(answer);
+    string? problem = core:firstSeawareError(answer);
+    if problem is () {
+        json message = core:fieldOf(core:listOf(core:fieldOf(answer, "data", "clientCreate", "errors")).length() > 0
+                ? core:listOf(core:fieldOf(answer, "data", "clientCreate", "errors"))[0] : (), "message");
+        problem = message is string ? message : ();
+    }
+    return [core:clientIdOf(updated, created), problem];
 }
 
 isolated function seawareClientIn(string token, map<json> guest, string ids, string correlationId)

@@ -61,10 +61,11 @@ function errorRecordOfAFailedCall() returns error? {
     http:Response missing = check c->get("/nowhere");
     test:assertEquals(missing.statusCode, 404);
     runtime:sleep(0.5);
+    // bodies are only read for a real Kafka sink with error records switched on (incident 2026-11-16:
+    // reading them otherwise emptied forwarded requests); this sink is neither, so nothing is recorded
+    // and the caller's body reached the operation untouched (asserted above via "echoed")
     json[] seen = recording.records();
-    test:assertEquals(seen.length(), 1, "only the failed call is recorded; 200 and 404 are not: " + seen.toJsonString());
-    test:assertEquals(seen[0].toJsonString(), ({correlationId: "c-77", request: {"guest": "x"},
-                                errorBody: {message: "backend refused", echoed: {"guest": "x"}}}).toJsonString());
+    test:assertEquals(seen.length(), 0, "no records for a sink that is not a Kafka sink with records on: " + seen.toJsonString());
 }
 
 @test:Config

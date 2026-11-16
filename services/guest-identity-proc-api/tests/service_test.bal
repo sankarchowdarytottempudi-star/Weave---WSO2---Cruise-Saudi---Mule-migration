@@ -332,7 +332,8 @@ function editProfileAsTheOldApp() returns error? {
     Answer withPicture = check call("PUT", "/guest-profiles/1001", {firstName: "Trial", lastName: "Guest",
         email: "trial.guest@example.invalid", profileImage: "aGVsbG8="});
     test:assertTrue(withPicture.status == 200 || withPicture.status == 400, withPicture.body);
-    test:assertTrue(countOf("crm write") >= 2);
+    test:assertEquals(countOf("crm write"), 1);
+    test:assertEquals(countOf("photo upload"), 1, "the picture goes to the CRM contact");
     test:assertEquals((check call("PUT", "/guest-profiles/1001", [1, 2])).status, 400);
 }
 

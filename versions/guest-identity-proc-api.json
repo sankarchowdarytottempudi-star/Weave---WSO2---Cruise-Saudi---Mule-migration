@@ -1,7 +1,21 @@
 {
  "api": "guest-identity-proc-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:16Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:79dea5426ac42a7e261a3fb1f71489d2c98483b3a1e19fca720fb24050004e43",
+ "version": 2,
+ "at": "2026-11-16T11:34:40Z",
+ "summary": {
+  "files": 7,
+  "changed": [
+   "framework/integration-commons/audit.bal",
+   "framework/integration-commons/routed.bal",
+   "framework/integration-commons/tests/kafka_errors_test.bal",
+   "framework/integration-commons/tests/routed_test.bal",
+   "services/guest-identity-proc-api/downstream.bal",
+   "services/guest-identity-proc-api/identity.bal",
+   "services/guest-identity-proc-api/tests/service_test.bal"
+  ]
+ }
 }

@@ -519,6 +519,21 @@ isolated function sessionKeep(SeawareSession session) returns boolean {
     }
 }
 
+# A session for one request: a kept usable one, else a new one (too-old kept ones are closed).
+#
+# + correlationId - The request's correlation id
+# + return - The session
+isolated function sessionAcquire(string correlationId) returns SeawareSession|Stop {
+    if seawareSessionPoolSize <= 0 {
+        return sessionOpen(correlationId);
+    }
+    [SeawareSession?, readonly & string[]] [kept, outdated] = sessionTake();
+    foreach string token in outdated {
+        future<()> _ = start seawareLogout(token, correlationId);
+    }
+    return kept ?: sessionOpen(correlationId);
+}
+
 isolated function sessionOpen(string correlationId) returns SeawareSession|Stop =>
     {token: check seawareLogin(correlationId), openedAt: time:monotonicNow()};
 
