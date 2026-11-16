@@ -7,6 +7,7 @@ function envEndingsAreIgnored() {
     test:assertEquals(normalisePath("person-profile-proc-api-dev/v1?x=1"), "/person-profile-proc-api/v1?x=1");
     test:assertEquals(normalisePath("/plain/v1"), "/plain/v1");
     test:assertEquals(prefixOf("/check-in-proc-api-uat/v1/"), "/check-in-proc-api/v1");
+    test:assertEquals(prefixOf("\"/check-in-proc-api/v1\""), "/check-in-proc-api/v1");   // quoted settings key
 }
 
 @test:Config {}

@@ -3,11 +3,15 @@
  "by": "deploy_one.sh on the server",
  "what": "deployed",
  "results": {},
- "image": "sha256:10db5723cc273f7ff375ceeb6fa0296ee7bf092df0480445bec7e6b2536bd968",
- "version": 2,
- "at": "2026-11-16T11:35:09Z",
+ "image": "sha256:b2fdadde72ead300873c4b5362f380160f9f78cb358233982905ea3793805083",
+ "version": 3,
+ "at": "2026-11-16T11:58:09Z",
  "summary": {
-  "files": 0,
-  "changed": []
+  "files": 3,
+  "changed": [
+   "deploy/settings-templates/seaware-sys-api.toml",
+   "framework/integration-commons/routed.bal",
+   "framework/integration-commons/tests/routed_test.bal"
+  ]
  }
 }

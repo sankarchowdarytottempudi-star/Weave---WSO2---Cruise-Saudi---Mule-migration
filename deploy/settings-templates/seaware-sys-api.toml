@@ -12,6 +12,7 @@ tlsValidation = "<kept on the server>"
 timeoutSeconds = "<kept on the server>"
 
 [aroya.seaware_sys_api.retryPolicy]
+retryOn = "<kept on the server>"
 count = "<kept on the server>"
 intervalSeconds = "<kept on the server>"
 

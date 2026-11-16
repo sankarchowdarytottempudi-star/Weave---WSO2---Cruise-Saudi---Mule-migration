@@ -26,7 +26,12 @@ public isolated function normalisePath(string path) returns string {
 }
 
 isolated function prefixOf(string key) returns string {
-    string p = normalisePath(key.trim());
+    // a settings key with "/" must be quoted in the file, and Ballerina keeps the quotes in the key
+    string k = key.trim();
+    if k.length() >= 2 && k.startsWith("\"") && k.endsWith("\"") {
+        k = k.substring(1, k.length() - 1);
+    }
+    string p = normalisePath(k);
     while p.length() > 1 && p.endsWith("/") {
         p = p.substring(0, p.length() - 1);
     }
