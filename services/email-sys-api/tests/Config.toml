@@ -2,6 +2,17 @@
 [aroya.email_sys_api]
 env = "test"
 httpPort = 18963
+codeMailVia = "api"
 
 [aroya.email_sys_api.stateRedis]
 enabled = false
+
+[aroya.email_sys_api.smtpZepto]
+host = "smtp.example.invalid"
+user = "emailapikey"
+password = "stand-in-send-mail-token"
+fromAddress = "noreply@example.invalid"
+
+[aroya.email_sys_api.zeptoApi]
+url = "http://127.0.0.2:18964"
+timeoutSeconds = 3

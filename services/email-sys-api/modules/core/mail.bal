@@ -169,3 +169,38 @@ public isolated function shouldBeHttps(string url) returns boolean {
     return !(host == "localhost" || host == "127.0.0.1" || host.endsWith(".svc") || host.endsWith(".local")
         || !host.includes("."));
 }
+
+
+# The body of ZeptoMail's HTTPS send API (POST /v1.1/email) for one message: the same sender,
+# recipients, subject, HTML body and attachment that the mail server would get.
+#
+# + fromAddress - Sender address (smtpZepto.fromAddress)
+# + mail - The message
+# + return - Request body
+public isolated function zeptoApiBody(string fromAddress, Mail mail) returns json {
+    json[] to = from string a in mail.to select {"email_address": {"address": a}};
+    map<json> body = {"from": {"address": fromAddress}, "to": to, "subject": mail.subject, "htmlbody": mail.body};
+    if mail.cc.length() > 0 {
+        body["cc"] = from string a in mail.cc select {"email_address": {"address": a}};
+    }
+    Attachment? attachment = mail.attachment;
+    if attachment is Attachment {
+        body["attachments"] = [{"content": attachment.contentBase64, "mime_type": attachment.contentType,
+            "name": attachment.name}];
+    }
+    return body;
+}
+
+# The provider's error code from a ZeptoMail error answer, never an address.
+#
+# + answer - The answer body
+# + return - For example `TM_3201` or "" when there is none
+public isolated function zeptoErrorCode(json answer) returns string {
+    json err = answer is map<json> ? answer["error"] : ();
+    json code = err is map<json> ? err["code"] : ();
+    json details = err is map<json> ? err["details"] : ();
+    json first = details is json[] && details.length() > 0 ? details[0] : ();
+    json sub = first is map<json> ? first["code"] : ();
+    string out = code is () ? "" : code.toString();
+    return sub is () ? out : out + "/" + sub.toString();
+}

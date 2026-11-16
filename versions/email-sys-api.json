@@ -1,7 +1,22 @@
 {
  "api": "email-sys-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:16Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:968318180c09c593e5a26e8ae76f21b7f9e542d70947838c52fb377e4cf25b4d",
+ "version": 2,
+ "at": "2026-11-16T12:48:46Z",
+ "summary": {
+  "files": 8,
+  "changed": [
+   "deploy/settings-templates/email-sys-api.toml",
+   "services/email-sys-api/config.bal",
+   "services/email-sys-api/e2e/standin.py",
+   "services/email-sys-api/e2e/trial.json",
+   "services/email-sys-api/mail.bal",
+   "services/email-sys-api/modules/core/mail.bal",
+   "services/email-sys-api/tests/Config.toml",
+   "services/email-sys-api/tests/zepto_api_test.bal"
+  ]
+ }
 }

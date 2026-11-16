@@ -112,11 +112,69 @@ isolated function sendExchange(json payload, string correlationId) returns Outco
     if mail is string {
         return notSent(commons:BAD_REQUEST, mail);
     }
+    if codeMailVia == "api" {
+        http:Client? api = zeptoApiClient;
+        if api is () {
+            return notSet(exchangeMissing());
+        }
+        return viaZeptoApi(api, mail, correlationId);
+    }
     email:SmtpClient? server = zeptoServer;
     if server is () {
         return notSet(exchangeMissing());
     }
     return handOver(server, smtpZepto, mail);
+}
+
+// ---------------------------------------------------------------------------------------------
+// ZeptoMail's HTTPS send API (same account as Email_SMTP_Zepto): no mail-server connection and
+// login per message. The answer to the caller is the same as with the mail server.
+// ---------------------------------------------------------------------------------------------
+
+final http:Client? zeptoApiClient = check zeptoApiOf();
+
+isolated function zeptoApiUrl() returns string {
+    if zeptoApi.url.trim() != "" {
+        return zeptoApi.url.trim();
+    }
+    string host = smtpZepto.host.trim();
+    if host == "" {
+        return "";
+    }
+    return "https://" + (host.startsWith("smtp.") ? "api." + host.substring(5) : host);
+}
+
+isolated function zeptoApiOf() returns http:Client|error? {
+    if codeMailVia != "api" || exchangeMissing().length() > 0 || zeptoApiUrl() == "" {
+        return ();
+    }
+    return check new (zeptoApiUrl(), {timeout: zeptoApi.timeoutSeconds, httpVersion: http:HTTP_1_1});
+}
+
+isolated function viaZeptoApi(http:Client api, core:Mail mail, string correlationId) returns Outcome {
+    int recipients = mail.to.length() + mail.cc.length();
+    http:Request request = new;
+    request.setJsonPayload(core:zeptoApiBody(smtpZepto.fromAddress, mail));
+    request.setHeader("Authorization", "Zoho-enczapikey " + smtpZepto.password);
+    request.setHeader("Accept", "application/json");
+    http:Response|http:ClientError reply = api->post("/v1.1/email", request);
+    if reply is http:ClientError {
+        if reply is http:IdleTimeoutError {
+            return notSent(commons:TIMEOUT, "The mail server did not answer in time");
+        }
+        return notSent(commons:BAD_GATEWAY, "The mail server did not accept the message", reply.message());
+    }
+    json|http:ClientError answer = reply.getJsonPayload();
+    json body = answer is json ? answer : ();
+    if reply.statusCode >= 200 && reply.statusCode < 300 {
+        json requestId = body is map<json> ? body["request_id"] : ();
+        log:printInfo("Message taken by the mail provider", correlationId = correlationId, via = "api",
+                status = reply.statusCode, requestId = requestId is () ? "" : requestId.toString());
+        return {sent: true, recipients};
+    }
+    string code = core:zeptoErrorCode(body);
+    return notSent(commons:BAD_GATEWAY, "The mail server did not accept the message",
+            "provider status " + reply.statusCode.toString() + (code == "" ? "" : ", code " + code));
 }
 
 # Mule: Send_EmailSub_Flow_Ship.

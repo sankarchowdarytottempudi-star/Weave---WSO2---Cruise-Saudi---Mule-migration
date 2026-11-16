@@ -34,3 +34,7 @@ auditEnabled = "<kept on the server>"
 enabled = "<kept on the server>"
 host = "<kept on the server>"
 port = "<kept on the server>"
+
+[aroya.email_sys_api.zeptoApi]
+url = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"

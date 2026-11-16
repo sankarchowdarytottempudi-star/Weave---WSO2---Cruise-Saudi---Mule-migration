@@ -68,6 +68,22 @@ public type SmtpSettings record {|
 
 # Mule: Email_SMTP_Zepto, used when the caller sends the header `provider: exchange`.
 configurable SmtpSettings smtpZepto = {};
+
+# How messages for `provider: exchange` (one-time codes, welcome and summary e-mails) are handed to
+# Zepto: "api" = ZeptoMail's HTTPS send API with the same account (the SMTP password is ZeptoMail's
+# Send Mail token), "smtp" = the mail server as in the old application. The message is the same.
+configurable string codeMailVia = "smtp";
+
+# ZeptoMail's HTTPS send API.
+#
+# + url - API address; empty = taken from smtpZepto.host ("smtp." becomes "api."), over https
+# + timeoutSeconds - Time the provider gets to take the message
+public type ZeptoApiSettings record {|
+    string url = "";
+    decimal timeoutSeconds = 15;
+|};
+
+configurable ZeptoApiSettings zeptoApi = {};
 # Mule: Email_SMTP, used on a ship.
 configurable SmtpSettings smtp = {};
 

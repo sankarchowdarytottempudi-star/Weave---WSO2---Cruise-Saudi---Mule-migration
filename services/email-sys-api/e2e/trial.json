@@ -1,6 +1,60 @@
 {
   "settings": {
-    "stateRedis.enabled": false
+    "stateRedis.enabled": false,
+    "codeMailVia": "api"
   },
-  "about": "Redis is not in the closed room: the trial keeps the object-store state in memory."
+  "about": "Redis is not in the closed room: the trial keeps the object-store state in memory. Code mail through a stand-in ZeptoMail API.",
+  "cases": [
+    {
+      "op": "POST /send-email-notification",
+      "name": "code mail via Zepto API",
+      "headers": {
+        "provider": "exchange"
+      },
+      "body": {
+        "to": "guest@example.invalid",
+        "subject": "Your code",
+        "body": "<p>123456</p>"
+      },
+      "expectStatus": 200,
+      "expectBodyHas": [
+        "Email sent."
+      ],
+      "expectTags": [
+        "zepto send"
+      ]
+    },
+    {
+      "op": "POST /send-email-notification",
+      "name": "Zepto refuses",
+      "scenario": "zepto refuses",
+      "headers": {
+        "provider": "exchange"
+      },
+      "body": {
+        "to": "guest@example.invalid",
+        "subject": "Your code",
+        "body": "x"
+      },
+      "expectStatus": 502,
+      "expectBodyHas": [
+        "The mail server did not accept the message"
+      ]
+    },
+    {
+      "op": "POST /send-email-notification",
+      "name": "missing subject",
+      "headers": {
+        "provider": "exchange"
+      },
+      "body": {
+        "to": "guest@example.invalid",
+        "body": "x"
+      },
+      "expectStatus": 400,
+      "expectNoCalls": [
+        "zeptoApi"
+      ]
+    }
+  ]
 }
