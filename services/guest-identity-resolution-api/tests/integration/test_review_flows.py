@@ -41,7 +41,9 @@ def test_get_case_returns_db_projection_with_display_for_reviewers_only(client):
                        headers={**REVIEWER, "X-Reviewer-Roles": "AUDIT_REPORTING"}).json()
     assert "display" not in audit["incoming"] and "globalId" not in audit["candidates"][0]["identity"]
     admin = client.get(f"/v1/review-cases/{d['reviewCaseId']}", headers={**REVIEWER, "X-Reviewer-Roles": "CRM_ADMINISTRATOR"})
-    assert admin.status_code == 403
+    assert admin.status_code == 200 and "display" not in admin.json()["incoming"]
+    nobody = client.get(f"/v1/review-cases/{d['reviewCaseId']}", headers={**REVIEWER, "X-Reviewer-Roles": "OTHER"})
+    assert nobody.status_code == 403
     assert client.get(f"/v1/review-cases/{d['reviewCaseId']}", headers={"X-Reviewer-Id": "u"}).status_code == 422
     assert client.get("/v1/review-cases/RC-NONE", headers=REVIEWER).status_code == 404
 
@@ -156,3 +158,62 @@ def test_reverse_requires_supervisor_and_idempotency_key_reuse_conflicts(client)
                         json={"caseId": d["reviewCaseId"], "reviewerId": "CRMUSER-77", "action": "DEFER", "versionsShown": vs,
                               "idempotencyKey": "o1", "comment": "c", "followUpDate": "2026-12-01"})
     assert other.status_code == 403        # body reviewerId differs from the asserted reviewer
+
+
+
+def test_workbench_queue_history_assignment_comments(client):
+    _, d = four_field_case(client)
+    case_id = d["reviewCaseId"]
+    q = client.get("/v1/review-cases", headers=REVIEWER).json()
+    assert q["total"] == 1 and q["cases"][0]["caseId"] == case_id and q["cases"][0]["slaDueTime"]
+    assert q["cases"][0]["candidateCount"] == 1 and not q["cases"][0]["overdue"]
+    assert client.get("/v1/review-cases?kind=PAIR_REPAIR", headers=REVIEWER).json()["total"] == 0
+    assert client.get("/v1/review-cases?assignee=unassigned", headers=REVIEWER).json()["total"] == 1
+    # take it
+    t = client.post(f"/v1/review-cases/{case_id}/assignment", headers=REVIEWER,
+                    json={"assigneeId": "CRMUSER-77", "assignedBy": "CRMUSER-77"})
+    assert t.status_code == 200
+    assert client.get("/v1/review-cases?assignee=CRMUSER-77", headers=REVIEWER).json()["total"] == 1
+    # hand-over needs a supervisor; assignedBy must be the caller
+    assert client.post(f"/v1/review-cases/{case_id}/assignment", headers=REVIEWER,
+                       json={"assigneeId": "OTHER-1", "assignedBy": "CRMUSER-77"}).status_code == 403
+    assert client.post(f"/v1/review-cases/{case_id}/assignment", headers=SUPERVISOR,
+                       json={"assigneeId": "OTHER-1", "assignedBy": "someone-else"}).status_code == 403
+    assert client.post(f"/v1/review-cases/{case_id}/assignment", headers=SUPERVISOR,
+                       json={"assigneeId": "OTHER-1", "assignedBy": "CRMUSER-77"}).status_code == 200
+    # comments: stored encrypted, text only for reviewers
+    c = client.post(f"/v1/review-cases/{case_id}/comments", headers=REVIEWER,
+                    json={"authorId": "CRMUSER-77", "text": "Passport of Testfirst checked"})
+    assert c.status_code == 200
+    audit = {**REVIEWER, "X-Reviewer-Roles": "AUDIT_REPORTING"}
+    assert client.post(f"/v1/review-cases/{case_id}/comments", headers=audit,
+                       json={"authorId": "CRMUSER-77", "text": "x"}).status_code == 403
+    full = client.get(f"/v1/review-cases/{case_id}", headers=REVIEWER).json()
+    assert full["comments"][0]["text"].startswith("Passport") and full["assignedTo"] == "OTHER-1"
+    assert "text" not in client.get(f"/v1/review-cases/{case_id}", headers=audit).json()["comments"][0]
+    # decision events, then history without personal details
+    case, vs = versions(client, case_id)
+    prep = prepare(client, case_id, "CONFIRM_DIFFERENT_PEOPLE", vs).json()
+    client.post(f"/v1/review-decisions/{prep['reviewDecisionId']}/commit", json={})
+    h = client.get(f"/v1/review-cases/{case_id}/history", headers=audit)
+    assert h.status_code == 200
+    types = [e["type"] for e in h.json()["history"]]
+    assert types == ["CREATED", "ASSIGNED", "ASSIGNED", "COMMENTED", "DECISION_PREPARED", "COMMITTED"]
+    blob = h.text.lower()
+    for pii in ("testfirst", "testlast", "passport", "1985", "555", "gir-synthetic"):
+        assert pii not in blob
+    assert client.get("/v1/review-cases/RC-NONE/history", headers=REVIEWER).status_code == 404
+    # closed cases leave the default queue and cannot be assigned
+    assert client.get("/v1/review-cases", headers=REVIEWER).json()["total"] == 0
+    assert client.get("/v1/review-cases?status=REVIEW_COMMITTED", headers=REVIEWER).json()["total"] == 1
+    assert client.post(f"/v1/review-cases/{case_id}/assignment", headers=REVIEWER,
+                       json={"assigneeId": "CRMUSER-77", "assignedBy": "CRMUSER-77"}).status_code == 409
+
+
+def test_queue_orders_high_priority_first(client):
+    four_field_case(client)                                           # NORMAL
+    established(client, guest="RQ1", phone="+1 202 555 0141", email="q1@gir-synthetic.invalid")
+    established(client, guest="RQ2", phone="+1 202 555 0142", email="q2@gir-synthetic.invalid")
+    evaluate(client, event(guest="RQ3", phone="+1 202 555 0141", email="q2@gir-synthetic.invalid"))   # HIGH
+    cases = client.get("/v1/review-cases", headers=REVIEWER).json()["cases"]
+    assert [c["priority"] for c in cases] == ["HIGH", "NORMAL"]

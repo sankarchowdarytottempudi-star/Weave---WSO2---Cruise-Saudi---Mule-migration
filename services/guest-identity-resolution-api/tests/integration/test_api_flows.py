@@ -16,7 +16,7 @@ def test_auth_is_required_and_fails_closed(client, make_client):
 def test_health_and_metrics(client):
     assert client.get("/health/live").json()["status"] == "UP"
     ready = client.get("/health/ready")
-    assert ready.status_code == 200 and ready.json()["schema"] == "0003_alternate_phone"
+    assert ready.status_code == 200 and ready.json()["schema"] == "0004_review_workbench"
     assert "gir_decisions_total" in client.get("/metrics").text
 
 
@@ -140,3 +140,10 @@ def test_loyalty_under_two_global_ids_makes_both_conflict(client, db):
     assert client.post("/v1/bootstrap/batches", json=batch).status_code == 200
     with db.connect() as c:
         assert {r[0] for r in c.execute(text("SELECT pair_integrity FROM identity_projection"))} == {"CONFLICT"}
+
+
+def test_rate_limit_returns_429_and_exempts_health(make_client):
+    c = make_client(rate_limit_per_minute=3)
+    codes = [c.get("/v1/guest-identities/decisions/IDDEC-X").status_code for _ in range(5)]
+    assert codes[:3] == [404, 404, 404] and codes[3:] == [429, 429]
+    assert c.get("/health/live").status_code == 200

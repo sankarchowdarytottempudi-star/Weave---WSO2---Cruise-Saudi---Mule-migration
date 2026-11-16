@@ -25,7 +25,8 @@ from app.services.rule_engine import decide
 
 REVIEWER, SUPERVISOR = "IDENTITY_REVIEWER", "IDENTITY_SUPERVISOR"
 CRM_ADMIN, AUDIT = "CRM_ADMINISTRATOR", "AUDIT_REPORTING"
-VIEW_ROLES = {REVIEWER, SUPERVISOR, AUDIT}
+VIEW_ROLES = {REVIEWER, SUPERVISOR, AUDIT, CRM_ADMIN}
+COMMENT_ROLES = {REVIEWER, SUPERVISOR, CRM_ADMIN}
 DISPLAY_ROLES = {REVIEWER, SUPERVISOR}          # audit sees evidence and history, not protected values
 DECIDE_ROLES = {REVIEWER, SUPERVISOR}
 COMPARE_FIELDS = ["firstName", "lastName", "dateOfBirth", "phone", "alternatePhone", "email", "guestIdentityId"]
@@ -63,6 +64,8 @@ class ReviewService:
                "followUpDate": case["follow_up_date"].isoformat() if case["follow_up_date"] else None,
                "slaBusinessDays": self.s.sla_four_field_days if case["kind"] == "FOUR_FIELD_REVIEW"
                else self.s.sla_conflict_days, "escalateTo": SUPERVISOR,
+               "slaDueTime": _iso(case["sla_due_time"]), "assignedTo": case["assigned_to"],
+               "comments": self._comments(conn, case_id, show),
                "createdTime": _iso(case["created_time"]),
                "incoming": self._guest_view(incoming, show),
                "provisionalIdentity": self._identity_view(prov, show), "candidates": []}
@@ -174,6 +177,9 @@ class ReviewService:
             crm_records_to_check=[{"crmGuestRecordId": g, "expectedModifiedTime": _iso(current[g]["crm_modified_time"])}
                                   for g in affected],
             crm_patch=patch, state=ReviewState.REVIEW_DECISION_PREPARED.value)
+        review_cases.add_event(conn, req.caseId, "DECISION_PREPARED", req.reviewerId,
+                               {"reviewDecisionId": rd_id, "action": action.value,
+                                "identityStatus": patch["identityStatus"]})
         review_cases.update_case(conn, req.caseId, state=ReviewState.REVIEW_DECISION_PREPARED.value,
                                  assigned_to=req.reviewerId,
                                  follow_up_date=req.followUpDate if action is ReviewerAction.DEFER else case["follow_up_date"])
@@ -212,6 +218,8 @@ class ReviewService:
                                  last_result=ReviewState.REVIEW_DATA_CHANGED.value,
                                  reason_codes=list(dict.fromkeys(list(case["reason_codes"]) +
                                                                  [str(Reason.CRM_FRESHNESS_CHECK_FAILED)])))
+        review_cases.add_event(conn, case["case_id"], "DATA_CHANGED", None,
+                               {"reviewDecisionId": rd_id, "reasonCodes": [str(Reason.CRM_FRESHNESS_CHECK_FAILED)]})
         return {"reviewDecisionId": rd_id, "caseId": case["case_id"], "state": ReviewState.REVIEW_DATA_CHANGED.value,
                 "reasonCodes": [str(Reason.CRM_FRESHNESS_CHECK_FAILED)]}
 
@@ -264,6 +272,9 @@ class ReviewService:
         case_state = ReviewState.REVIEW_OPEN if action is ReviewerAction.DEFER else ReviewState.REVIEW_COMMITTED
         check_review(case["state"], case_state)
         review_cases.update_case(conn, case["case_id"], state=case_state.value, last_result=action.value)
+        review_cases.add_event(conn, case["case_id"], "COMMITTED", rd["reviewer_id"],
+                               {"reviewDecisionId": rd_id, "action": action.value, "caseStatus": case_state.value,
+                                "reasonCodes": [str(Reason.REVIEW_DECISION_COMMITTED)]})
         return self._prepared_view(review_cases.get_decision(conn, rd_id))
 
     def fail(self, conn: Connection, rd_id: str, retryable: bool, error_code: str) -> dict:
@@ -277,4 +288,71 @@ class ReviewService:
         check_review(case["state"], case_state)
         review_cases.update_decision(conn, rd_id, state=state.value, error_code=error_code)
         review_cases.update_case(conn, case["case_id"], state=case_state.value, last_result=state.value)
+        review_cases.add_event(conn, case["case_id"], "CRM_UPDATE_PENDING" if retryable else "FAILED", None,
+                               {"reviewDecisionId": rd_id, "errorCode": error_code, "retryable": retryable})
         return self._prepared_view(review_cases.get_decision(conn, rd_id))
+
+
+    # ------------------------------------------------------------------ Workbench support
+    def _comments(self, conn: Connection, case_id: str, show: bool) -> list:
+        out = []
+        for c in review_cases.comments(conn, case_id):
+            item = {"commentId": c["comment_id"], "authorId": c["author_id"], "createdTime": _iso(c["created_time"])}
+            if show:
+                item["text"] = self.crypto.decrypt(c["text_enc"])
+            out.append(item)
+        return out
+
+    def list_cases(self, conn: Connection, roles: set, kind=None, status=None, assignee=None,
+                   limit: int = 50, offset: int = 0) -> dict:
+        if not roles & VIEW_ROLES:
+            raise forbidden()
+        from datetime import datetime, timezone
+        rows, total = review_cases.queue(conn, kind, status, assignee, limit, offset)
+        t = datetime.now(timezone.utc)
+        cases = [{"caseId": r["case_id"], "kind": r["kind"], "priority": r["priority"], "caseStatus": r["state"],
+                  "assignedTo": r["assigned_to"], "crmGuestRecordId": r["crm_guest_record_id"],
+                  "candidateCount": r["candidate_count"], "createdTime": _iso(r["created_time"]),
+                  "ageHours": round((t - r["created_time"]).total_seconds() / 3600, 1),
+                  "slaDueTime": _iso(r["sla_due_time"]),
+                  "overdue": bool(r["sla_due_time"] and r["sla_due_time"] < t),
+                  "followUpDate": r["follow_up_date"].isoformat() if r["follow_up_date"] else None}
+                 for r in rows]
+        return {"cases": cases, "total": total, "limit": limit, "offset": offset}
+
+    def history(self, conn: Connection, case_id: str, roles: set) -> dict:
+        if not roles & VIEW_ROLES:
+            raise forbidden()
+        if not review_cases.get(conn, case_id):
+            raise not_found("Review case")
+        return {"caseId": case_id, "history": [
+            {"eventId": e["event_id"], "type": e["event_type"], "actorId": e["actor_id"],
+             "time": _iso(e["created_time"]), "details": e["details"]} for e in review_cases.history(conn, case_id)]}
+
+    def assign(self, conn: Connection, case_id: str, assignee_id: str, assigned_by: str, roles: set) -> dict:
+        if not roles & DECIDE_ROLES:
+            raise forbidden()
+        if assignee_id != assigned_by and SUPERVISOR not in roles:
+            raise forbidden("Handing a case to someone else requires the Identity Supervisor role.")
+        lock(conn, "case:" + case_id)
+        case = review_cases.get(conn, case_id, for_update=True)
+        if not case:
+            raise not_found("Review case")
+        if case["state"] == ReviewState.REVIEW_COMMITTED.value:
+            raise invalid_state("A closed case cannot be assigned.")
+        review_cases.update_case(conn, case_id, assigned_to=assignee_id)
+        review_cases.add_event(conn, case_id, "ASSIGNED", assigned_by,
+                               {"from": case["assigned_to"], "to": assignee_id,
+                                "handover": assignee_id != assigned_by})
+        return {"caseId": case_id, "assignedTo": assignee_id, "assignedBy": assigned_by}
+
+    def comment(self, conn: Connection, case_id: str, author_id: str, text: str, roles: set) -> dict:
+        if not roles & COMMENT_ROLES:
+            raise forbidden()
+        if not review_cases.get(conn, case_id):
+            raise not_found("Review case")
+        import uuid as _uuid
+        cid = "CM-" + _uuid.uuid4().hex[:16].upper()
+        review_cases.add_comment(conn, cid, case_id, author_id, self.crypto.encrypt(text))
+        review_cases.add_event(conn, case_id, "COMMENTED", author_id, {"commentId": cid, "length": len(text)})
+        return {"commentId": cid, "caseId": case_id, "authorId": author_id}

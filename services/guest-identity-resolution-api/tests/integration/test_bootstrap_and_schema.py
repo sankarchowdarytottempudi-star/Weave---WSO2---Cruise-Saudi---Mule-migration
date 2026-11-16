@@ -120,4 +120,4 @@ def test_migration_downgrade_upgrade_and_app_role_grants(db):
             "SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee='gir_app_it' "
             "AND table_schema=:s AND table_name='guest_match_index'"), {"s": SCHEMA})}
         assert privs == {"SELECT", "INSERT", "UPDATE", "DELETE"}
-        assert c.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0003_alternate_phone"
+        assert c.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0004_review_workbench"

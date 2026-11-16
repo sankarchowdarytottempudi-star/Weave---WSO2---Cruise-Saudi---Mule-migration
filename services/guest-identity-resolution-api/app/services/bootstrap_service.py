@@ -9,7 +9,9 @@ import time
 from collections import Counter
 from typing import Optional
 
-from sqlalchemy import func, select
+import uuid
+
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Connection
 
@@ -18,7 +20,9 @@ from app.db.crypto import Crypto
 from app.db.models import bootstrap_batch as bb, guest_match_index as g, identity_projection as ip
 from app.db.session import lock
 from app.domain.errors import idempotency_conflict
-from app.repositories import guest_projection, identity_projection, statistics
+from app.domain.enums import IdentityLifecycle, PairIntegrity
+from app.repositories import guest_projection, statistics
+from app.services.pair_allocator import is_reusable_pair
 from app.repositories.guest_projection import now
 from app.schemas.bootstrap import BootstrapBatch, BootstrapRecord, DryRunRequest
 from app.services import candidate_retrieval
@@ -32,57 +36,130 @@ class BootstrapService:
 
     # ------------------------------------------------------------------ load
     def load(self, conn: Connection, batch: BootstrapBatch) -> dict:
+        """Set-based: a handful of statements per batch (not per record). Batches are serialized by
+        an advisory lock so identity creation never races between concurrent batches."""
         started = time.monotonic()
         h = hashlib.sha256(json.dumps(batch.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
-        lock(conn, "bootstrap:" + batch.batchId)
+        lock(conn, "bootstrap")
         done = conn.execute(select(bb).where(bb.c.batch_id == batch.batchId)).mappings().first()
         if done:
             if done["payload_hash"] != h:
                 raise idempotency_conflict()
             return {"batchId": batch.batchId, "replayed": True, "received": done["received"], **done["counts"]}
         counts: Counter = Counter()
-        phones, emails = set(), set()
+        # last snapshot wins inside one batch
+        recs = {}
         for rec in batch.records:
-            outcome = self._load_one(conn, rec, phones, emails)
-            for k in outcome:
-                counts[k] += 1
-        for key in phones:
-            statistics.refresh(conn, "PHONE", key, self.s.over_shared_phone_threshold, self.s.over_shared_threshold_version)
-        for key in emails:
-            statistics.refresh(conn, "EMAIL", key, self.s.over_shared_email_threshold, self.s.over_shared_threshold_version)
-        result = dict(sorted(counts.items()))
+            prev = recs.get(rec.crmGuestRecordId)
+            if prev is None or rec.crmModifiedTime >= prev.crmModifiedTime:
+                recs[rec.crmGuestRecordId] = rec
+        counts["duplicateInBatch"] = len(batch.records) - len(recs)
+        ids = list(recs)
+        current = {r["crm_guest_record_id"]: r for r in conn.execute(
+            select(g.c.crm_guest_record_id, g.c.crm_modified_time, g.c.identity_id, g.c.crm_identity_record_id)
+            .where(g.c.crm_guest_record_id.in_(ids))).mappings()}
+        fresh = []
+        for gid, rec in recs.items():
+            cur = current.get(gid)
+            if cur and cur["crm_modified_time"] > rec.crmModifiedTime:
+                counts["staleSkipped"] += 1
+            else:
+                fresh.append(rec)
+        identity_of = self._resolve_identities(conn, fresh, counts)
+        rows, phones, emails = [], set(), set()
+        for rec in fresh:
+            norm = normalize_identity(rec.firstName, rec.lastName, rec.dateOfBirth, rec.phone, rec.email,
+                                      rec.countryCode, self.s, citizenship=rec.citizenshipCode, alt_phone=rec.alternatePhone)
+            direct = is_direct(rec.sourceCode, rec.agencyName or rec.agencyCode, rec.sourceSystem, self.s)
+            counts["directScope" if direct else "excludedNonDirect"] += 1
+            if not rec.active:
+                counts["inactive"] += 1
+            cur = current.get(rec.crmGuestRecordId)
+            ident, crm_ident = identity_of.get(rec.crmGuestRecordId) or (
+                (cur["identity_id"], cur["crm_identity_record_id"]) if cur else (None, None))
+            counts["linkedToIdentity" if ident else "pendingIdentity"] += 1
+            rows.append(guest_projection.row_values(self.crypto, _Snapshot(rec), norm, direct, ident, crm_ident))
+            phones |= norm.high_phones()
+            if norm.email.key:
+                emails.add(norm.email.key)
+        for i in range(0, len(rows), 1000):
+            guest_projection.upsert_many(conn, rows[i:i + 1000])
+        counts["indexed"] = len(rows)
+        statistics.refresh_many(conn, "PHONE", phones, self.s.over_shared_phone_threshold, self.s.over_shared_threshold_version)
+        statistics.refresh_many(conn, "EMAIL", emails, self.s.over_shared_email_threshold, self.s.over_shared_threshold_version)
+        result = {k: v for k, v in sorted(counts.items()) if v}
         ms = int((time.monotonic() - started) * 1000)
         conn.execute(bb.insert().values(batch_id=batch.batchId, payload_hash=h, received=len(batch.records),
                                         counts=result, duration_ms=ms, created_time=now()))
         return {"batchId": batch.batchId, "replayed": False, "received": len(batch.records), "durationMs": ms, **result}
 
-    def _load_one(self, conn: Connection, rec: BootstrapRecord, phones: set, emails: set) -> list[str]:
-        out = []
-        current = guest_projection.get(conn, rec.crmGuestRecordId, for_update=True)
-        if current and current["crm_modified_time"] > rec.crmModifiedTime:
-            return ["staleSkipped"]
-        norm = normalize_identity(rec.firstName, rec.lastName, rec.dateOfBirth, rec.phone, rec.email,
-                                  rec.countryCode, self.s, citizenship=rec.citizenshipCode, alt_phone=rec.alternatePhone)
-        direct = is_direct(rec.sourceCode, rec.agencyName or rec.agencyCode, rec.sourceSystem, self.s)
-        out.append("directScope" if direct else "excludedNonDirect")
-        if not rec.active:
-            out.append("inactive")
-        identity_id, crm_identity = (current["identity_id"], current["crm_identity_record_id"]) if current else (None, None)
-        if rec.currentIdentityId or rec.currentGlobalId or rec.currentLoyaltyId:
-            crm_identity = rec.currentIdentityId or ("GID:" + rec.currentGlobalId if rec.currentGlobalId
-                                                     else "LID:" + rec.currentLoyaltyId)
-            identity_id = identity_projection.ensure_external(conn, self.crypto, crm_identity, rec.currentGlobalId,
-                                                              rec.currentLoyaltyId, self.s.active_rule_version)
-            out.append("linkedToIdentity")
-        else:
-            out.append("pendingIdentity")
-        ev = _Snapshot(rec)
-        guest_projection.upsert(conn, self.crypto, ev, norm, direct, identity_id=identity_id,
-                                crm_identity_record_id=crm_identity if identity_id else None)
-        out.append("indexed")
-        phones |= norm.high_phones()
-        if norm.email.key:
-            emails.add(norm.email.key)
+    def _resolve_identities(self, conn: Connection, recs: list, counts: Counter) -> dict:
+        """Existing CRM pairs -> identity_projection rows, keyed by the CRM identity (or Global ID).
+        Only complete, conflict-free pairs stay COMPLETE (16.1); one ID under two pairs -> both CONFLICT."""
+        wanted = {}
+        for rec in recs:
+            if rec.currentIdentityId or rec.currentGlobalId or rec.currentLoyaltyId:
+                key = rec.currentIdentityId or ("GID:" + rec.currentGlobalId if rec.currentGlobalId
+                                                else "LID:" + rec.currentLoyaltyId)
+                wanted.setdefault(key, []).append(rec)
+        if not wanted:
+            return {}
+        existing = {r["crm_identity_record_id"]: dict(r) for r in conn.execute(
+            select(ip.c.identity_id, ip.c.crm_identity_record_id, ip.c.global_id_hash, ip.c.loyalty_id_hash,
+                   ip.c.pair_integrity).where(ip.c.crm_identity_record_id.in_(list(wanted)))).mappings()}
+        h = self.crypto.keyed_hash
+        all_hashes = {x for rs in wanted.values() for r in rs for x in (h(r.currentGlobalId), h(r.currentLoyaltyId)) if x}
+        owner = {}
+        if all_hashes:
+            for r in conn.execute(select(ip.c.identity_id, ip.c.global_id_hash, ip.c.loyalty_id_hash)
+                                  .where((ip.c.global_id_hash.in_(all_hashes)) | (ip.c.loyalty_id_hash.in_(all_hashes)))).mappings():
+                for col in ("global_id_hash", "loyalty_id_hash"):
+                    if r[col]:
+                        owner[r[col]] = str(r["identity_id"])
+        conflicts, inserts, out = set(), [], {}
+        t = now()
+        for key, rs in wanted.items():
+            first = rs[0]
+            g_vals = {r.currentGlobalId for r in rs if r.currentGlobalId}
+            l_vals = {r.currentLoyaltyId for r in rs if r.currentLoyaltyId}
+            if key in existing:
+                ident = str(existing[key]["identity_id"])
+                e = existing[key]
+                if (e["global_id_hash"] and any(h(v) != e["global_id_hash"] for v in g_vals)) or \
+                   (e["loyalty_id_hash"] and any(h(v) != e["loyalty_id_hash"] for v in l_vals)):
+                    conflicts.add(ident)
+            else:
+                ident = str(uuid.uuid4())
+                gid = sorted(g_vals)[0] if g_vals else None
+                lid = sorted(l_vals)[0] if l_vals else None
+                integrity = PairIntegrity.COMPLETE if is_reusable_pair(gid, lid) else PairIntegrity.INCOMPLETE
+                gh, lh = h(gid), h(lid)
+                if len(g_vals) > 1 or len(l_vals) > 1:
+                    integrity = PairIntegrity.CONFLICT
+                for x in (gh, lh):
+                    if x and x in owner and owner[x] != ident:
+                        conflicts.add(owner[x])
+                        integrity = PairIntegrity.CONFLICT
+                if integrity is PairIntegrity.CONFLICT:
+                    gh = lh = None
+                else:
+                    for x in (gh, lh):
+                        if x:
+                            owner[x] = ident
+                inserts.append(dict(identity_id=ident, crm_identity_record_id=key, global_id_enc=self.crypto.encrypt(gid),
+                                    loyalty_id_enc=self.crypto.encrypt(lid), global_id_hash=gh, loyalty_id_hash=lh,
+                                    pair_integrity=integrity.value, lifecycle_status=IdentityLifecycle.ACTIVE.value,
+                                    committed=True, created_by_process="BASELINE", rule_version=self.s.active_rule_version,
+                                    created_time=t, modified_time=t))
+            for r in rs:
+                out[r.crmGuestRecordId] = (ident, key)
+        for i in range(0, len(inserts), 1000):
+            conn.execute(ip.insert(), inserts[i:i + 1000])
+        if conflicts:
+            conn.execute(update(ip).where(ip.c.identity_id.in_(list(conflicts)))
+                         .values(pair_integrity=PairIntegrity.CONFLICT.value, modified_time=t))
+        counts["identitiesCreated"] += len(inserts)
+        counts["identitiesMarkedConflict"] += len(conflicts)
         return out
 
     # ------------------------------------------------------------------ status

@@ -49,3 +49,14 @@ def test_crypto_roundtrip_and_keys_hidden(settings):
         Crypto("", "k1", settings.hmac_key_b64)
     with pytest.raises(RuntimeError):
         Crypto("c2hvcnQ=", "k1", settings.hmac_key_b64)
+
+
+
+def test_sla_business_days_skip_the_ksa_weekend(settings):
+    from datetime import datetime, timezone
+    from app.services.sla import due_time
+    thu = datetime(2026, 11, 19, 10, 0, tzinfo=timezone.utc)          # Thursday
+    assert due_time(settings, "MULTIPLE_IDENTITY_CONFLICT", thu).date().isoformat() == "2026-11-22"   # Sunday
+    assert due_time(settings, "FOUR_FIELD_REVIEW", thu).date().isoformat() == "2026-11-23"
+    fri = datetime(2026, 11, 20, 10, 0, tzinfo=timezone.utc)
+    assert due_time(settings, "PAIR_REPAIR", fri).date().isoformat() == "2026-11-23"

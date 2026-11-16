@@ -47,7 +47,12 @@ direct_scope:                        # section 12.1 - CLIENT-APPROVED; both cond
     status: CLIENT-APPROVED
     default: [AROYA CRUISES MAIN OFFICE, AROYA CRUISES MAIN OFFICE USD, AROYA CRUISES MAIN OFFICE EUR,
               AROYA CRUISES MAIN OFFICE GBP, FUTURE CRUISES, RIYADH SEASON, WHATSAPP]
-    note: "Event field agencyName (agencyCode accepted as fallback carrier)."
+    note: "Event field agencyName (agencyCode accepted as fallback carrier). 'AROYA MAIN OFFICE SAR' (2,944 guests) - OWNER DECISION pending; add here if approved."
+  accept_empty_agency:
+    env: GIR_DIRECT_ACCEPT_EMPTY_AGENCY
+    status: TO BE PROVIDED BY CLIENT
+    default: false
+    note: "OWNER DECISION pending: 113,677 direct-source guests have an empty agency (baseline, UAT). true = admit them."
 
 normalization:                       # section 12.2
   name_placeholders:   {env: GIR_NAME_PLACEHOLDERS, default: [test, unknown, na, n a, none, guest, x, xx, xxx], status: ASSUMPTION}
@@ -57,27 +62,41 @@ normalization:                       # section 12.2
                         note: "Counts as a real DOB unless shared by more than dob_suspicious_threshold distinct active identities."}
   dob_suspicious_threshold: {env: GIR_DOB_SUSPICIOUS_THRESHOLD, default: 3, status: ASSUMPTION}
   dob_max_age_years:   {env: GIR_DOB_MAX_AGE_YEARS, default: 120, status: ASSUMPTION, note: "Future dates and age > 120 are invalid."}
+  email_placeholder_patterns: {env: GIR_EMAIL_PLACEHOLDER_PATTERNS, status: ASSUMPTION, separator: "||",
+                        note: "Regexes (noemail@, no-email@, test@, none@, na@, x@x..., @example., mailinator...). Baseline: ~7% placeholder-looking (18,410)."}
   email_placeholders:  {env: GIR_EMAIL_PLACEHOLDERS, default: [noemail@noemail.com, test@test.com, na@na.com, no@email.com], status: ASSUMPTION}
   phone_country_context:
     status: ASSUMPTION
     rule: "1) country code in the number (+ or 00) -> HIGH_E164 if valid; 2) Guest countryCode; 3) Guest citizenshipCode; 4) otherwise LOW - never HIGH_E164, never a forced +966."
+  phone_966_without_plus_is_e164: {env: GIR_PHONE_966_WITHOUT_PLUS_IS_E164, default: true, status: ASSUMPTION,
+                        note: "Baseline: Mobile mostly 966XXXXXXXXX without '+' (139,699) -> +966, HIGH."}
+  phone_saudi_local_without_context: {env: GIR_PHONE_SAUDI_LOCAL_WITHOUT_CONTEXT, default: MEDIUM, status: ASSUMPTION,
+                        note: "Local 05.../5... without country context (45,830): MEDIUM (never evidence). Country SA -> HIGH."}
+  phone_fields: {status: ASSUMPTION, note: "Both CRM Mobile (phone) and Phone (alternatePhone) are evidence."}
   phone_default_region: {env: GIR_PHONE_DEFAULT_REGION, default: null, status: ASSUMPTION, note: "Unset. If ever set, gives MEDIUM only (never production evidence)."}
-  over_shared_phone_threshold: {env: GIR_OVER_SHARED_PHONE_THRESHOLD, default: 3, status: ASSUMPTION,
-                                note: "Shared by MORE than 3 distinct active identities -> suppressed. Tune from the baseline distribution."}
-  over_shared_email_threshold: {env: GIR_OVER_SHARED_EMAIL_THRESHOLD, default: 3, status: ASSUMPTION}
+  over_shared_phone_threshold: {env: GIR_OVER_SHARED_PHONE_THRESHOLD, default: 5, status: ASSUMPTION,
+                                note: "Shared by MORE than 5 distinct active identities -> suppressed. >3 would suppress ~25% of keys (many people carry several Global IDs). Tune after baseline identity repair."}
+  over_shared_email_threshold: {env: GIR_OVER_SHARED_EMAIL_THRESHOLD, default: 5, status: ASSUMPTION,
+                                note: "Shared agency mailboxes are caught by this per-address rule; personal addresses on a corporate domain stay valid."}
   candidate_guardrail: {env: GIR_CANDIDATE_GUARDRAIL, default: 100, status: CLIENT-APPROVED, note: "Plan 8.3."}
   validation_sample: {status: TO BE PROVIDED BY CLIENT, note: "Masked production sample for phone/email/name rules (12.2) - needs the baseline go."}
 
 id_generation:                       # CLIENT-APPROVED: ported from Mule identity-support-exp-api
   id_allocation_strategy: {env: GIR_ID_ALLOCATION_STRATEGY, default: MULE_COMPAT, status: CLIENT-APPROVED, note: "SEQUENCE = diagnostics/tests only."}
-  global_id: {status: CLIENT-APPROVED, rule: "ULID (sulky ULID 8.3.0 nextULID): 26 chars Crockford base32, upper case."}
+  global_id: {status: CLIENT-APPROVED, rule: "ULID (sulky ULID 8.3.0 nextULID): 26 chars Crockford base32, upper case; starts '01' today.",
+              baseline: "Existing: 2 leading digits + random alphanumerics, ~24-27 chars (legacy lengths accepted, never generated)."}
   loyalty_id_prefix: {env: GIR_LOYALTY_ID_PREFIX, default: "12", status: CLIENT-APPROVED}
-  loyalty_id_random_digits: {env: GIR_LOYALTY_ID_RANDOM_DIGITS, default: 7, status: CLIENT-APPROVED}
+  loyalty_id_random_digits: {env: GIR_LOYALTY_ID_RANDOM_DIGITS, default: 7, status: CLIENT-APPROVED,
+              baseline: "Existing: 10 digits (102,643) = generated shape; 11 digits (197) and '6-4' (13) legacy, accepted as existing IDs."}
   loyalty_check_digit: {status: CLIENT-APPROVED, rule: "Mule luhnCheckDigit exactly (reversed base, ODD positions doubled) - NOT textbook Luhn; confirm intent with client."}
   id_allocation_max_attempts: {env: GIR_ID_ALLOCATION_MAX_ATTEMPTS, default: 5, status: ASSUMPTION, note: "Uniqueness re-draws; Mule had no uniqueness check."}
   existing_pair_eligibility: {status: CLIENT-APPROVED, rule: "Both IDs present and Global ID without '-' (Mule rule)."}
   global_id_format: {env: GIR_GLOBAL_ID_FORMAT, default: "G{n:08d}", status: TEST-ONLY, note: "SEQUENCE strategy only."}
   loyalty_id_format: {env: GIR_LOYALTY_ID_FORMAT, default: "L{n:08d}", status: TEST-ONLY, note: "SEQUENCE strategy only."}
+
+operations:
+  rate_limit_per_minute: {env: GIR_RATE_LIMIT_PER_MINUTE, default: 0, status: ASSUMPTION, note: "In-app limit for instances without a gateway (interim: 600)."}
+  docs_enabled: {env: GIR_DOCS_ENABLED, default: false, status: ASSUMPTION, note: "Interactive /docs behind the service credential (Basic password = key)."}
 
 review:                              # section 15
   reviewer_roles: {status: ASSUMPTION, values: [IDENTITY_REVIEWER, IDENTITY_SUPERVISOR, CRM_ADMINISTRATOR, AUDIT_REPORTING], note: "Per 15.3; CRM profile mapping in the CRM configuration spec."}

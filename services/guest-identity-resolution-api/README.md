@@ -9,7 +9,7 @@ A test (`tests/unit/test_no_crm_client.py`) proves the service contains no CRM c
 ```
 app/
   main.py                      FastAPI app factory (+ /docs only when GIR_DOCS_ENABLED, behind the credential)
-  api/        evaluation.py decisions.py review_cases.py bootstrap.py health.py deps.py errors.py
+  api/        evaluation.py decisions.py review_cases.py bootstrap.py health.py deps.py errors.py ratelimit.py
   schemas/    events.py review.py bootstrap.py
   domain/     enums.py reason_codes.py state_machine.py errors.py
   services/   normalization.py candidate_retrieval.py rule_engine.py shadow.py pair_allocator.py
@@ -19,11 +19,12 @@ app/
   jobs/       reconciliation_support.py
   observability/ logging.py metrics.py
 migrations/   0001_initial (all §8.1 tables, §8.2 columns, §8.3 indexes, CHECKs) 0002_bootstrap 0003_alternate_phone
+              0004_review_workbench (SLA due time, case history without personal details, encrypted comments)
 contracts/    openapi.yaml  events/*.schema.json  catalogues.yaml  crm/zoho-crm-configuration-spec.yaml
 config/       config-catalogue.yaml
 deploy/helm/  guest-identity-resolution-api (2 replicas, probes, NetworkPolicy, migration Job; NOT deployed)
 docs/         DB-READINESS-CHECKLIST.md
-tests/        unit/ component/ contract/ integration/ corpus/   (357 tests, 95% coverage)
+tests/        unit/ component/ contract/ integration/ corpus/   (367 tests, 94% coverage)
 tools/        gen_event_schemas.py  load_baseline.py
 ```
 
@@ -104,6 +105,17 @@ docker rm -f gir-it-pg
   - ClusterIP only.
 - DB connection is pure configuration (`GIR_DB_HOST/PORT/NAME/USER`, `GIR_DB_PASSWORD_FILE`, `GIR_DB_SSLMODE=verify-full`, `GIR_DB_SSLROOTCERT`, `GIR_DATABASE_SCHEMA`). See `docs/DB-READINESS-CHECKLIST.md`.
 
+## Interim instance (`gir-test`, real data until the customer PostgreSQL exists)
+`deploy/gir-test/` holds:
+- the manifests: Postgres 16 on a 20 Gi PVC; TLS; default-deny NetworkPolicies (DB has no egress); the API over HTTPS on NodePort 30960 with a key, rate limit and protected `/docs`;
+- `setup.sh`, which creates root-only keys under `/root/.weave-gir/`;
+- `backup.sh` (nightly encrypted pg_dump, 7 days);
+- `reset.sh`;
+- a fake DEMO seed;
+- `TESTING.md`, the owner's guide.
+
+Measured at 500k synthetic rows: bulk load 18.3 min, DB 737 MB, evaluate p95 231 ms (1 client) and 477 ms (4 clients). Bulk load goes through `POST /v1/bootstrap/batches` (≤ 5,000 per call), or server-side with `tools/load_baseline.py`.
+
 ## Rollout (plan §22.2, flags only)
 1. Shadow (`GIR_SHADOW_ONLY_ENABLED=true`).
 2. New pairs only (shadow off, CERTAIN and four-field off).
@@ -113,6 +125,13 @@ docker rm -f gir-it-pg
 6. Weighted auto: future approval; `weighted_auto_enabled` is fixed false.
 
 Rollback: `GIR_CERTAIN_REUSE_ENABLED=false`.
+
+## Workbench support
+These endpoints serve the Workbench through the Integration review API, all from PostgreSQL:
+- `GET /v1/review-cases` (kind / status / assignee filters, paging, HIGH priority first, then SLA due time; SLA in business days, Sun–Thu, conflict 1 / four-field 2, configurable);
+- `GET /v1/review-cases/{id}/history` (codes, states and user ids only);
+- `POST /v1/review-cases/{id}/assignment` (taking a case yourself, or a supervisor handing it over);
+- `POST /v1/review-cases/{id}/comments` (stored encrypted; text shown to reviewers and supervisors only).
 
 ## Workbench (decision deferred)
 Recommended: a Weave-hosted page embedded in Zoho CRM as a **Web Tab**, which needs no widget or marketplace licence. It authenticates through the Integration Service and calls only the Integration Review API, which calls `/v1/review-cases/*`.

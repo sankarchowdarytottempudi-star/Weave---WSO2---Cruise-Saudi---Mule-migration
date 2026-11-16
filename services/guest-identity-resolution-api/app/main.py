@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import FastAPI
 from sqlalchemy.engine import Engine
 
-from app.api import bootstrap, decisions, errors, evaluation, health, review_cases
+from app.api import bootstrap, decisions, errors, evaluation, health, ratelimit, review_cases
 from app.api.deps import Container
 from app.config import Settings, get_settings
 from app.observability.logging import configure
@@ -26,6 +26,7 @@ def create_app(settings: Optional[Settings] = None, engine: Optional[Engine] = N
                   docs_url=None, redoc_url=None, openapi_url=None)
     app.state.container = Container.build(settings, engine, allocator)
     errors.install(app)
+    ratelimit.install(app, settings.rate_limit_per_minute)
     if settings.docs_enabled:
         _mount_docs(app)
     for r in (evaluation.router, decisions.router, review_cases.router, bootstrap.router, health.router):

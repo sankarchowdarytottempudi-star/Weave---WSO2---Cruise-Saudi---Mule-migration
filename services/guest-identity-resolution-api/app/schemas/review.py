@@ -39,6 +39,18 @@ class ReviewCommitRequest(BaseModel):
     correlationId: Optional[str] = None
 
 
+class AssignmentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    assigneeId: str = Field(min_length=1, max_length=100)
+    assignedBy: str = Field(min_length=1, max_length=100)
+
+
+class CommentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    authorId: str = Field(min_length=1, max_length=100)
+    text: str = Field(min_length=1, max_length=2000)
+
+
 class ReviewFailRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     retryable: bool

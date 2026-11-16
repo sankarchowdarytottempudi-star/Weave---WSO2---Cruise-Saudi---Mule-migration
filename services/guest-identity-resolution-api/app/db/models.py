@@ -126,6 +126,7 @@ review_case_projection = Table(
     Column("follow_up_date", Date),
     Column("created_time", DateTime(timezone=True), nullable=False),
     Column("updated_time", DateTime(timezone=True), nullable=False),
+    Column("sla_due_time", DateTime(timezone=True)),
 )
 
 review_candidate = Table(
@@ -184,5 +185,25 @@ bootstrap_batch = Table(
     Column("received", Integer, nullable=False),
     Column("counts", JSONB, nullable=False),
     Column("duration_ms", Integer, nullable=False),
+    Column("created_time", DateTime(timezone=True), nullable=False),
+)
+
+
+review_case_event = Table(
+    "review_case_event", metadata,
+    Column("event_id", Integer, primary_key=True, autoincrement=True),
+    Column("case_id", String, nullable=False),
+    Column("event_type", String, nullable=False),
+    Column("actor_id", String),
+    Column("details", JSONB, nullable=False),
+    Column("created_time", DateTime(timezone=True), nullable=False),
+)
+
+review_comment = Table(
+    "review_comment", metadata,
+    Column("comment_id", String, primary_key=True),
+    Column("case_id", String, nullable=False),
+    Column("author_id", String, nullable=False),
+    Column("text_enc", LargeBinary, nullable=False),
     Column("created_time", DateTime(timezone=True), nullable=False),
 )

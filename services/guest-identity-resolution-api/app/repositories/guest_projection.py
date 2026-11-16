@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import and_, or_, select, update
+from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Connection
 
@@ -26,8 +26,8 @@ def get(conn: Connection, crm_guest_record_id: str, for_update: bool = False):
     return conn.execute(q).mappings().first()
 
 
-def upsert(conn: Connection, crypto: Crypto, ev, norm: NormalizedIdentity, direct: bool,
-           identity_id: Optional[str] = None, crm_identity_record_id: Optional[str] = None) -> None:
+def row_values(crypto: Crypto, ev, norm: NormalizedIdentity, direct: bool,
+               identity_id: Optional[str] = None, crm_identity_record_id: Optional[str] = None) -> dict:
     values = dict(
         crm_guest_record_id=ev.crmGuestRecordId, source_system=ev.sourceSystem, source_record_id=ev.sourceRecordId,
         source_first_name_enc=crypto.encrypt(ev.firstName), source_last_name_enc=crypto.encrypt(ev.lastName),
@@ -45,8 +45,26 @@ def upsert(conn: Connection, crypto: Crypto, ev, norm: NormalizedIdentity, direc
     if identity_id is not None:
         values["identity_id"] = identity_id
         values["crm_identity_record_id"] = crm_identity_record_id
+    return values
+
+
+def upsert(conn: Connection, crypto: Crypto, ev, norm: NormalizedIdentity, direct: bool,
+           identity_id: Optional[str] = None, crm_identity_record_id: Optional[str] = None) -> None:
+    values = row_values(crypto, ev, norm, direct, identity_id, crm_identity_record_id)
     stmt = insert(g).values(**values)
     updates = {k: stmt.excluded[k] for k in values if k != "crm_guest_record_id"}
+    conn.execute(stmt.on_conflict_do_update(index_elements=[g.c.crm_guest_record_id], set_=updates))
+
+
+def upsert_many(conn: Connection, rows: list[dict]) -> None:
+    """One multi-row upsert. Rows without an identity keep the identity already stored."""
+    if not rows:
+        return
+    full = [dict(r, identity_id=r.get("identity_id"), crm_identity_record_id=r.get("crm_identity_record_id")) for r in rows]
+    stmt = insert(g).values(full)
+    updates = {k: stmt.excluded[k] for k in full[0] if k not in ("crm_guest_record_id", "identity_id", "crm_identity_record_id")}
+    updates["identity_id"] = func.coalesce(stmt.excluded.identity_id, g.c.identity_id)
+    updates["crm_identity_record_id"] = func.coalesce(stmt.excluded.crm_identity_record_id, g.c.crm_identity_record_id)
     conn.execute(stmt.on_conflict_do_update(index_elements=[g.c.crm_guest_record_id], set_=updates))
 
 

@@ -125,7 +125,7 @@ def test_catalogues_match_db_checks_and_state_machine():
 def test_config_catalogue_envs_exist_in_code():
     cat = (ROOT / "config" / "config-catalogue.yaml").read_text()
     code = (ROOT / "app" / "config.py").read_text()
-    for env in set(re.findall(r"env: (GIR_[A-Z_]+)", cat)):
+    for env in set(re.findall(r"env: (GIR_[A-Z0-9_]+)", cat)):
         name = env[:-5] if env.endswith("_FILE") else env
         assert f'"{name}"' in code, env
     yaml.safe_load(cat)

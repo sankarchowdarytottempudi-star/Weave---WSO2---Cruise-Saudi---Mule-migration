@@ -203,9 +203,12 @@ class EvaluationService:
     def _open_case(self, conn: Connection, ev, result: RuleResult, decision_id: str,
                    identity_id: Optional[str]) -> str:
         case_id = review_cases.new_case_id()
+        from app.repositories.guest_projection import now as _now
+        from app.services.sla import due_time
         review_cases.create(conn, case_id, ev.crmGuestRecordId, identity_id if result.provisional else None,
                             decision_id, result.review_kind.value, result.review_priority or "NORMAL",
-                            self.s.active_rule_version, [str(r) for r in result.reasons])
+                            self.s.active_rule_version, [str(r) for r in result.reasons],
+                            sla_due_time=due_time(self.s, result.review_kind.value, _now()))
         review_cases.replace_candidates(conn, case_id, [
             {"crm_guest_record_id": e.candidate.crm_guest_record_id, "identity_id": e.candidate.identity_id,
              "crm_identity_record_id": e.candidate.crm_identity_record_id, "field_results": e.fields,

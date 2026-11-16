@@ -117,6 +117,120 @@ paths:
                 section11_5: {$ref: '#/components/examples/ReviewCase'}
         '403': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+  /v1/review-cases:
+    get:
+      tags: [review]
+      operationId: listReviewCases
+      summary: Workbench queue from PostgreSQL - HIGH priority first, then SLA due time and age. Closed cases excluded unless status is given.
+      parameters:
+        - {name: kind, in: query, schema: {type: array, items: {type: string}}, style: form, explode: true}
+        - {name: status, in: query, schema: {type: array, items: {$ref: '#/components/schemas/ReviewState'}}, style: form, explode: true}
+        - {name: assignee, in: query, schema: {type: string}, description: "A reviewer id, or 'unassigned'."}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        - {name: offset, in: query, schema: {type: integer, minimum: 0, default: 0}}
+        - {$ref: '#/components/parameters/ReviewerId'}
+        - {$ref: '#/components/parameters/ReviewerRoles'}
+        - {$ref: '#/components/parameters/CorrelationId'}
+      responses:
+        '200':
+          description: Queue page.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cases:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        caseId: {type: string}
+                        kind: {type: string}
+                        priority: {type: string, enum: [HIGH, NORMAL]}
+                        caseStatus: {$ref: '#/components/schemas/ReviewState'}
+                        assignedTo: {type: [string, 'null']}
+                        crmGuestRecordId: {type: string}
+                        candidateCount: {type: integer}
+                        createdTime: {type: string, format: date-time}
+                        ageHours: {type: number}
+                        slaDueTime: {type: [string, 'null'], format: date-time}
+                        overdue: {type: boolean}
+                        followUpDate: {type: [string, 'null'], format: date}
+                  total: {type: integer}
+                  limit: {type: integer}
+                  offset: {type: integer}
+        '403': {$ref: '#/components/responses/Error'}
+  /v1/review-cases/{caseId}/history:
+    get:
+      tags: [review]
+      operationId: getReviewCaseHistory
+      summary: Case history (codes, states and user ids only - no personal details).
+      parameters:
+        - {$ref: '#/components/parameters/CaseId'}
+        - {$ref: '#/components/parameters/ReviewerId'}
+        - {$ref: '#/components/parameters/ReviewerRoles'}
+        - {$ref: '#/components/parameters/CorrelationId'}
+      responses:
+        '200':
+          description: History, oldest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  caseId: {type: string}
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        eventId: {type: integer}
+                        type: {type: string, enum: [CREATED, ASSIGNED, COMMENTED, DECISION_PREPARED, DATA_CHANGED, CRM_UPDATE_PENDING, COMMITTED, FAILED, REOPENED]}
+                        actorId: {type: [string, 'null']}
+                        time: {type: string, format: date-time}
+                        details: {type: object}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/review-cases/{caseId}/assignment:
+    post:
+      tags: [review]
+      operationId: assignReviewCase
+      summary: Take a case (assigneeId = self) or hand it over (supervisor). Recorded in history.
+      parameters:
+        - {$ref: '#/components/parameters/CaseId'}
+        - {$ref: '#/components/parameters/ReviewerId'}
+        - {$ref: '#/components/parameters/ReviewerRoles'}
+        - {$ref: '#/components/parameters/CorrelationId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: false, required: [assigneeId, assignedBy],
+                     properties: {assigneeId: {type: string}, assignedBy: {type: string}}}
+      responses:
+        '200': {description: Assigned., content: {application/json: {schema: {type: object}}}}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+  /v1/review-cases/{caseId}/comments:
+    post:
+      tags: [review]
+      operationId: commentReviewCase
+      summary: Add a comment (stored encrypted; history records only its id and length).
+      parameters:
+        - {$ref: '#/components/parameters/CaseId'}
+        - {$ref: '#/components/parameters/ReviewerId'}
+        - {$ref: '#/components/parameters/ReviewerRoles'}
+        - {$ref: '#/components/parameters/CorrelationId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: false, required: [authorId, text],
+                     properties: {authorId: {type: string}, text: {type: string, minLength: 1, maxLength: 2000}}}
+      responses:
+        '200': {description: Comment stored., content: {application/json: {schema: {type: object}}}}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
   /v1/review-cases/{caseId}/decision-preparations:
     post:
       tags: [review]
@@ -470,7 +584,7 @@ components:
       type: object
       required: [code, message]
       properties:
-        code: {type: string, enum: [INVALID_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, IDEMPOTENCY_CONFLICT, STALE_CRM_EVENT, INVALID_STATE, REVIEW_DATA_CHANGED, INTERNAL_ERROR]}
+        code: {type: string, enum: [INVALID_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, IDEMPOTENCY_CONFLICT, STALE_CRM_EVENT, INVALID_STATE, REVIEW_DATA_CHANGED, PAYLOAD_TOO_LARGE, RATE_LIMITED, INTERNAL_ERROR]}
         message: {type: string}
         reasonCodes: {type: array, items: {type: string}}
         fields: {type: array, items: {type: object}}

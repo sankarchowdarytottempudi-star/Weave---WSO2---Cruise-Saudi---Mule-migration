@@ -82,9 +82,11 @@ class Settings:
     approved_name_punctuation: str = ".,'’`\"-_/"
 
     # ---- review SLA (ASSUMPTION) and deployment ----
+    rate_limit_per_minute: int = 0          # per client address and pod; 0 = off (gateway limits in prod)
     docs_enabled: bool = False               # interactive /docs, always behind the service credential
     sla_conflict_days: int = 1
     sla_four_field_days: int = 2
+    work_week: tuple[int, ...] = (6, 0, 1, 2, 3)   # Python weekday numbers: Sun-Thu (KSA); holidays TBD by client
     database_schema: str = "gir"
     # ---- database connection: pure configuration (customer PostgreSQL, provided later) ----
     db_host: str = ""
@@ -142,8 +144,10 @@ def get_settings() -> Settings:
         loyalty_id_format=os.environ.get("GIR_LOYALTY_ID_FORMAT", "L{n:08d}"),
         candidate_guardrail=int(os.environ.get("GIR_CANDIDATE_GUARDRAIL", "100")),
         docs_enabled=_flag("GIR_DOCS_ENABLED", False),
+        rate_limit_per_minute=int(os.environ.get("GIR_RATE_LIMIT_PER_MINUTE", "0")),
         sla_conflict_days=int(os.environ.get("GIR_SLA_CONFLICT_DAYS", "1")),
         sla_four_field_days=int(os.environ.get("GIR_SLA_FOUR_FIELD_DAYS", "2")),
+        work_week=tuple(int(x) for x in _list("GIR_WORK_WEEK", ("6", "0", "1", "2", "3"))),
         database_schema=os.environ.get("GIR_DATABASE_SCHEMA", "gir"),
         db_host=os.environ.get("GIR_DB_HOST", ""),
         db_port=int(os.environ.get("GIR_DB_PORT", "5432")),

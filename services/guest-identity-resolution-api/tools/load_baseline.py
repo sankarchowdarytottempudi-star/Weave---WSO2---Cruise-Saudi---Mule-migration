@@ -56,13 +56,16 @@ def records(data: dict, direct_sources=DIRECT_DEFAULT):
                "active": True, "currentGlobalId": str(g) if g else None, "currentLoyaltyId": str(l) if l else None}
 
 
+_CTX = None
+
+
 def post(url: str, token: str, batch_id: str, recs: list) -> dict:
     body = json.dumps({"batchId": batch_id, "records": recs}).encode()
     req = urllib.request.Request(url + "/v1/bootstrap/batches", data=body, method="POST",
                                  headers={"Content-Type": "application/json", "Authorization": "Bearer " + token})
     for attempt in range(5):
         try:
-            with urllib.request.urlopen(req, timeout=600) as r:
+            with urllib.request.urlopen(req, timeout=600, context=_CTX) as r:
                 return json.loads(r.read())
         except Exception as exc:          # transient: retry the same batch id (idempotent)
             if attempt == 4:
@@ -72,18 +75,30 @@ def post(url: str, token: str, batch_id: str, recs: list) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--extract", required=True)
-    ap.add_argument("--key", required=True)
+    ap.add_argument("--extract", help="encrypted baseline extract (AES-GCM)")
+    ap.add_argument("--key", help="key file of the extract")
+    ap.add_argument("--ndjson-dir", help="alternatively: a directory of NDJSON bootstrap files (e.g. synthetic)")
+    ap.add_argument("--cafile", help="CA/cert to verify the API's TLS certificate")
     ap.add_argument("--url", required=True)
     ap.add_argument("--token-file", required=True)
     ap.add_argument("--batch-size", type=int, default=2000)
     ap.add_argument("--prefix", default="baseline")
     a = ap.parse_args()
+    global _CTX
+    if a.cafile:
+        import ssl
+        _CTX = ssl.create_default_context(cafile=a.cafile)
     token = open(a.token_file).read().strip()
-    data = decrypt(a.extract, a.key)
+    if a.ndjson_dir:
+        import glob
+        data = None
+        source = (json.loads(line) for f in sorted(glob.glob(a.ndjson_dir + "/*.ndjson")) for line in open(f) if line.strip())
+    else:
+        data = decrypt(a.extract, a.key)
+        source = records(data)
     totals: dict = {}
     batch, n, started = [], 0, time.monotonic()
-    for rec in records(data):
+    for rec in source:
         batch.append(rec)
         if len(batch) == a.batch_size:
             n += 1

@@ -1,0 +1,240 @@
+# INTERIM instance (namespace gir-test) - holds REAL guest data until the customer's PostgreSQL
+# (Tencent) is available; then the data is moved and this namespace, its volume and backups are
+# destroyed. Secrets are created by setup.sh from root-only files under /root/.weave-gir/.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gir-test
+  labels: {purpose: interim-guest-identity, data: real-pii}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: default-deny, namespace: gir-test}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: api, namespace: gir-test}
+spec:
+  podSelector: {matchLabels: {app: gir-api}}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - ports: [{port: 8443, protocol: TCP}]          # NodePort traffic; TLS + API key enforced by the app
+  egress:
+    - to: [{podSelector: {matchLabels: {app: gir-pg}}}]
+      ports: [{port: 5432, protocol: TCP}]
+    - to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}}]
+      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: migrate, namespace: gir-test}
+spec:
+  podSelector: {matchLabels: {app: gir-migrate}}
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress:
+    - to: [{podSelector: {matchLabels: {app: gir-pg}}}]
+      ports: [{port: 5432, protocol: TCP}]
+    - to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}}]
+      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: pg, namespace: gir-test}
+spec:
+  podSelector: {matchLabels: {app: gir-pg}}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from: [{podSelector: {matchLabels: {app: gir-api}}}, {podSelector: {matchLabels: {app: gir-migrate}}}]
+      ports: [{port: 5432, protocol: TCP}]
+  egress: []                                         # the database talks to nobody
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: gir-pg-init, namespace: gir-test}
+data:
+  10-roles.sh: |
+    #!/bin/sh
+    set -eu
+    psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d postgres \
+      -v owner_pw="$(cat /secrets/owner-password)" -v app_pw="$(cat /secrets/app-password)" <<'SQL'
+    CREATE ROLE gir_owner LOGIN PASSWORD :'owner_pw' CONNECTION LIMIT 5;
+    CREATE ROLE gir_app LOGIN PASSWORD :'app_pw' CONNECTION LIMIT 40;
+    CREATE DATABASE gir OWNER gir_owner ENCODING 'UTF8' TEMPLATE template0;
+    REVOKE ALL ON DATABASE gir FROM PUBLIC;
+    GRANT CONNECT ON DATABASE gir TO gir_app;
+    \c gir
+    REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+    CREATE SCHEMA gir AUTHORIZATION gir_owner;
+    GRANT USAGE ON SCHEMA gir TO gir_app;
+    ALTER ROLE gir_app SET statement_timeout = '30s';
+    ALTER ROLE gir_app SET idle_in_transaction_session_timeout = '60s';
+    SQL
+---
+apiVersion: v1
+kind: Service
+metadata: {name: gir-pg, namespace: gir-test}
+spec:
+  clusterIP: None
+  selector: {app: gir-pg}
+  ports: [{port: 5432, name: pg}]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: {name: gir-pg, namespace: gir-test}
+spec:
+  serviceName: gir-pg
+  replicas: 1
+  selector: {matchLabels: {app: gir-pg}}
+  template:
+    metadata: {labels: {app: gir-pg}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsUser: 70, runAsGroup: 70, fsGroup: 70, runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: postgres
+          image: postgres@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e   # 16-alpine
+          args: ["-c", "shared_buffers=512MB", "-c", "effective_cache_size=1536MB", "-c", "work_mem=16MB",
+                 "-c", "maintenance_work_mem=256MB", "-c", "max_wal_size=4GB", "-c", "min_wal_size=512MB",
+                 "-c", "checkpoint_completion_target=0.9", "-c", "random_page_cost=1.1", "-c", "max_connections=80",
+                 "-c", "autovacuum_vacuum_scale_factor=0.05", "-c", "autovacuum_analyze_scale_factor=0.02",
+                 "-c", "autovacuum_max_workers=3", "-c", "log_min_duration_statement=1000", "-c", "password_encryption=scram-sha-256",
+                 "-c", "ssl=on", "-c", "ssl_cert_file=/tls/tls.crt", "-c", "ssl_key_file=/tls/tls.key",
+                 "-c", "listen_addresses=*"]
+          env:
+            - {name: POSTGRES_USER, value: postgres}
+            - {name: POSTGRES_PASSWORD_FILE, value: /secrets/superuser-password}
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+            - {name: POSTGRES_INITDB_ARGS, value: "--auth-host=scram-sha-256 --data-checksums"}
+          ports: [{containerPort: 5432}]
+          resources: {requests: {cpu: "1", memory: 2Gi}, limits: {cpu: "2", memory: 2Gi}}
+          readinessProbe: {exec: {command: [pg_isready, -U, postgres]}, periodSeconds: 10}
+          livenessProbe: {exec: {command: [pg_isready, -U, postgres]}, initialDelaySeconds: 30, periodSeconds: 30}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+            - {name: run, mountPath: /var/run/postgresql}
+            - {name: tmp, mountPath: /tmp}
+            - {name: init, mountPath: /docker-entrypoint-initdb.d, readOnly: true}
+            - {name: secrets, mountPath: /secrets, readOnly: true}
+            - {name: tls, mountPath: /tls, readOnly: true}
+            - {name: shm, mountPath: /dev/shm}
+      volumes:
+        - {name: run, emptyDir: {}}
+        - {name: tmp, emptyDir: {}}
+        - {name: shm, emptyDir: {medium: Memory, sizeLimit: 256Mi}}
+        - {name: init, configMap: {name: gir-pg-init, defaultMode: 0555}}
+        - {name: secrets, secret: {secretName: gir-pg-passwords, defaultMode: 0440}}
+        - {name: tls, secret: {secretName: gir-pg-tls, defaultMode: 0440}}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: local-path
+        resources: {requests: {storage: 20Gi}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: gir-api, namespace: gir-test}
+data:
+  GIR_DB_HOST: gir-pg-0.gir-pg.gir-test.svc.cluster.local
+  GIR_DB_PORT: "5432"
+  GIR_DB_NAME: gir
+  GIR_DATABASE_SCHEMA: gir
+  GIR_DB_SSLMODE: verify-full
+  GIR_DB_SSLROOTCERT: /var/run/secrets/gir/pg-ca/tls.crt
+  GIR_DB_POOL_SIZE: "8"
+  GIR_DB_MAX_OVERFLOW: "4"
+  GIR_SHADOW_ONLY_ENABLED: "false"         # every outcome can be exercised
+  GIR_CERTAIN_REUSE_ENABLED: "true"
+  GIR_FOUR_FIELD_REVIEW_ENABLED: "true"
+  GIR_WEIGHTED_SHADOW_ENABLED: "true"
+  GIR_ID_ALLOCATION_STRATEGY: MULE_COMPAT
+  GIR_DOCS_ENABLED: "true"                 # behind the API key (HTTP Basic, password = key)
+  GIR_RATE_LIMIT_PER_MINUTE: "600"
+  GIR_DATA_KEY_ID: k1
+---
+apiVersion: batch/v1
+kind: Job
+metadata: {name: gir-migrate, namespace: gir-test}
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: {labels: {app: gir-migrate}}
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: migrate
+          image: guest-identity-resolution-api:1.0.0
+          imagePullPolicy: Never
+          command: ["alembic", "upgrade", "head"]
+          envFrom: [{configMapRef: {name: gir-api}}]
+          env:
+            - {name: GIR_DB_USER, value: gir_owner}
+            - {name: GIR_DB_PASSWORD_FILE, value: /var/run/secrets/gir/db/owner-password}
+            - {name: GIR_APP_DB_ROLE, value: gir_app}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts:
+            - {name: db, mountPath: /var/run/secrets/gir/db, readOnly: true}
+            - {name: pg-ca, mountPath: /var/run/secrets/gir/pg-ca, readOnly: true}
+      volumes:
+        - {name: db, secret: {secretName: gir-pg-passwords, defaultMode: 0440}}
+        - {name: pg-ca, secret: {secretName: gir-pg-tls, items: [{key: tls.crt, path: tls.crt}]}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: gir-api, namespace: gir-test}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: gir-api}}
+  strategy: {type: RollingUpdate, rollingUpdate: {maxUnavailable: 0, maxSurge: 1}}
+  template:
+    metadata: {labels: {app: gir-api}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: api
+          image: guest-identity-resolution-api:1.0.0
+          imagePullPolicy: Never
+          args: ["uvicorn", "--factory", "app.main:app_factory", "--host", "0.0.0.0", "--port", "8443",
+                 "--ssl-keyfile", "/var/run/secrets/gir/api-tls/tls.key", "--ssl-certfile", "/var/run/secrets/gir/api-tls/tls.crt",
+                 "--no-server-header", "--timeout-keep-alive", "30"]
+          envFrom: [{configMapRef: {name: gir-api}}]
+          env:
+            - {name: GIR_DB_USER, value: gir_app}
+            - {name: GIR_DB_PASSWORD_FILE, value: /var/run/secrets/gir/db/app-password}
+            - {name: GIR_DATA_KEY_FILE, value: /var/run/secrets/gir/keys/data-key}
+            - {name: GIR_HMAC_KEY_FILE, value: /var/run/secrets/gir/keys/hmac-key}
+            - {name: GIR_SERVICE_TOKEN_FILE, value: /var/run/secrets/gir/keys/service-token}
+          ports: [{containerPort: 8443, name: https}]
+          readinessProbe: {httpGet: {path: /health/ready, port: https, scheme: HTTPS}, periodSeconds: 10, timeoutSeconds: 3}
+          livenessProbe: {httpGet: {path: /health/live, port: https, scheme: HTTPS}, initialDelaySeconds: 15, periodSeconds: 20}
+          resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 768Mi}}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: db, mountPath: /var/run/secrets/gir/db, readOnly: true}
+            - {name: keys, mountPath: /var/run/secrets/gir/keys, readOnly: true}
+            - {name: api-tls, mountPath: /var/run/secrets/gir/api-tls, readOnly: true}
+            - {name: pg-ca, mountPath: /var/run/secrets/gir/pg-ca, readOnly: true}
+      volumes:
+        - {name: tmp, emptyDir: {medium: Memory, sizeLimit: 32Mi}}
+        - {name: db, secret: {secretName: gir-pg-passwords, items: [{key: app-password, path: app-password}], defaultMode: 0440}}
+        - {name: keys, secret: {secretName: gir-keys, defaultMode: 0440}}
+        - {name: api-tls, secret: {secretName: gir-api-tls, defaultMode: 0440}}
+        - {name: pg-ca, secret: {secretName: gir-pg-tls, items: [{key: tls.crt, path: tls.crt}]}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: gir-api, namespace: gir-test}
+spec:
+  type: NodePort
+  selector: {app: gir-api}
+  ports: [{name: https, port: 8443, targetPort: https, nodePort: 30960}]
