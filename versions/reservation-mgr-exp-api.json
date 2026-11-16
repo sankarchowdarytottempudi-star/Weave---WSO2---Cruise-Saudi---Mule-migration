@@ -1,7 +1,15 @@
 {
  "api": "reservation-mgr-exp-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:18Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:e845c482d7bf48ea0876026f6930e24e2885350c4ad6c4f5096067c7cde25009",
+ "version": 2,
+ "at": "2026-11-16T11:59:12Z",
+ "summary": {
+  "files": 1,
+  "changed": [
+   "deploy/settings-templates/reservation-mgr-exp-api.toml"
+  ]
+ }
 }

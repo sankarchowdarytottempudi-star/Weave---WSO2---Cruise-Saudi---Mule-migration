@@ -30,6 +30,7 @@ host = "<kept on the server>"
 port = "<kept on the server>"
 
 [aroya.reservation_mgr_exp_api.retryPolicy]
+retryOn = "<kept on the server>"
 count = "<kept on the server>"
 intervalSeconds = "<kept on the server>"
 
