@@ -4,3 +4,8 @@
 env = "<kept on the server>"
 httpPort = "<kept on the server>"
 basePath = "<kept on the server>"
+
+[aroya.reservation_common_proc_api.stateRedis]
+enabled = "<kept on the server>"
+host = "<kept on the server>"
+port = "<kept on the server>"

@@ -7,10 +7,13 @@ configurable int httpPort = 8081;
 configurable string basePath = "/reservation-common-proc-api/v1";
 configurable string sysApiUrl = "http://seaware-sys-api.wso2.svc";
 configurable string sysApiPath = "/seaware-sys-api/v1/integration-tasks";
-configurable decimal sysTimeoutSeconds = 60;
+// Reads: 28 s, so the Reservation Manager (30 s) still gets a clear answer from us on time;
+// seaware-sys waits 25 s for Seaware. Writes (GraphQL mutations) keep their own longer limit.
+configurable decimal sysTimeoutSeconds = 28;
+configurable decimal sysWriteTimeoutSeconds = 60;
 configurable string cacheUrl = "http://seaware-cache-proc-api.wso2.svc";
 configurable string cachePath = "/seaware-cache-proc-api/v1/cache";
-configurable decimal cacheTimeoutSeconds = 15;
+configurable decimal cacheTimeoutSeconds = 3;
 // Payments are handled by the financial transactions Process API (inside the cluster).
 configurable string paymentsUrl = "http://financial-transactions-proc-api.wso2.svc";
 configurable string paymentsPath = "/financial-transactions-proc-api/v1/process-payment";

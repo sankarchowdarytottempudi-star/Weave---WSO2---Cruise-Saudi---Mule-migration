@@ -1,7 +1,22 @@
 {
  "api": "reservation-common-proc-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:17Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:4b1d6d950b43ad176f08cc491034d07370e59078a14109cf41a7c3fadce8ae70",
+ "version": 2,
+ "at": "2026-11-16T12:41:57Z",
+ "summary": {
+  "files": 8,
+  "changed": [
+   "deploy/settings-templates/reservation-common-proc-api.toml",
+   "services/reservation-common-proc-api/Dependencies.toml",
+   "services/reservation-common-proc-api/config.bal",
+   "services/reservation-common-proc-api/refcache.bal",
+   "services/reservation-common-proc-api/service.bal",
+   "services/reservation-common-proc-api/state.bal",
+   "services/reservation-common-proc-api/tests/refcache_test.bal",
+   "services/reservation-common-proc-api/tests/timeouts_test.bal"
+  ]
+ }
 }

@@ -12,6 +12,8 @@ import aroya/integration_commons as commons;
 final readonly & string[] CACHEABLE = ["availablevoyages", "availablepromotions", "packagepromotions", "cities"];
 
 final http:Client sysClient = check new (sysApiUrl, timeout = sysTimeoutSeconds);
+// Writes: their own limit, longer than a read (a reservation store takes up to ~30 s in Seaware).
+final http:Client sysWriteClient = check new (sysApiUrl, timeout = sysWriteTimeoutSeconds);
 final http:Client cacheClient = check new (cacheUrl, timeout = cacheTimeoutSeconds);
 // No retry on this client: a payment must never be sent twice.
 final http:Client paymentsClient = check new (paymentsUrl, timeout = paymentsTimeoutSeconds);
@@ -76,7 +78,28 @@ isolated service class ErrorRecordedApi {
         if swAuth is string {
             headers["X-Seaware-Authorization"] = swAuth;
         }
-        http:Response|http:ClientError reply = sysClient->post(sysApiPath, body, headers);
+        // reference lists: answered from the hourly cache (refreshed in the background when older)
+        boolean hourly = hourlyCached(op, body);
+        string refKeyOf = hourly ? refKey(body) : "";
+        if hourly {
+            [int, string, byte[]]? kept = refGet(refKeyOf);
+            if kept is [int, string, byte[]] {
+                if kept[0] >= hourlyCacheSeconds {
+                    refreshInBackground(refKeyOf, body, headers);
+                    return cachedResponse(correlationId, kept[1], kept[2], "stale-refreshing");
+                }
+                return cachedResponse(correlationId, kept[1], kept[2], "hit");
+            }
+        }
+        http:Client upstream = isMutation(body) ? sysWriteClient : sysClient;
+        http:Response|http:ClientError reply = upstream->post(sysApiPath, body, headers);
+        if hourly && reply is http:Response {
+            byte[]|http:ClientError data = reply.getBinaryPayload();
+            if data is byte[] {
+                refPut(refKeyOf, reply.statusCode, reply.getContentType(), data);
+                reply.setBinaryPayload(data, reply.getContentType());
+            }
+        }
         if reply is http:ClientError {
             log:printError("Upstream call failed", correlationId = correlationId, 'error = reply);
             res.statusCode = 502;
@@ -141,4 +164,23 @@ isolated function rootFieldOfBody(byte[] body) returns string? {
         }
     }
     return ();
+}
+
+
+# Whether the request is a GraphQL mutation (a write). Anything unreadable counts as a read.
+#
+# + body - The request body as received
+# + return - True for a mutation
+isolated function isMutation(byte[] body) returns boolean {
+    string|error text = string:fromBytes(body);
+    if text is error {
+        return false;
+    }
+    json|error parsed = text.fromJsonString();
+    if parsed is map<json> && parsed["query"] is string {
+        // comment lines before the operation are ignored, as in seaware-sys
+        string query = re `#[^\n]*`.replaceAll(<string>parsed["query"], "");
+        return commons:operationTypeOf(query) == commons:MUTATION;
+    }
+    return false;
 }
