@@ -107,3 +107,42 @@ public type PhotoCacheSettings record {|
 |};
 
 configurable PhotoCacheSettings photoCache = {};
+
+# Guest Identity Resolution (plan v2.1). enabled = false (the default): POST /processGuestIdentity
+# works exactly as before. enabled = true: a guest in the approved direct scope gets no IDs here -
+# its CRM contact is upserted as PENDING_IDENTITY and its snapshot is handed to the identity
+# integration service, which publishes guest.identity.evaluation.requested.v1; the Python decision
+# service then gives it its Global and Loyalty IDs. Guests outside the scope keep today's flow.
+#
+# + enabled - Switch (owner decision: stays off until the cut-over)
+# + sourceCodes - Approved direct booking source codes
+# + agencyNames - Approved direct agencies
+# + sourceCodeField - Field of the incoming guest with the booking source code (batch: sourceCode)
+# + agencyNameField - Field of the incoming guest with the agency name (batch: agencyName)
+# + sourceSystem - Source system written to the contact and the event
+# + sourceCodeCrmField - CRM contact field for the source code; "" = not written (CRM spec: to confirm)
+# + integration - The identity integration service (guest-identity-integration, role review)
+# + ingressPath - Its ingress path
+# + ingressToken - Token it expects in X-Webhook-Token
+public type IdentityResolutionSettings record {|
+    boolean enabled = false;
+    string[] sourceCodes = ["INT-ASSC", "INT-CON", "NEWINT-CON", "MOBAPP", "WHATSAPP", "IN HOUSE"];
+    string[] agencyNames = [
+        "AROYA CRUISES MAIN OFFICE",
+        "AROYA CRUISES MAIN OFFICE USD",
+        "AROYA CRUISES MAIN OFFICE EUR",
+        "AROYA CRUISES MAIN OFFICE GBP",
+        "FUTURE CRUISES",
+        "RIYADH SEASON",
+        "WHATSAPP"
+    ];
+    string sourceCodeField = "sourceCode";
+    string agencyNameField = "agencyName";
+    string sourceSystem = "SEAWARE";
+    string sourceCodeCrmField = "";
+    commons:DownstreamSettings integration = {url: "http://localhost"};
+    string ingressPath = "/guest-identity-integration/v1/crm-events";
+    string ingressToken = "";
+|};
+
+configurable IdentityResolutionSettings identityResolution = {};

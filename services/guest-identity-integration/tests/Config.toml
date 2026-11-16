@@ -1,0 +1,24 @@
+[aroya.guest_identity_integration]
+env = "test"
+httpPort = 19181
+httpHost = "127.0.0.1"
+role = "review"
+pythonServiceToken = "test-token-not-real"
+zohoSystemPath = "/zoho-sys-api/v1/zoho"
+webhookToken = "test-webhook-token-not-real"
+allowMemoryState = true
+
+[aroya.guest_identity_integration.python]
+url = "http://127.0.0.1:19182/py"
+
+[aroya.guest_identity_integration.zohoSysApi]
+url = "http://127.0.0.1:19183"
+
+[aroya.guest_identity_integration.retries]
+maxAttempts = 3
+firstBackoffSeconds = 0.01
+maxBackoffSeconds = 0.04
+
+[aroya.guest_identity_integration.reviewAuth]
+signingSecret = "test-secret-not-real"
+maxAgeSeconds = 300

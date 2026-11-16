@@ -1,0 +1,31 @@
+# Guest Identity Resolution - Review API + CRM webhook + ingress endpoint (plan v2.1 10.4, 14.2-14.4).
+# Image: services/guest-identity-integration; Config.toml (Secret identity-review-api-config) sets
+# role = "review". Callers: the Review Workbench backend and the Zoho CRM workflow webhook (both
+# through the APIM gateway), and guest-identity-proc-api (process layer) for the ingress events.
+# NOT DEPLOYED.
+name: identity-review-api
+layer: process
+image:
+  repository: REGISTRY/guest-identity-integration
+port: 8081
+configSecret: identity-review-api-config
+
+replicas: 2
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  requests: { cpu: 100m, memory: 384Mi }
+  limits: { cpu: "1", memory: 768Mi }
+
+networkPolicy:
+  enabled: true
+  allowFromLayers: [process]                # guest-identity-proc-api -> POST /crm-events
+  allowFromNamespaces: [ingress-nginx, observability, apim]
+  egressAllowAll: true
+
+service:
+  type: ClusterIP

@@ -250,7 +250,7 @@ public isolated class SeawareSync {
     isolated function writeGuests(Chunk c) returns error? {
         c.contactAnswers = [];
         foreach json e in c.edges {
-            json[] request = guestRequest(f(e, "node"));
+            json[] request = guestRequest(f(e, "node"), self.sync.identityScopeFields);
             Answer answer = check self.guests.send("POST", {"client_channel": "seawareBatch", "correlationId": c.correlationId},
                     request);
             c.contactAnswers.push(answer.status >= 400 || answer.unreadable ? guestRefusal(answer, request.length()) : answer.body);

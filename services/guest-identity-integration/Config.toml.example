@@ -1,0 +1,58 @@
+# guest-identity-integration - one image, three Helm releases (role = worker | review | reconcile).
+# Real values live in the <release>-config Secret, never in git. "<...>" = to be supplied.
+
+[aroya.guest_identity_integration]
+env = "<env>"
+httpPort = 8081
+basePath = "/guest-identity-integration/v1"
+role = "review"                     # identity-event-worker: "worker"; identity-review-api: "review"; CronJob: "reconcile"
+pythonServiceToken = "<bearer token of the Python decision API>"
+zohoSystemPath = "/zoho-sys-api/v1/zoho"
+crmApiVersion = "v6"
+webhookToken = "<token the CRM workflow webhook and guest-identity-proc-api send in X-Webhook-Token>"
+allowMemoryState = false
+
+# The customer's EXISTING Kafka. Empty bootstrapServers = Kafka off (worker idle, webhook 503).
+[aroya.guest_identity_integration.kafkaConfig]
+bootstrapServers = []               # e.g. ["<broker-1>:9093", "<broker-2>:9093"]
+securityProtocol = "SASL_SSL"       # PLAINTEXT | SASL_PLAINTEXT | SASL_SSL | SSL
+saslMechanism = "SCRAM-SHA-512"     # PLAIN | SCRAM-SHA-256 | SCRAM-SHA-512
+username = "<sasl user>"
+password = "<sasl password>"
+caCertPath = "/etc/kafka-ca/ca.pem" # CA of the brokers (mounted from a Secret); "" = JVM trust store
+consumerGroup = "guest-identity-worker"
+evaluationTopic = "guest.identity.evaluation.requested.v1"
+reevaluationTopic = "guest.identity.reevaluation.requested.v1"
+dlqTopic = "guest.identity.processing.dlq.v1"
+pollSeconds = 5
+maxPollRecords = 10
+maxPollIntervalMs = 900000
+
+[aroya.guest_identity_integration.python]
+url = "http://guest-identity-resolution-api.gir.svc:8080"   # namespace: where the decision service is installed
+timeoutSeconds = 10
+
+[aroya.guest_identity_integration.zohoSysApi]
+url = "http://zoho-sys-api.wso2.svc"
+timeoutSeconds = 30
+
+[aroya.guest_identity_integration.retries]
+maxAttempts = 5
+firstBackoffSeconds = 2
+maxBackoffSeconds = 60
+
+[aroya.guest_identity_integration.reviewAuth]
+signingSecret = "<shared HMAC secret with the Workbench backend>"
+maxAgeSeconds = 300
+
+[aroya.guest_identity_integration.reconcile]
+pageSize = 2000
+maxPages = 50
+pendingAfterMinutes = 60
+initialWatermark = "2026-01-01T00:00:00+00:00"
+lockSeconds = 3600
+
+[aroya.guest_identity_integration.stateRedis]
+enabled = true
+host = "intg-redis.wso2.svc"
+port = 6379

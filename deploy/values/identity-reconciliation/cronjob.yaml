@@ -1,0 +1,59 @@
+# Guest Identity Resolution - nightly reconciliation (plan v2.1 section 17).
+# Same image as the worker; Config.toml (Secret identity-reconciliation-config) sets role = "reconcile".
+# The run takes a Redis lock (single instance) on top of concurrencyPolicy: Forbid, reads the CRM
+# delta since its watermark, republishes PENDING work, commits decisions CRM already holds, and
+# advances the watermark only when everything succeeded. It never writes an identity to CRM.
+#
+# NOT APPLIED. suspend: true until Kafka is connected and the owner switches it on:
+#   kubectl -n wso2 apply -f deploy/values/identity-reconciliation/cronjob.yaml   (after setting the image)
+#   kubectl -n wso2 patch cronjob identity-reconciliation -p '{"spec":{"suspend":false}}'
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: identity-reconciliation
+  namespace: wso2
+  labels:
+    app.kubernetes.io/name: identity-reconciliation
+    integration.aroya/layer: process
+spec:
+  schedule: "30 1 * * *"
+  timeZone: "Asia/Riyadh"
+  suspend: true
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 0                 # a failed run keeps its watermark; the next night retries
+      activeDeadlineSeconds: 5400
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: identity-reconciliation
+            integration.aroya/layer: process
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          imagePullSecrets: [{ name: wso2-registry }]
+          securityContext: { runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001 }
+          containers:
+            - name: reconcile
+              image: REGISTRY/guest-identity-integration:TAG
+              imagePullPolicy: IfNotPresent
+              resources:
+                requests: { cpu: 100m, memory: 384Mi }
+                limits: { cpu: "1", memory: 768Mi }
+              volumeMounts:
+                - { name: config, mountPath: /config, readOnly: true }
+                - { name: tmp, mountPath: /tmp }
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+          volumes:
+            - name: tmp
+              emptyDir: {}
+            - name: config
+              secret:
+                secretName: identity-reconciliation-config

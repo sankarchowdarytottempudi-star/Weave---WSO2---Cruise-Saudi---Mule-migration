@@ -51,6 +51,9 @@ public type SeawareLogin record {|
 # + retryErrorTypes - Kinds of failure that are tried again
 # + writeShorex - Write shore excursions to the CRM. Off, as in the old application, where the
 # shorex step (zoho-shorex-upsertSub_Flow) is ported but switched off in Batch_zoho_modules
+# + identityScopeFields - Guest Identity Resolution (plan v2.1): also send each guest's booking source
+# code and agency name to the guest service, which needs them for the direct-scope filter. Off = the
+# guest request is exactly what it was
 public type SyncSettings record {|
     string mode = "delta";
     int pageSize = 100;
@@ -66,6 +69,7 @@ public type SyncSettings record {|
     string[] retryErrorTypes = ["BAD_GATEWAY", "CONNECTIVITY", "TIMEOUT", "GATEWAY_TIMEOUT", "INTERNAL_SERVER_ERROR",
         "RETRY_EXHAUSTED"];
     boolean writeShorex = false;
+    boolean identityScopeFields = false;
 |};
 
 # CRM paths the job writes to and searches (sent to the CRM system service in the `zohoPath` header).

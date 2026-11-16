@@ -55,3 +55,9 @@ port = "<kept on the server>"
 [aroya.guest_identity_proc_api.photoCache]
 enabled = "<kept on the server>"
 ttlSeconds = "<kept on the server>"
+
+# Guest Identity Resolution - not set on the server = enabled false (off). Keys when it is switched on:
+# [aroya.guest_identity_proc_api.identityResolution]
+# enabled, sourceSystem, sourceCodeField, agencyNameField, sourceCodeCrmField, ingressPath, ingressToken
+# [aroya.guest_identity_proc_api.identityResolution.integration]
+# url

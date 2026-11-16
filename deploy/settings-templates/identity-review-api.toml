@@ -1,0 +1,37 @@
+# Key names of the service's settings (image guest-identity-integration). The values are kept on the
+# server only. See services/guest-identity-integration/Config.toml.example for the meaning of each key.
+
+[aroya.guest_identity_integration]
+env = "<kept on the server>"
+role = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+pythonServiceToken = "<kept on the server>"
+zohoSystemPath = "<kept on the server>"
+webhookToken = "<kept on the server>"
+
+[aroya.guest_identity_integration.kafkaConfig]
+bootstrapServers = "<kept on the server>"
+securityProtocol = "<kept on the server>"
+saslMechanism = "<kept on the server>"
+username = "<kept on the server>"
+password = "<kept on the server>"
+caCertPath = "<kept on the server>"
+consumerGroup = "<kept on the server>"
+evaluationTopic = "<kept on the server>"
+reevaluationTopic = "<kept on the server>"
+dlqTopic = "<kept on the server>"
+
+[aroya.guest_identity_integration.python]
+url = "<kept on the server>"
+
+[aroya.guest_identity_integration.zohoSysApi]
+url = "<kept on the server>"
+
+[aroya.guest_identity_integration.reviewAuth]
+signingSecret = "<kept on the server>"
+
+[aroya.guest_identity_integration.stateRedis]
+enabled = "<kept on the server>"
+host = "<kept on the server>"
+port = "<kept on the server>"

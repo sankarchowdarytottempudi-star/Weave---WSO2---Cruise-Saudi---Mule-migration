@@ -42,6 +42,7 @@ username = "<kept on the server>"
 password = "<kept on the server>"
 
 [aroya.batch.sync]
+# identityScopeFields - Guest Identity Resolution; not set on the server = false (off)
 writeShorex = "<kept on the server>"
 mode = "<kept on the server>"
 pageSize = "<kept on the server>"

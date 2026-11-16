@@ -1,0 +1,8 @@
+[package]
+org = "aroya"
+name = "guest_identity_integration"
+version = "0.1.0"
+distribution = "2201.13.4"
+
+[build-options]
+observabilityIncluded = true

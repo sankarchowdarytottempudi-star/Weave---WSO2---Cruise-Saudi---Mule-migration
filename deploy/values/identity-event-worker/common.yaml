@@ -1,0 +1,35 @@
+# Guest Identity Resolution - identity event worker (plan v2.1 sections 11, 14.1, 14.5).
+# Image: services/guest-identity-integration; its Config.toml (Secret identity-event-worker-config)
+# sets role = "worker". NOT DEPLOYED: needs the customer's Kafka (see deploy/gir/CONNECTIVITY-CHECKLIST.md).
+name: identity-event-worker
+layer: process
+image:
+  repository: REGISTRY/guest-identity-integration
+port: 8081
+configSecret: identity-event-worker-config
+
+# One consumer per replica in group guest-identity-worker; events of one Guest share a partition
+# key (CRM record id), so order per Guest holds with any replica count <= partition count.
+replicas: 2
+autoscaling:
+  enabled: false
+podDisruptionBudget:
+  minAvailable: 1
+
+resources:
+  requests: { cpu: 100m, memory: 384Mi }
+  limits: { cpu: "1", memory: 768Mi }
+
+probes:
+  # ready = consumer connected; with Kafka not set it stays not-ready (nothing to do)
+  readiness: { path: /health/ready, periodSeconds: 10, timeoutSeconds: 5 }
+  liveness: { path: /health/live, initialDelaySeconds: 30, periodSeconds: 20 }
+
+networkPolicy:
+  enabled: true
+  allowFromLayers: []                       # nobody calls the worker; metrics only
+  allowFromNamespaces: [observability]
+  egressAllowAll: true                      # Kafka brokers (customer network), Python, zoho-sys-api
+
+service:
+  type: ClusterIP

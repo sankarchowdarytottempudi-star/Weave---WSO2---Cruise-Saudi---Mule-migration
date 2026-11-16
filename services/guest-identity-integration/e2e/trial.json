@@ -1,0 +1,268 @@
+{
+ "about": "guest-identity-integration (role review): Review API and CRM webhook against made-up stand-ins of the Python decision service and zoho-sys-api (e2e/standin.py). Kafka is not set, as it is today: the webhook answers 503 and nothing is published. Reviewer contexts are signed with a trial-only secret.",
+ "settings": {
+  "role": "review",
+  "webhookToken": "trial-webhook-token-not-real",
+  "reviewAuth.signingSecret": "trial-review-secret-not-real",
+  "reviewAuth.maxAgeSeconds": 315360000,
+  "pythonServiceToken": "trial-python-token-not-real",
+  "retries.firstBackoffSeconds": 0.01,
+  "retries.maxBackoffSeconds": 0.02,
+  "retries.maxAttempts": 2
+ },
+ "cases": [
+  {
+   "op": "GET /review-cases/{caseId}",
+   "name": "open a case without a reviewer",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "expectStatus": 401,
+   "expectNoCalls": [
+    "python",
+    "zohoSysApi"
+   ]
+  },
+  {
+   "op": "GET /review-cases/{caseId}",
+   "name": "open a case: Python only, zero CRM calls",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "X-Reviewer-Context": "eyJ1c2VySWQiOiJVLVRSSUFMLTEiLCJyb2xlcyI6WyJJREVOVElUWV9SRVZJRVdFUiJdLCJleHAiOjIwMDAwMDAwMDB9",
+    "X-Reviewer-Signature": "b709710b28f4dfd4e254f1e7015093ea266dd39a9615fd71447c3282b86f1f2c"
+   },
+   "expectStatus": 200,
+   "expectCalls": [
+    "python"
+   ],
+   "expectNoCalls": [
+    "zohoSysApi"
+   ],
+   "expectTags": [
+    "review case"
+   ],
+   "expectBodyHas": [
+    "RC-1"
+   ]
+  },
+  {
+   "op": "GET /review-cases/{caseId}",
+   "name": "audit role may open",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "X-Reviewer-Context": "eyJ1c2VySWQiOiJVLVRSSUFMLTIiLCJyb2xlcyI6WyJJREVOVElUWV9BVURJVCJdLCJleHAiOjIwMDAwMDAwMDB9",
+    "X-Reviewer-Signature": "1d3e10250910b7dd065dd8678d059ce018d5450e6014f86737470439601b76d7"
+   },
+   "expectStatus": 200,
+   "expectNoCalls": [
+    "zohoSysApi"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/decisions",
+   "name": "submit unchanged: one CRM read, patch applied, committed",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "X-Reviewer-Context": "eyJ1c2VySWQiOiJVLVRSSUFMLTEiLCJyb2xlcyI6WyJJREVOVElUWV9SRVZJRVdFUiJdLCJleHAiOjIwMDAwMDAwMDB9",
+    "X-Reviewer-Signature": "b709710b28f4dfd4e254f1e7015093ea266dd39a9615fd71447c3282b86f1f2c"
+   },
+   "body": {
+    "action": "CONFIRM_SAME_PERSON",
+    "selectedIdentityId": "I200",
+    "comment": "same passport",
+    "idempotencyKey": "trial-idem-1",
+    "versionsShown": [
+     {
+      "crmGuestRecordId": "G1",
+      "crmModifiedTime": "2026-11-16T10:00:00+00:00"
+     }
+    ]
+   },
+   "expectStatus": 200,
+   "expectTags": [
+    "prepare",
+    "crm read",
+    "crm update Guest_Identities",
+    "crm update Contacts",
+    "crm upsert Identity_Review_Cases",
+    "review commit"
+   ],
+   "expectMinCalls": {
+    "zohoSysApi": 4
+   },
+   "expectBodyHas": [
+    "REVIEW_COMMITTED"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/decisions",
+   "name": "CRM changed before submit: REVIEW_DATA_CHANGED, CRM not updated",
+   "scenario": "crm changed",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "X-Reviewer-Context": "eyJ1c2VySWQiOiJVLVRSSUFMLTEiLCJyb2xlcyI6WyJJREVOVElUWV9SRVZJRVdFUiJdLCJleHAiOjIwMDAwMDAwMDB9",
+    "X-Reviewer-Signature": "b709710b28f4dfd4e254f1e7015093ea266dd39a9615fd71447c3282b86f1f2c"
+   },
+   "body": {
+    "action": "CONFIRM_SAME_PERSON",
+    "selectedIdentityId": "I200",
+    "comment": "same passport",
+    "idempotencyKey": "trial-idem-1",
+    "versionsShown": [
+     {
+      "crmGuestRecordId": "G1",
+      "crmModifiedTime": "2026-11-16T10:00:00+00:00"
+     }
+    ]
+   },
+   "expectStatus": 409,
+   "expectTags": [
+    "prepare",
+    "crm read",
+    "freshness failed"
+   ],
+   "expectNoTags": [
+    "crm update Contacts",
+    "review commit"
+   ],
+   "expectBodyHas": [
+    "REVIEW_DATA_CHANGED"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/decisions",
+   "name": "CRM update fails: decision left pending, retry same decision",
+   "scenario": "crm write fails",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "X-Reviewer-Context": "eyJ1c2VySWQiOiJVLVRSSUFMLTEiLCJyb2xlcyI6WyJJREVOVElUWV9SRVZJRVdFUiJdLCJleHAiOjIwMDAwMDAwMDB9",
+    "X-Reviewer-Signature": "b709710b28f4dfd4e254f1e7015093ea266dd39a9615fd71447c3282b86f1f2c"
+   },
+   "body": {
+    "action": "CONFIRM_SAME_PERSON",
+    "selectedIdentityId": "I200",
+    "comment": "same passport",
+    "idempotencyKey": "trial-idem-1",
+    "versionsShown": [
+     {
+      "crmGuestRecordId": "G1",
+      "crmModifiedTime": "2026-11-16T10:00:00+00:00"
+     }
+    ]
+   },
+   "expectStatus": 502,
+   "expectTags": [
+    "review fail"
+   ],
+   "expectNoTags": [
+    "review commit"
+   ],
+   "expectBodyHas": [
+    "REVIEW_CRM_UPDATE_PENDING"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/decisions",
+   "name": "Python refuses on the versions shown",
+   "scenario": "python refuses",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "X-Reviewer-Context": "eyJ1c2VySWQiOiJVLVRSSUFMLTEiLCJyb2xlcyI6WyJJREVOVElUWV9SRVZJRVdFUiJdLCJleHAiOjIwMDAwMDAwMDB9",
+    "X-Reviewer-Signature": "b709710b28f4dfd4e254f1e7015093ea266dd39a9615fd71447c3282b86f1f2c"
+   },
+   "body": {
+    "action": "CONFIRM_SAME_PERSON",
+    "selectedIdentityId": "I200",
+    "comment": "same passport",
+    "idempotencyKey": "trial-idem-1",
+    "versionsShown": [
+     {
+      "crmGuestRecordId": "G1",
+      "crmModifiedTime": "2026-11-16T10:00:00+00:00"
+     }
+    ]
+   },
+   "expectStatus": 409,
+   "expectNoCalls": [
+    "zohoSysApi"
+   ],
+   "expectBodyHas": [
+    "REVIEW_DATA_CHANGED"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/decisions",
+   "name": "reviewer may not reverse",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "X-Reviewer-Context": "eyJ1c2VySWQiOiJVLVRSSUFMLTEiLCJyb2xlcyI6WyJJREVOVElUWV9SRVZJRVdFUiJdLCJleHAiOjIwMDAwMDAwMDB9",
+    "X-Reviewer-Signature": "b709710b28f4dfd4e254f1e7015093ea266dd39a9615fd71447c3282b86f1f2c"
+   },
+   "body": {
+    "action": "REVERSE_DECISION",
+    "selectedIdentityId": "I200",
+    "comment": "same passport",
+    "idempotencyKey": "trial-idem-1",
+    "versionsShown": [
+     {
+      "crmGuestRecordId": "G1",
+      "crmModifiedTime": "2026-11-16T10:00:00+00:00"
+     }
+    ]
+   },
+   "expectStatus": 403,
+   "expectNoCalls": [
+    "python",
+    "zohoSysApi"
+   ]
+  },
+  {
+   "op": "POST /crm-events",
+   "name": "CRM webhook with the wrong token",
+   "headers": {
+    "X-Webhook-Token": "wrong"
+   },
+   "body": {
+    "eventType": "updated",
+    "record": {
+     "id": "G1",
+     "Modified_Time": "2026-11-16T10:00:00+00:00"
+    }
+   },
+   "expectStatus": 401
+  },
+  {
+   "op": "POST /crm-events",
+   "name": "CRM webhook while Kafka is not set: 503, nothing published",
+   "headers": {
+    "X-Webhook-Token": "trial-webhook-token-not-real"
+   },
+   "body": {
+    "eventType": "updated",
+    "record": {
+     "id": "G1",
+     "Modified_Time": "2026-11-16T10:00:00+00:00",
+     "First_Name": "Trial"
+    }
+   },
+   "expectStatus": 503,
+   "expectBodyHas": [
+    "EVENT_NOT_PUBLISHED"
+   ]
+  }
+ ]
+}

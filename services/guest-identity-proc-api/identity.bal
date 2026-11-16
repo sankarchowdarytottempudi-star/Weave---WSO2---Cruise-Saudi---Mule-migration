@@ -91,7 +91,10 @@ isolated function identityItem(map<json> & readonly guest, IdentityContext & rea
     future<[SeawareSession, json]|Stop> early = start sessionAndSearch(guest, correlationId);
     string globalId = "";
     string loyaltyId = "";
-    if crm {
+    // Guest Identity Resolution: an in-scope guest gets its IDs from the decision service later
+    // (always false while identityResolution.enabled is off).
+    boolean pending = crm && resolutionApplies(guest);
+    if crm && !pending {
         [string, string]|Stop ids = crmIds(guest, correlationId);
         if ids is Stop {
             [SeawareSession, json]|Stop|error opened = wait early;
@@ -109,10 +112,10 @@ isolated function identityItem(map<json> & readonly guest, IdentityContext & rea
         return core:clientOnlyAnswerOf(clientId);
     }
     if ctx.realTime {
-        future<()> _ = start crmUpsertLater(guest, clientId, problem, globalId, loyaltyId, ctx);
+        future<()> _ = start crmUpsertLater(guest, clientId, problem, globalId, loyaltyId, ctx, pending);
         return core:clientOnlyAnswerOf(clientId);
     }
-    return crmUpsert(guest, clientId, problem, globalId, loyaltyId, ctx);
+    return crmUpsert(guest, clientId, problem, globalId, loyaltyId, ctx, pending);
 }
 
 # The guest id and loyalty id of a guest: those of the newest matching CRM contact, else new ones.
@@ -289,20 +292,25 @@ isolated function seawareClientIn(string token, map<json> guest, string ids, str
 # + globalId - Guest id
 # + loyaltyId - Loyalty id
 # + ctx - The caller's headers
+# + pending - Guest Identity Resolution: upsert as PENDING_IDENTITY without IDs, then request evaluation
 # + return - The answer for the guest
 isolated function crmUpsert(map<json> & readonly guest, string clientId, string? problem, string globalId,
-        string loyaltyId, IdentityContext & readonly ctx) returns json|Stop {
+        string loyaltyId, IdentityContext & readonly ctx, boolean pending = false) returns json|Stop {
     string correlationId = ctx.correlationId;
-    map<json>|error contact = core:crmRecordOf(guest, clientId, globalId, loyaltyId);
-    if contact is error {
-        return {"status": "error", "message": contact.message() + (problem is string ? ": " + problem : "")};
+    map<json>|error built = core:crmRecordOf(guest, clientId, globalId, loyaltyId);
+    if built is error {
+        return {"status": "error", "message": built.message() + (problem is string ? ": " + problem : "")};
     }
+    map<json> contact = pending ? pendingContact(guest, built) : built;
     json answer = check zohoWrite(http:POST, contactUpsertPath, core:crmUpsertBodyOf(contact), correlationId);
     boolean failed = core:isCrmError(answer);
     string zohoId = core:crmContactIdOf(answer);
     if !failed {
         // Mule stores the guest in an async scope: the answer does not wait for it.
         future<()> _ = start storeGuest(contact.cloneReadOnly(), answer.cloneReadOnly(), ctx);
+        if pending {
+            future<()> _ = start requestEvaluation(guest, contact.cloneReadOnly(), answer.cloneReadOnly(), correlationId);
+        }
     }
     json image = ();
     json file = guest["file"];
@@ -313,8 +321,8 @@ isolated function crmUpsert(map<json> & readonly guest, string clientId, string?
 }
 
 isolated function crmUpsertLater(map<json> & readonly guest, string clientId, string? problem, string globalId,
-        string loyaltyId, IdentityContext & readonly ctx) {
-    json|Stop result = crmUpsert(guest, clientId, problem, globalId, loyaltyId, ctx);
+        string loyaltyId, IdentityContext & readonly ctx, boolean pending = false) {
+    json|Stop result = crmUpsert(guest, clientId, problem, globalId, loyaltyId, ctx, pending);
     if result is Stop {
         log:printError("CRM contact was not written", correlationId = ctx.correlationId, status = result.detail().status);
     } else {
