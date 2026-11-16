@@ -3,19 +3,11 @@
  "by": "deploy_one.sh on the server",
  "what": "deployed",
  "results": {},
- "image": "sha256:d08b0bf352485dd0dd5a4a374199b6c7cdeae1bbb2af06ff6ec3d9f0764c392f",
- "version": 3,
- "at": "2026-11-16T13:06:38Z",
+ "image": "sha256:40bf487370bec99aa3e4852d01700c03cd0f8e21c32c3f6a132b0a3f4fc52c90",
+ "version": 4,
+ "at": "2026-11-16T15:17:20Z",
  "summary": {
-  "files": 7,
-  "changed": [
-   "deploy/settings-templates/guest-identity-proc-api.toml",
-   "services/guest-identity-proc-api/Dependencies.toml",
-   "services/guest-identity-proc-api/config.bal",
-   "services/guest-identity-proc-api/downstream.bal",
-   "services/guest-identity-proc-api/profiles.bal",
-   "services/guest-identity-proc-api/state.bal",
-   "services/guest-identity-proc-api/tests/photo_cache_test.bal"
-  ]
+  "files": 0,
+  "changed": []
  }
 }
