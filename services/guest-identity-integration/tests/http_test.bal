@@ -18,6 +18,9 @@ service /py on new http:Listener(19182) {
         return {caseId: id, caseStatus: "REVIEW_OPEN", reviewer: check req.getHeader("X-Reviewer-Id")};
     }
 
+    isolated resource function get v1/review\-cases(http:Request req) returns json =>
+        {cases: [], kind: req.getQueryParamValue("kind") ?: ""};
+
     isolated resource function post v1/review\-cases/[string id]/decision\-preparations() returns http:Conflict =>
         {body: {code: "REVIEW_DATA_CHANGED", message: "changed on screen"}};
 }
@@ -162,4 +165,32 @@ function stateStoreFallsBackToMemoryOnlyWhenAllowed() returns error? {
 function smokeRefusesWithoutKafkaSettings() {
     test:assertTrue(runKafkaSmoke({}, "") is error);
     test:assertTrue(runKafkaSmoke({bootstrapServers: ["127.0.0.1:1"], securityProtocol: "TLS"}, "") is error);
+}
+
+@test:Config {}
+function workbenchBearerSignIn() returns error? {
+    map<string> h = {
+        "Authorization": "Bearer test-bff-token-not-real",
+        "x-reviewer-id": "Z-77",
+        "x-reviewer-roles": "IDENTITY_REVIEWER",
+        "x-correlation-id": "wb-1"
+    };
+    http:Response q = check api->get("/guest-identity-integration/v1/review-cases?kind=GUARDRAIL", h);
+    test:assertEquals(q.statusCode, 200);
+    test:assertEquals(core:pick(check q.getJsonPayload(), "kind"), "GUARDRAIL");
+    test:assertEquals(check q.getHeader("correlationId"), "wb-1");
+    http:Response c = check api->get("/guest-identity-integration/v1/review-cases/RC-9", h);
+    test:assertEquals(core:pick(check c.getJsonPayload(), "reviewer"), "Z-77");
+    h["Authorization"] = "Bearer wrong";
+    http:Response bad = check api->get("/guest-identity-integration/v1/review-cases", h);
+    test:assertEquals(bad.statusCode, 401);
+    http:Response hist = check api->get("/guest-identity-integration/v1/review-cases/RC-9/history",
+            {"Authorization": "Bearer test-bff-token-not-real", "x-reviewer-id": "Z-77", "x-reviewer-roles": "AUDIT_REPORTING"});
+    test:assertEquals(hist.statusCode, 404, "until the Python service has the history endpoint");
+    http:Response asg = check api->post("/guest-identity-integration/v1/review-cases/RC-9/assignment", {assigneeId: "Z-1"},
+            {"Authorization": "Bearer test-bff-token-not-real", "x-reviewer-id": "Z-77", "x-reviewer-roles": "IDENTITY_REVIEWER"});
+    test:assertEquals(asg.statusCode, 403);
+    http:Response cm = check api->post("/guest-identity-integration/v1/review-cases/RC-9/comments", {text: "x"},
+            {"Authorization": "Bearer test-bff-token-not-real", "x-reviewer-id": "Z-77", "x-reviewer-roles": "AUDIT_REPORTING"});
+    test:assertEquals(cm.statusCode, 403);
 }

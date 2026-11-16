@@ -223,3 +223,22 @@ function reviewerAuthentication() returns error? {
     test:assertEquals((<error>reviewerOf(blank, check signatureOf(blank, secret), secret, 1000, 300)).message(),
             "REVIEWER_CONTEXT_INVALID");
 }
+
+@test:Config {}
+function workbenchReviewerAndPermissions() returns error? {
+    Reviewer r = check trustedReviewerOf("Bearer tok", " Z1 ", "IDENTITY_REVIEWER, CRM_ADMINISTRATOR", "tok");
+    test:assertEquals(r.userId, "Z1");
+    test:assertEquals(r.roles, ["IDENTITY_REVIEWER", "CRM_ADMINISTRATOR"]);
+    test:assertTrue(mayComment(r));
+    test:assertTrue(mayAssign(r, "Z1"));
+    test:assertFalse(mayAssign(r, "Z2"));
+    test:assertTrue(mayAssign({userId: "S", roles: [ROLE_SUPERVISOR], exp: 0}, "Z2"));
+    test:assertFalse(mayComment({userId: "A", roles: [ROLE_AUDIT], exp: 0}));
+    test:assertTrue(mayView({userId: "A", roles: [ROLE_AUDIT], exp: 0}));
+    test:assertEquals((<error>trustedReviewerOf("Bearer x", "Z1", "", "tok")).message(), "REVIEWER_TOKEN_INVALID");
+    test:assertEquals((<error>trustedReviewerOf("Bearer tok", "", "", "tok")).message(), "REVIEWER_CONTEXT_MISSING");
+    test:assertEquals((<error>trustedReviewerOf("Bearer tok", "Z1", "", "")).message(), "REVIEW_AUTH_NOT_CONFIGURED");
+    test:assertEquals(withoutPersonalDetails("call +966 55 123 4567 or mail a.b@x.example, passport 12345678; same DOB"),
+            "call [removed] or mail [removed], passport [removed]; same DOB");
+    test:assertEquals(withoutPersonalDetails("same person, case 12"), "same person, case 12");
+}

@@ -42,6 +42,7 @@ firstBackoffSeconds = 2
 maxBackoffSeconds = 60
 
 [aroya.guest_identity_integration.reviewAuth]
+serviceToken = "<token of the Review Workbench backend (Factory BFF REVIEW_API_TOKEN_FILE)>"
 signingSecret = "<shared HMAC secret with the Workbench backend>"
 maxAgeSeconds = 300
 

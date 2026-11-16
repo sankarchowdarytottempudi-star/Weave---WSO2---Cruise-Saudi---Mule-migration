@@ -14,6 +14,16 @@ T2 = "2026-11-16T09:40:00+00:00"
 def reply(backend, method, path, query, headers, body, state):
     sc = state.get("scenario") or ""
     if backend == "python":
+        if method == "GET" and path.rstrip("/").endswith("/v1/review-cases"):
+            return 200, {"cases": [{"caseId": "RC-1", "kind": "FOUR_FIELD_REVIEW", "caseStatus": "REVIEW_OPEN"}]}, None, "queue"
+        if method == "GET" and path.endswith("/history"):
+            return 200, [{"at": "2026-11-16T10:00:00Z", "event": "CASE_OPENED"}], None, "history"
+        if path.endswith("/assignment"):
+            ok = isinstance(body, dict) and body.get("assignedBy") == (headers.get("X-Reviewer-Id") or headers.get("x-reviewer-id"))
+            return 200, {"caseId": "RC-1", "assignee": (body or {}).get("assigneeId")}, None, "assignment" + ("" if ok else " (assignedBy not the reviewer)")
+        if path.endswith("/comments"):
+            clean = "@" not in str((body or {}).get("text", ""))
+            return 201, {"caseId": "RC-1"}, None, "comment" + ("" if clean else " (personal details kept)")
         if method == "GET" and "/v1/review-cases/" in path:
             return 200, {"caseId": "RC-1", "caseStatus": "REVIEW_OPEN", "kind": "FOUR_FIELD_REVIEW", "priority": "NORMAL",
                          "ruleVersion": "1.0", "reasonCodes": ["FOUR_FIELD_MATCH"], "candidates": []}, None, "review case"

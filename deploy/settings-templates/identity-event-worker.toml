@@ -29,6 +29,7 @@ url = "<kept on the server>"
 url = "<kept on the server>"
 
 [aroya.guest_identity_integration.reviewAuth]
+serviceToken = "<kept on the server>"
 signingSecret = "<kept on the server>"
 
 [aroya.guest_identity_integration.stateRedis]

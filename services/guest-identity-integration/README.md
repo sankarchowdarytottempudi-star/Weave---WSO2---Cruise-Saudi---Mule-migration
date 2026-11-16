@@ -55,22 +55,36 @@ refreshes keys, rejects stale ones). Guests `PENDING_IDENTITY` for longer than `
 get their evaluation republished. The watermark advances only when every page and record succeeded.
 It never writes an identity to CRM.
 
-## Reviewer authentication (contract with the Review Workbench)
+## Review Workbench contract (Factory BFF, `src/review/README.md`)
 
-The Workbench backend (not the browser) calls the Review API with two headers:
+Set the BFF's `REVIEW_API_URL` to `http://identity-review-api.wso2.svc/guest-identity-integration`
+(the BFF appends `/v1/review-cases...`) and give it the token in `reviewAuth.serviceToken`.
 
-- `X-Reviewer-Context`: base64url (no padding) of the JSON `{"userId": "<CRM user id>", "roles": ["IDENTITY_REVIEWER" | "IDENTITY_SUPERVISOR" | "IDENTITY_AUDIT", ...], "exp": <unix seconds>}`
-- `X-Reviewer-Signature`: lowercase hex HMAC-SHA256 of the exact `X-Reviewer-Context` string with the shared secret `reviewAuth.signingSecret`
+| Endpoint | Upstream (Python) | Rules here |
+|---|---|---|
+| `GET /v1/review-cases?kind&status&assignee` (+ `page`, `pageSize`, `limit`, `offset`, `cursor`) | same path | any review role; unknown filters dropped |
+| `GET /v1/review-cases/{id}` | same path | any review role; **zero CRM calls** |
+| `GET /v1/review-cases/{id}/history` | same path | any review role |
+| `POST /v1/review-cases/{id}/assignment` `{assigneeId}` | same path, `{assigneeId, assignedBy, correlationId}` | `assignedBy` = signed-in user; reviewers take cases for themselves, only `IDENTITY_SUPERVISOR` hands to others |
+| `POST /v1/review-cases/{id}/comments` `{text}` | same path, `{authorId, text, correlationId}` | reviewer, supervisor, CRM administrator; `authorId` = signed-in user; e-mail addresses and long digit runs removed from the text (history reaches audit users unmasked) |
+| `POST /v1/review-cases/{id}/decisions` (DecisionPreparationRequest) | `decision-preparations`, `freshness-failed`, `commit`, `fail` | plan 10.4 flow below; `reviewerId` = signed-in user; comment scrubbed as above |
 
-`exp` must be in the future and at most `reviewAuth.maxAgeSeconds` (default 300) ahead. Open a case:
-any of the three roles. Decide: `IDENTITY_REVIEWER` or `IDENTITY_SUPERVISOR`; `REVERSE_DECISION`:
-`IDENTITY_SUPERVISOR` only. The user and roles are forwarded to Python as `X-Reviewer-Id` /
-`X-Reviewer-Roles`. Errors: `401 UNAUTHORIZED` (missing, bad signature, expired), `403 FORBIDDEN`,
-`503 REVIEW_AUTH_NOT_CONFIGURED` (no secret set).
+Queue, history, assignment and comments are stored by the Python service (PostgreSQL); this API
+only proxies them with the role checks. Python answers 404 for them until AV adds those endpoints.
 
-`POST /review-cases/{caseId}/decisions` body: `{"action", "selectedIdentityId"?, "comment"?,
-"versionsShown": [{"crmGuestRecordId", "crmModifiedTime"}], "idempotencyKey", "followUpDate"?}`.
-Answers: `200 {reviewDecisionId, caseId, state: REVIEW_COMMITTED}`, `409 REVIEW_DATA_CHANGED`
+**Sign-in.** Either
+- the BFF way: `Authorization: Bearer <reviewAuth.serviceToken>` plus `x-reviewer-id` and
+  `x-reviewer-roles` (comma separated) from the BFF's own Zoho session; or
+- a signed context: `X-Reviewer-Context` = base64url (no padding) of `{"userId", "roles", "exp"}` and
+  `X-Reviewer-Signature` = lowercase hex HMAC-SHA256 of that string with `reviewAuth.signingSecret`
+  (`exp` in the future, at most `maxAgeSeconds` ahead).
+
+Roles: `IDENTITY_REVIEWER` (decide, take, comment), `IDENTITY_SUPERVISOR` (also reverse, hand over),
+`CRM_ADMINISTRATOR` (read, comment), `AUDIT_REPORTING` (read). The user and roles go to Python as
+`X-Reviewer-Id` / `X-Reviewer-Roles`. Errors: `401 UNAUTHORIZED`, `403 FORBIDDEN`,
+`503 REVIEW_AUTH_NOT_CONFIGURED`.
+
+**Decision answers:** `200 {reviewDecisionId, caseId, state: REVIEW_COMMITTED}`, `409 REVIEW_DATA_CHANGED`
 (`changedRecords`), `502/503 REVIEW_CRM_UPDATE_PENDING` (submit again with the same idempotency key),
 `202 REVIEW_CRM_UPDATE_PENDING` (CRM updated, commit pending), or Python's own error passed through.
 
@@ -83,8 +97,8 @@ answers 503, and nothing else changes. Field and module API names are configurab
 
 ## Tests
 
-`bal test --code-coverage` (from this folder, inside the workspace): 44 tests, package line
-coverage 82.3% (`modules/core` 100%; root module 75.3% - the uncovered part is the Kafka consumer
+`bal test --code-coverage` (from this folder, inside the workspace): 47 tests, package line
+coverage 83.9% (`modules/core` 100%; root module 77.0% - the uncovered part is the Kafka consumer
 loop, the Kafka producer and the smoke role, which need a broker). Python, CRM and Kafka are in-memory stand-ins
 (`tests/standins.bal`); the HTTP wiring runs against HTTP stand-ins on loopback. Covered plan 21.3
 scenarios: source guest end to end, duplicate event, CRM update fails → retry same pair, commit

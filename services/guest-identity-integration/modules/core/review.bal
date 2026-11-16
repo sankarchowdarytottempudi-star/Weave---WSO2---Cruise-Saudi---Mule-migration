@@ -5,6 +5,8 @@ import ballerina/lang.array;
 
 public const string ROLE_REVIEWER = "IDENTITY_REVIEWER";
 public const string ROLE_SUPERVISOR = "IDENTITY_SUPERVISOR";
+public const string ROLE_CRM_ADMIN = "CRM_ADMINISTRATOR";
+public const string ROLE_AUDIT = "AUDIT_REPORTING";
 
 # A reviewer, as the Workbench vouched for them.
 #
@@ -101,7 +103,7 @@ public isolated function mayDecide(Reviewer reviewer, string action) returns boo
 # Whether a reviewer may open a case (reviewers, supervisors and audit).
 public isolated function mayView(Reviewer reviewer) returns boolean {
     foreach string r in reviewer.roles {
-        if r == ROLE_REVIEWER || r == ROLE_SUPERVISOR || r == "IDENTITY_AUDIT" {
+        if r == ROLE_REVIEWER || r == ROLE_SUPERVISOR || r == ROLE_CRM_ADMIN || r == ROLE_AUDIT || r == "IDENTITY_AUDIT" {
             return true;
         }
     }
@@ -206,5 +208,63 @@ public isolated function reviewWritesOf(json crmPatch, string guestRecordId, str
         c["Follow_Up_Date"] = followUp.length() > 10 ? followUp.substring(0, 10) : followUp;
     }
     out.push({module: m.reviewCases, upsertKey: "Case_ID", fields: c});
+    return out;
+}
+
+# The reviewer as the Workbench backend (Factory BFF) states it: a bearer service token that only the
+# BFF holds, plus x-reviewer-id / x-reviewer-roles taken from its own signed-in session.
+#
+# + authorization - Authorization header
+# + reviewerId - x-reviewer-id
+# + roles - x-reviewer-roles (comma separated)
+# + serviceToken - The token the BFF is given; empty = this way of signing in is off
+# + return - The reviewer, or an error saying why not
+public isolated function trustedReviewerOf(string authorization, string reviewerId, string roles, string serviceToken)
+        returns Reviewer|error {
+    if serviceToken == "" {
+        return error("REVIEW_AUTH_NOT_CONFIGURED");
+    }
+    string expected = "Bearer " + serviceToken;
+    if !sameText(authorization.trim(), expected) {
+        return error("REVIEWER_TOKEN_INVALID");
+    }
+    string id = reviewerId.trim();
+    if id == "" || id.length() > 80 {
+        return error("REVIEWER_CONTEXT_MISSING");
+    }
+    string[] list = [];
+    foreach string r in re `,`.split(roles) {
+        if r.trim() != "" {
+            list.push(r.trim());
+        }
+    }
+    return {userId: id, roles: list, exp: 0};
+}
+
+# Who may comment on a case (Workbench: reviewers, supervisors, CRM administrators).
+public isolated function mayComment(Reviewer reviewer) returns boolean {
+    foreach string r in reviewer.roles {
+        if r == ROLE_REVIEWER || r == ROLE_SUPERVISOR || r == ROLE_CRM_ADMIN {
+            return true;
+        }
+    }
+    return false;
+}
+
+# Who may assign a case: reviewers and supervisors take a case themselves; only a supervisor
+# gives a case to someone else.
+public isolated function mayAssign(Reviewer reviewer, string assigneeId) returns boolean {
+    boolean supervisor = reviewer.roles.indexOf(ROLE_SUPERVISOR) is int;
+    if supervisor {
+        return true;
+    }
+    return assigneeId == reviewer.userId && reviewer.roles.indexOf(ROLE_REVIEWER) is int;
+}
+
+# A comment with e-mail addresses and long digit runs (phone, passport, ID numbers) removed: case
+# history reaches audit users unmasked, so personal details must not be stored in it.
+public isolated function withoutPersonalDetails(string comment) returns string {
+    string out = re `[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}`.replaceAll(comment, "[removed]");
+    out = re `\+?[0-9][0-9 ()-]{5,}[0-9]`.replaceAll(out, "[removed]");
     return out;
 }

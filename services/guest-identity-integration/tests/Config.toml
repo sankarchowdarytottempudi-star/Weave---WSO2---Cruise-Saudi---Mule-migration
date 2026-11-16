@@ -20,5 +20,6 @@ firstBackoffSeconds = 0.01
 maxBackoffSeconds = 0.04
 
 [aroya.guest_identity_integration.reviewAuth]
+serviceToken = "test-bff-token-not-real"
 signingSecret = "test-secret-not-real"
 maxAgeSeconds = 300

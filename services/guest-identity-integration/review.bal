@@ -72,7 +72,7 @@ public isolated function submitDecision(Deps d, core:Reviewer reviewer, string c
         reviewerId: reviewer.userId,
         action,
         selectedIdentityId: input["selectedIdentityId"],
-        comment: input["comment"],
+        comment: input["comment"] is string ? core:withoutPersonalDetails(<string>input["comment"]) : (),
         versionsShown: input["versionsShown"],
         idempotencyKey: input["idempotencyKey"],
         followUpDate: input["followUpDate"]
@@ -219,4 +219,62 @@ public isolated function acceptGuestEvent(Deps d, json body, string cid) returns
                 cid);
     }
     return {status: 202, body: {eventId: event["eventId"], eventType: event["eventType"], correlationId: cid}};
+}
+
+// Workbench queue, history, assignment and comments (Factory BFF contract). The data lives in the
+// Python service (PostgreSQL); these are proxies with the role checks done here as well. None of
+// them calls CRM.
+
+const string[] QUEUE_FILTERS = ["kind", "status", "assignee", "page", "pageSize", "limit", "offset", "cursor"];
+
+# GET the review queue: only the known filters are passed on.
+public isolated function listCases(Deps d, core:Reviewer reviewer, map<string> filters, string cid) returns Answer {
+    if !core:mayView(reviewer) {
+        return problem(403, "FORBIDDEN", "This user has no identity review role.", cid);
+    }
+    map<string> q = {};
+    foreach string k in QUEUE_FILTERS {
+        string? v = filters[k];
+        if v is string && v.trim() != "" && v.length() <= 80 {
+            q[k] = v.trim();
+        }
+    }
+    return passThrough(d.python.call(http:GET, "/v1/review-cases" + queryOf(q), (), cid, reviewerHeaders(reviewer)), cid);
+}
+
+# GET a case's history.
+public isolated function caseHistory(Deps d, core:Reviewer reviewer, string caseId, string cid) returns Answer {
+    if !core:mayView(reviewer) {
+        return problem(403, "FORBIDDEN", "This user has no identity review role.", cid);
+    }
+    return passThrough(d.python.call(http:GET, "/v1/review-cases/" + caseId + "/history", (), cid,
+            reviewerHeaders(reviewer)), cid);
+}
+
+# Take a case, or (supervisor) hand it to someone. assignedBy is always the signed-in reviewer.
+public isolated function assignCase(Deps d, core:Reviewer reviewer, string caseId, json input, string cid) returns Answer {
+    string assignee = core:text(core:pick(input, "assigneeId")).trim();
+    if assignee == "" || assignee.length() > 80 {
+        return problem(400, "INVALID_REQUEST", "assigneeId is required.", cid);
+    }
+    if !core:mayAssign(reviewer, assignee) {
+        return problem(403, "FORBIDDEN", "Only a supervisor can give a case to someone else.", cid);
+    }
+    return passThrough(d.python.call(http:POST, "/v1/review-cases/" + caseId + "/assignment",
+            {assigneeId: assignee, assignedBy: reviewer.userId, correlationId: cid}, cid, reviewerHeaders(reviewer)), cid);
+}
+
+# Comment on a case. authorId is always the signed-in reviewer; e-mail addresses and long numbers
+# are removed from the text first (history reaches audit users unmasked).
+public isolated function commentCase(Deps d, core:Reviewer reviewer, string caseId, json input, string cid) returns Answer {
+    if !core:mayComment(reviewer) {
+        return problem(403, "FORBIDDEN", "Your role can read cases but not comment.", cid);
+    }
+    string comment = core:text(core:pick(input, "text")).trim();
+    if comment == "" || comment.length() > 2000 {
+        return problem(400, "INVALID_REQUEST", "Write a comment of up to 2000 characters.", cid);
+    }
+    return passThrough(d.python.call(http:POST, "/v1/review-cases/" + caseId + "/comments",
+            {authorId: reviewer.userId, text: core:withoutPersonalDetails(comment), correlationId: cid}, cid,
+            reviewerHeaders(reviewer)), cid);
 }

@@ -75,9 +75,12 @@ configurable RetrySettings retries = {};
 
 # Reviewer authentication: the Workbench backend signs the CRM user context (see README).
 #
-# + signingSecret - Shared HMAC secret; empty = the Review API answers 503
+# + serviceToken - Bearer token of the Workbench backend (Factory BFF REVIEW_API_TOKEN_FILE); the
+# reviewer then comes from its x-reviewer-id / x-reviewer-roles headers. Empty = off
+# + signingSecret - Shared HMAC secret for a signed reviewer context (alternative); empty = off
 # + maxAgeSeconds - Longest lifetime of a signed context
 public type ReviewAuthSettings record {|
+    string serviceToken = "";
     string signingSecret = "";
     int maxAgeSeconds = 300;
 |};

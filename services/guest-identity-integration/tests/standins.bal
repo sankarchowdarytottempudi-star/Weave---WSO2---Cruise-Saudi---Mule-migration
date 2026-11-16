@@ -160,6 +160,15 @@ isolated class MemPython {
                 }
                 return {status: 200, body: {decisionId: id, processingState: st}};
             }
+            if method == http:GET && (path == "/v1/review-cases" || path.startsWith("/v1/review-cases?")) {
+                return {status: 200, body: {cases: [{caseId: "RC-1", kind: "FOUR_FIELD_REVIEW"}], query: path}};
+            }
+            if method == http:GET && path.endsWith("/history") {
+                return {status: 200, body: [{at: "2026-11-16T10:00:00Z", event: "CASE_OPENED"}]};
+            }
+            if path.endsWith("/assignment") || path.endsWith("/comments") {
+                return {status: 200, body: body};
+            }
             if method == http:GET && path.startsWith("/v1/review-cases/") {
                 return {
                     status: 200,

@@ -8,7 +8,8 @@
   "pythonServiceToken": "trial-python-token-not-real",
   "retries.firstBackoffSeconds": 0.01,
   "retries.maxBackoffSeconds": 0.02,
-  "retries.maxAttempts": 2
+  "retries.maxAttempts": 2,
+  "reviewAuth.serviceToken": "trial-bff-token-not-real"
  },
  "cases": [
   {
@@ -262,6 +263,138 @@
    "expectStatus": 503,
    "expectBodyHas": [
     "EVENT_NOT_PUBLISHED"
+   ]
+  },
+  {
+   "op": "GET /review-cases",
+   "name": "Workbench queue (bearer + reviewer headers)",
+   "headers": {
+    "Authorization": "Bearer trial-bff-token-not-real",
+    "x-reviewer-id": "Z-TRIAL-1",
+    "x-reviewer-roles": "IDENTITY_REVIEWER"
+   },
+   "query": "kind=FOUR_FIELD_REVIEW&assignee=Z-TRIAL-1",
+   "expectStatus": 200,
+   "expectTags": [
+    "queue"
+   ],
+   "expectNoCalls": [
+    "zohoSysApi"
+   ]
+  },
+  {
+   "op": "GET /review-cases",
+   "name": "queue with a wrong token",
+   "headers": {
+    "Authorization": "Bearer wrong",
+    "x-reviewer-id": "Z-TRIAL-1",
+    "x-reviewer-roles": "IDENTITY_REVIEWER"
+   },
+   "expectStatus": 401,
+   "expectNoCalls": [
+    "python"
+   ]
+  },
+  {
+   "op": "GET /review-cases/{caseId}/history",
+   "name": "history for an audit user",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "Authorization": "Bearer trial-bff-token-not-real",
+    "x-reviewer-id": "Z-TRIAL-2",
+    "x-reviewer-roles": "AUDIT_REPORTING"
+   },
+   "expectStatus": 200,
+   "expectTags": [
+    "history"
+   ],
+   "expectNoCalls": [
+    "zohoSysApi"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/assignment",
+   "name": "reviewer takes the case",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "Authorization": "Bearer trial-bff-token-not-real",
+    "x-reviewer-id": "Z-TRIAL-1",
+    "x-reviewer-roles": "IDENTITY_REVIEWER"
+   },
+   "body": {
+    "assigneeId": "Z-TRIAL-1",
+    "assignedBy": "someone-else"
+   },
+   "expectStatus": 200,
+   "expectTags": [
+    "assignment"
+   ],
+   "expectNoTags": [
+    "assignment (assignedBy not the reviewer)"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/assignment",
+   "name": "reviewer may not hand the case to someone else",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "Authorization": "Bearer trial-bff-token-not-real",
+    "x-reviewer-id": "Z-TRIAL-1",
+    "x-reviewer-roles": "IDENTITY_REVIEWER"
+   },
+   "body": {
+    "assigneeId": "Z-OTHER"
+   },
+   "expectStatus": 403,
+   "expectNoCalls": [
+    "python"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/comments",
+   "name": "comment without personal details",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "Authorization": "Bearer trial-bff-token-not-real",
+    "x-reviewer-id": "Z-TRIAL-1",
+    "x-reviewer-roles": "IDENTITY_REVIEWER"
+   },
+   "body": {
+    "text": "mail guest@example.invalid says same person"
+   },
+   "expectStatus": 201,
+   "expectTags": [
+    "comment"
+   ],
+   "expectNoTags": [
+    "comment (personal details kept)"
+   ]
+  },
+  {
+   "op": "POST /review-cases/{caseId}/comments",
+   "name": "audit user may not comment",
+   "pathValues": {
+    "caseId": "RC-1"
+   },
+   "headers": {
+    "Authorization": "Bearer trial-bff-token-not-real",
+    "x-reviewer-id": "Z-TRIAL-2",
+    "x-reviewer-roles": "AUDIT_REPORTING"
+   },
+   "body": {
+    "text": "x"
+   },
+   "expectStatus": 403,
+   "expectNoCalls": [
+    "python"
    ]
   }
  ]

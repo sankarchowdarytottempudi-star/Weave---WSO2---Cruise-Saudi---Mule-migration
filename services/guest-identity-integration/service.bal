@@ -35,9 +35,25 @@ isolated function cidOf(http:Request req) returns string {
     return x is string && x.trim() != "" ? x.trim() : commons:correlationIdOf(req);
 }
 
-isolated function reviewerFrom(http:Request req) returns core:Reviewer|error =>
-    core:reviewerOf(commons:headerOf(req, "X-Reviewer-Context") ?: "", commons:headerOf(req, "X-Reviewer-Signature") ?: "",
-        reviewAuth.signingSecret, time:utcNow()[0], reviewAuth.maxAgeSeconds);
+# The reviewer: a signed context (X-Reviewer-Context + X-Reviewer-Signature) when one is sent,
+# otherwise the Workbench backend's bearer token with x-reviewer-id / x-reviewer-roles.
+isolated function reviewerFrom(http:Request req) returns core:Reviewer|error {
+    string context = commons:headerOf(req, "X-Reviewer-Context") ?: "";
+    if context != "" {
+        return core:reviewerOf(context, commons:headerOf(req, "X-Reviewer-Signature") ?: "", reviewAuth.signingSecret,
+                time:utcNow()[0], reviewAuth.maxAgeSeconds);
+    }
+    if reviewAuth.serviceToken == "" {
+        return error(reviewAuth.signingSecret == "" ? "REVIEW_AUTH_NOT_CONFIGURED" : "REVIEWER_CONTEXT_MISSING");
+    }
+    return core:trustedReviewerOf(commons:headerOf(req, "Authorization") ?: "", commons:headerOf(req, "x-reviewer-id") ?: "",
+            commons:headerOf(req, "x-reviewer-roles") ?: "", reviewAuth.serviceToken);
+}
+
+isolated function bodyOf(http:Request req) returns json {
+    json|error b = req.getJsonPayload();
+    return b is json ? b : ();
+}
 
 isolated function authProblem(error e, string cid) returns Answer {
     if e.message() == "REVIEW_AUTH_NOT_CONFIGURED" {
@@ -55,6 +71,49 @@ isolated function tokenOk(http:Request req) returns boolean|Answer {
 }
 
 final http:Service reviewService = isolated service object {
+    # The review queue (Workbench). Filters: kind, status, assignee, paging.
+    isolated resource function get review\-cases(http:Request req) returns http:Response {
+        string cid = cidOf(req);
+        core:Reviewer|error reviewer = reviewerFrom(req);
+        if reviewer is error {
+            return respond(authProblem(reviewer, cid), cid);
+        }
+        map<string> filters = {};
+        foreach [string, string[]] [k, v] in req.getQueryParams().entries() {
+            if v.length() > 0 {
+                filters[k] = v[0];
+            }
+        }
+        return respond(listCases(liveDeps(), reviewer, filters, cid), cid);
+    }
+
+    isolated resource function get review\-cases/[string caseId]/history(http:Request req) returns http:Response {
+        string cid = cidOf(req);
+        core:Reviewer|error reviewer = reviewerFrom(req);
+        if reviewer is error {
+            return respond(authProblem(reviewer, cid), cid);
+        }
+        return respond(caseHistory(liveDeps(), reviewer, caseId, cid), cid);
+    }
+
+    isolated resource function post review\-cases/[string caseId]/assignment(http:Request req) returns http:Response {
+        string cid = cidOf(req);
+        core:Reviewer|error reviewer = reviewerFrom(req);
+        if reviewer is error {
+            return respond(authProblem(reviewer, cid), cid);
+        }
+        return respond(assignCase(liveDeps(), reviewer, caseId, bodyOf(req), cid), cid);
+    }
+
+    isolated resource function post review\-cases/[string caseId]/comments(http:Request req) returns http:Response {
+        string cid = cidOf(req);
+        core:Reviewer|error reviewer = reviewerFrom(req);
+        if reviewer is error {
+            return respond(authProblem(reviewer, cid), cid);
+        }
+        return respond(commentCase(liveDeps(), reviewer, caseId, bodyOf(req), cid), cid);
+    }
+
     isolated resource function get health/live() returns json => {status: "UP"};
 
     isolated resource function get health/ready() returns http:Response => readiness();
