@@ -6,6 +6,7 @@ httpPort = "<kept on the server>"
 basePath = "<kept on the server>"
 
 [aroya.cms_proc_api.strapi]
+http2 = "<kept on the server>"
 url = "<kept on the server>"
 timeoutSeconds = "<kept on the server>"
 
