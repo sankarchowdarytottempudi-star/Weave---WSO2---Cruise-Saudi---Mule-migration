@@ -1282,7 +1282,7 @@ isolated function dwUuid() returns json => uuid:createType4AsString();
 
 isolated function dwProp(json key) returns json {
     string k = dwText(key);
-    string? v = props[k];
+    string? v = props[k] ?: props["\"" + k + "\""];   // keys with dots are quoted in the settings file and keep their quotes
     return v;
 }
 
@@ -1299,7 +1299,7 @@ isolated function propText(string text) returns string {
             break;
         }
         string name = out.substring(s + 2, e);
-        string? v = props[name];
+        string? v = props[name] ?: props["\"" + name + "\""];
         out = out.substring(0, s) + (v ?: "") + out.substring(e + 1);
     }
     return out;

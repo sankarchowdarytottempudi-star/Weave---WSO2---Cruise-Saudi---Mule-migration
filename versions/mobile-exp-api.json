@@ -1,0 +1,42 @@
+{
+ "api": "mobile-exp-api",
+ "by": "deploy in the tool",
+ "what": "deployed",
+ "results": {
+  "parity": {
+   "status": "action_required",
+   "detail": "80 of 82 old flows fully found in the new service; calls 87.5%, fields 100.0%, conditions 100.0%, tables 100.0%, error handling 100.0%"
+  },
+  "unit_run": {
+   "status": "failed",
+   "detail": "POST__dining_v1_reservation_vendor_reservation_actions_activ_missingHeader: has failed."
+  },
+  "e2e": {
+   "status": "failed",
+   "detail": "GET /pms/v1/travel-documents - travel documents routed to check-in: expected a call to hTTPRequestAllProcsRoutes.check_in_proc_api_v1, none was made"
+  },
+  "coverage": {
+   "status": "skipped",
+   "detail": "no coverage: the unit tests did not pass"
+  }
+ },
+ "image": "sha256:633885a2131e485f326b7daeca55eaf18d7781a350a8004e186e97ab7e49d937",
+ "version": 1,
+ "at": "2026-11-16T16:19:36Z",
+ "summary": {
+  "files": 11,
+  "changed": [
+   "deploy/settings-templates/mobile-exp-api.toml",
+   "deploy/vm/values/mobile-exp-api.yaml",
+   "services/mobile-exp-api/.migration-decisions.json",
+   "services/mobile-exp-api/Dependencies.toml",
+   "services/mobile-exp-api/config.bal",
+   "services/mobile-exp-api/dwrt.bal",
+   "services/mobile-exp-api/e2e/trial.json",
+   "services/mobile-exp-api/flows.bal",
+   "services/mobile-exp-api/service.bal",
+   "services/mobile-exp-api/tests/Config.toml",
+   "services/mobile-exp-api/tests/routing_test.bal"
+  ]
+ }
+}

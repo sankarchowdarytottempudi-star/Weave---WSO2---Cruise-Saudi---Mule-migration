@@ -10,6 +10,10 @@ configurable commons:RetryPolicy retryPolicy = {};
 configurable commons:AuditSettings audit = {};
 # Source: HTTP_Request_all_procs
 configurable commons:DownstreamSettings hTTPRequestAllProcs = {url: "http://localhost"};
+# The old shared connection reaches several process APIs, each under its own base path. Base paths
+# listed here go to the migrated service inside the cluster (prefix = the old base path, environment
+# ending ignored; value = the service's address with its base path); all others use the shared url.
+configurable map<string> hTTPRequestAllProcsRoutes = {};
 # Where the source's object store lives now: Redis (shared and kept over restarts). With
 # `enabled = false` it is kept in memory only (lost on restart, different in each copy).
 configurable commons:RedisSettings stateRedis = {enabled: false};

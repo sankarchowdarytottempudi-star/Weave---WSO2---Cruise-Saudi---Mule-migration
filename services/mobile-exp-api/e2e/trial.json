@@ -1,0 +1,21 @@
+{
+  "about": "Shared connection hTTPRequestAllProcs is routed by base path: check-in calls go to the migrated check-in-proc-api (stand-in in the trial), the rest to the shared address.",
+  "settings": {
+    "stateRedis.enabled": false
+  },
+  "cases": [
+    {
+      "op": "GET /pms/v1/travel-documents",
+      "name": "travel documents routed to check-in",
+      "headers": {
+        "Authorization": "Bearer trial-token"
+      },
+      "expectCalls": [
+        "hTTPRequestAllProcsRoutes.check_in_proc_api_v1"
+      ],
+      "expectNoCalls": [
+        "hTTPRequestAllProcs"
+      ]
+    }
+  ]
+}

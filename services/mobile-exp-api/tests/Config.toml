@@ -78,3 +78,6 @@ enabled = false
 host  = "localhost"
 port = 6379
 
+
+[aroya.mobile_exp_api.hTTPRequestAllProcsRoutes]
+"/check-in-proc-api/v1" = "http://127.0.0.1:19591/routed/check-in-proc-api/v1"

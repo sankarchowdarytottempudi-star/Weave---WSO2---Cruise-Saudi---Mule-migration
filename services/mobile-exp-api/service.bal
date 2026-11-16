@@ -11,7 +11,8 @@ listener http:Listener httpListener = new (httpPort);
 
 function init() returns error? {
     check httpListener.attach(apiService, basePath);
-    log:printInfo("mobile-exp-api starting", env = env, basePath = basePath);
+    log:printInfo("mobile-exp-api starting", env = env, basePath = basePath,
+            routedToMigrated = string:'join(",", ...hTTPRequestAllProcsClient.routedPrefixes()));
     log:printInfo("state store", keptIn = state.location());
 }
 
