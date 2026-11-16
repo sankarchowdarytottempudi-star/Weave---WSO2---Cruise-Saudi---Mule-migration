@@ -176,7 +176,7 @@ public isolated function submitDecision(Deps d, core:Reviewer reviewer, string c
 isolated function reviewFail(Deps d, string rdId, boolean retryable, string code, string cid, map<string> rh)
         returns boolean {
     Reply|error r = d.python.call(http:POST, "/v1/review-decisions/" + rdId + "/fail",
-            {retryable, errorCode: code, correlationId: cid}, cid, rh);
+            {retryable, errorCode: code}, cid, rh);
     return r is Reply && r.status < 300;
 }
 
@@ -261,7 +261,7 @@ public isolated function assignCase(Deps d, core:Reviewer reviewer, string caseI
         return problem(403, "FORBIDDEN", "Only a supervisor can give a case to someone else.", cid);
     }
     return passThrough(d.python.call(http:POST, "/v1/review-cases/" + caseId + "/assignment",
-            {assigneeId: assignee, assignedBy: reviewer.userId, correlationId: cid}, cid, reviewerHeaders(reviewer)), cid);
+            {assigneeId: assignee, assignedBy: reviewer.userId}, cid, reviewerHeaders(reviewer)), cid);
 }
 
 # Comment on a case. authorId is always the signed-in reviewer; e-mail addresses and long numbers
@@ -275,6 +275,6 @@ public isolated function commentCase(Deps d, core:Reviewer reviewer, string case
         return problem(400, "INVALID_REQUEST", "Write a comment of up to 2000 characters.", cid);
     }
     return passThrough(d.python.call(http:POST, "/v1/review-cases/" + caseId + "/comments",
-            {authorId: reviewer.userId, text: core:withoutPersonalDetails(comment), correlationId: cid}, cid,
+            {authorId: reviewer.userId, text: core:withoutPersonalDetails(comment)}, cid,
             reviewerHeaders(reviewer)), cid);
 }
