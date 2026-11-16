@@ -282,3 +282,18 @@ isolated function isCode(string value) returns boolean {
     }
     return true;
 }
+
+
+# The CRM module a path works on, for the log (never a record id): "/crm/v6/Contacts/search?…" -> "Contacts".
+#
+# + zohoPath - The path sent to Zoho
+# + return - The module name, or "?"
+public isolated function moduleOf(string zohoPath) returns string {
+    string[] parts = re `[/?]`.split(zohoPath);
+    foreach string part in parts {
+        if part != "" && part != "crm" && !re `v[0-9]+`.isFullMatch(part) {
+            return re `[^A-Za-z_]`.isFullMatch(part.substring(0, 1)) ? "?" : part;
+        }
+    }
+    return "?";
+}

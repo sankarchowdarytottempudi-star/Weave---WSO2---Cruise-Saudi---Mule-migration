@@ -172,7 +172,9 @@ isolated function callZoho(http:Request request, string method, string[] segment
         if token is TokenError {
             return tokenFailure(token, correlationId);
         }
+        decimal sentAt = time:monotonicNow();
         http:Response|http:ClientError reply = sendToZoho(method, target, token, body, photo);
+        int zohoMs = <int>((time:monotonicNow() - sentAt) * 1000);
         if reply is http:ClientError {
             string errorType = commons:errorTypeOfClientError(reply);
             log:printError("Zoho call failed", correlationId = correlationId, method = method, errorType = errorType);
@@ -180,7 +182,8 @@ isolated function callZoho(http:Request request, string method, string[] segment
         }
         if reply.statusCode < 400 {
             log:printInfo("Zoho answered", correlationId = correlationId, method = method, status = reply.statusCode,
-                    upload = photo is byte[], tokenRenewals = attempt);
+                    upload = photo is byte[], tokenRenewals = attempt, durationMs = zohoMs,
+                    module = core:moduleOf(zohoPath));
             return answerOf(reply, correlationId);
         }
         byte[]|http:ClientError raw = reply.getBinaryPayload();
@@ -194,7 +197,7 @@ isolated function callZoho(http:Request request, string method, string[] segment
             continue;
         }
         log:printError("Zoho answered with an error", correlationId = correlationId, method = method,
-                status = reply.statusCode, errorType = core:errorTypeOfStatus(reply.statusCode));
+                status = reply.statusCode, errorType = core:errorTypeOfStatus(reply.statusCode), durationMs = zohoMs);
         return commons:errorResponse(commons:envelopeOf(core:errorTypeOfStatus(reply.statusCode),
                         core:errorMessageOf(targetError, reply.statusCode), correlationId, reply.statusCode, targetError));
     }

@@ -1,7 +1,16 @@
 {
  "api": "zoho-sys-api",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:18Z"
+ "by": "deploy_one.sh on the server",
+ "what": "deployed",
+ "results": {},
+ "image": "sha256:0e10805648b6d0cfd6bf58394428c30cbe7a84ea0196584e71623de479010aa2",
+ "version": 2,
+ "at": "2026-11-16T11:59:32Z",
+ "summary": {
+  "files": 2,
+  "changed": [
+   "services/zoho-sys-api/modules/core/zoho.bal",
+   "services/zoho-sys-api/service.bal"
+  ]
+ }
 }
