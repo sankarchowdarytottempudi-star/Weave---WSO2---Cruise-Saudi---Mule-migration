@@ -61,6 +61,9 @@ configurable int identityParallelism = 4;
 configurable string contactUpsertPath = "/crm/v6/Contacts/upsert";
 configurable string contactUpdatePath = "/crm/v2/Contacts";
 configurable string contactSearchPath = "/crm/v6/Contacts/search";
+# Contact fields asked for in a CRM search (comma separated). Empty = every field, as the old
+# application did. Must contain every field this service reads from a contact.
+configurable string contactSearchFields = "";
 configurable string contactPhotoPath = "/crm/v8/Contacts/{contactId}/photo";
 
 # Logo of the e-mails, and the link of the welcome e-mail's button when the CMS has none.
@@ -87,3 +90,20 @@ configurable boolean otpEmailAfterAnswer = false;
 # True: a few harmless read-only requests are run at start, and the service reports "ready" after
 # them, so the first caller after a deployment does not wait.
 configurable boolean warmUpAtStart = true;
+
+# Redis for kept values (profile photos). With enabled = false they are kept in memory only.
+configurable commons:RedisSettings stateRedis = {enabled: false};
+
+# Profile photos kept between requests, keyed by contact id and the contact's Modified_Time, so a
+# changed contact gets a fresh photo. A photo that could not be read is never kept.
+#
+# + enabled - Keep photos (owner's decision 2026-11-16)
+# + ttlSeconds - How long a kept photo is used
+# + memoryEntries - Most photos kept in memory when Redis is switched off
+public type PhotoCacheSettings record {|
+    boolean enabled = false;
+    int ttlSeconds = 86400;
+    int memoryEntries = 200;
+|};
+
+configurable PhotoCacheSettings photoCache = {};

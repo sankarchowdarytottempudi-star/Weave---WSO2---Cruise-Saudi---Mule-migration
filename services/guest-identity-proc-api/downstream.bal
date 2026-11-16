@@ -251,6 +251,9 @@ isolated function zohoWrite(string method, string zohoPath, json body, string co
 # + return - The CRM's answer (`[]` when nothing matches)
 isolated function zohoSearch(string criteria, int? page, string correlationId) returns json|Stop {
     map<string[]> query = {"criteria": [criteria]};
+    if contactSearchFields.trim() != "" {
+        query["fields"] = [contactSearchFields.trim()];
+    }
     if page is int {
         query["page"] = [page.toString()];
         query["per_page"] = ["200"];
@@ -276,6 +279,57 @@ isolated function zohoPhoto(string contactId, string correlationId) returns stri
     }
     byte[]|http:ClientError picture = reply.getBinaryPayload();
     return picture is byte[] && picture.length() > 0 ? picture.toBase64() : ();
+}
+
+# A contact's picture, from the photo cache when switched on: keyed by contact id and the contact's
+# Modified_Time, so a changed contact is read fresh. A picture that could not be read is not kept.
+#
+# + contact - The contact (CRM search item)
+# + correlationId - The request's correlation id
+# + return - The picture as base64, `()` when it has none or it cannot be read
+isolated function photoOf(json contact, string correlationId) returns string? {
+    string contactId = core:textOf(core:fieldOf(contact, "id"));
+    if !photoCache.enabled {
+        return zohoPhoto(contactId, correlationId);
+    }
+    string key = "photo:" + contactId + "|" + core:textOf(core:fieldOf(contact, "Modified_Time"));
+    string? kept = photoKept(key);
+    if kept is string {
+        return kept;
+    }
+    string? picture = zohoPhoto(contactId, correlationId);
+    if picture is string {
+        photoKeep(key, picture);
+    }
+    return picture;
+}
+
+isolated map<string> keptPhotos = {};
+
+isolated function photoKept(string key) returns string? {
+    if state.location() == "Redis" {
+        string?|error got = state.get(key);
+        return got is string ? got : ();
+    }
+    lock {
+        return keptPhotos[key];
+    }
+}
+
+isolated function photoKeep(string key, string picture) {
+    if state.location() == "Redis" {
+        error? failed = state.put(key, picture, photoCache.ttlSeconds);
+        if failed is error {
+            log:printWarn("Photo not kept", reason = failed.message());
+        }
+        return;
+    }
+    lock {
+        if keptPhotos.length() >= photoCache.memoryEntries {
+            keptPhotos.removeAll();
+        }
+        keptPhotos[key] = picture;
+    }
 }
 
 # Uploads a contact's picture.

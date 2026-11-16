@@ -52,7 +52,8 @@ isolated function profileList(http:Request request, string correlationId) return
     // The pictures of the page's contacts are read at the same time.
     future<string?>[] pictures = [];
     foreach json contact in shown {
-        future<string?> picture = start zohoPhoto(core:textOf(core:fieldOf(contact, "id")), correlationId);
+        json & readonly item = contact.cloneReadOnly();
+        future<string?> picture = start photoOf(item, correlationId);
         pictures.push(picture);
     }
     json[] profiles = [];

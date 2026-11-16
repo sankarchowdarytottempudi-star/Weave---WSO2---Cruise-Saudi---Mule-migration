@@ -10,6 +10,8 @@ deploymentTarget = "<kept on the server>"
 sessionSigningKey = "<kept on the server>"
 emailLogoUrl = "<kept on the server>"
 appHomeUrl = "<kept on the server>"
+tripsCacheSeconds = "<kept on the server>"
+contactSearchFields = "<kept on the server>"
 
 [aroya.guest_identity_proc_api.reservationProcApi]
 url = "<kept on the server>"
@@ -44,3 +46,12 @@ toAddress = "<kept on the server>"
 ccAddress = "<kept on the server>"
 app = "<kept on the server>"
 env = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.stateRedis]
+enabled = "<kept on the server>"
+host = "<kept on the server>"
+port = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.photoCache]
+enabled = "<kept on the server>"
+ttlSeconds = "<kept on the server>"

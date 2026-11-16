@@ -3,19 +3,19 @@
  "by": "deploy_one.sh on the server",
  "what": "deployed",
  "results": {},
- "image": "sha256:79dea5426ac42a7e261a3fb1f71489d2c98483b3a1e19fca720fb24050004e43",
- "version": 2,
- "at": "2026-11-16T11:34:40Z",
+ "image": "sha256:d08b0bf352485dd0dd5a4a374199b6c7cdeae1bbb2af06ff6ec3d9f0764c392f",
+ "version": 3,
+ "at": "2026-11-16T13:06:38Z",
  "summary": {
   "files": 7,
   "changed": [
-   "framework/integration-commons/audit.bal",
-   "framework/integration-commons/routed.bal",
-   "framework/integration-commons/tests/kafka_errors_test.bal",
-   "framework/integration-commons/tests/routed_test.bal",
+   "deploy/settings-templates/guest-identity-proc-api.toml",
+   "services/guest-identity-proc-api/Dependencies.toml",
+   "services/guest-identity-proc-api/config.bal",
    "services/guest-identity-proc-api/downstream.bal",
-   "services/guest-identity-proc-api/identity.bal",
-   "services/guest-identity-proc-api/tests/service_test.bal"
+   "services/guest-identity-proc-api/profiles.bal",
+   "services/guest-identity-proc-api/state.bal",
+   "services/guest-identity-proc-api/tests/photo_cache_test.bal"
   ]
  }
 }
