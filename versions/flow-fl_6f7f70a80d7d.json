@@ -1,0 +1,13 @@
+{
+ "flow": "fl_6f7f70a80d7d",
+ "by": "dev-tester",
+ "what": "deployed",
+ "version": 1,
+ "at": "2026-11-16T18:24:24Z",
+ "summary": {
+  "files": 1,
+  "changed": [
+   "flows/fl_6f7f70a80d7d/flow.json"
+  ]
+ }
+}
