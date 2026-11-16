@@ -1,0 +1,261 @@
+{
+ "createdAt": "2026-11-16T18:07:42.485Z",
+ "deployment": {
+  "deployedAt": "2026-11-16T18:07:57.530Z",
+  "deployedBy": "dev-tester",
+  "gateway": {
+   "status": "skipped"
+  },
+  "revision": 2,
+  "runtimeUrl": "http://127.0.0.1:8790/run/e2e-1116180714-common-cache/v1",
+  "status": "deployed"
+ },
+ "description": "Created by the end-to-end check. Safe to delete.",
+ "edges": [
+  {
+   "from": "n_aip1hl",
+   "fromPort": "out",
+   "id": "e_7s5b04",
+   "to": "n_ugnhu9"
+  },
+  {
+   "from": "n_ugnhu9",
+   "fromPort": "case:c1",
+   "id": "e_ekb59x",
+   "to": "n_1bhvoi"
+  },
+  {
+   "from": "n_1bhvoi",
+   "fromPort": "out",
+   "id": "e_xazntl",
+   "to": "n_8yh8az"
+  },
+  {
+   "from": "n_8yh8az",
+   "fromPort": "out",
+   "id": "e_3bes0j",
+   "to": "n_evvsi2"
+  },
+  {
+   "from": "n_ugnhu9",
+   "fromPort": "otherwise",
+   "id": "e_r37ore",
+   "to": "n_idzwbv"
+  },
+  {
+   "from": "n_idzwbv",
+   "fromPort": "out",
+   "id": "e_eow2w7",
+   "to": "n_bk1s6w"
+  },
+  {
+   "from": "n_bk1s6w",
+   "fromPort": "out",
+   "id": "e_z8aye3",
+   "to": "n_evvsi2"
+  }
+ ],
+ "id": "fl_03c3f336baeb",
+ "name": "e2e-1116180714-common-cache",
+ "nodes": [
+  {
+   "config": {
+    "methods": [
+     "GET"
+    ],
+    "path": "/reference/:kind"
+   },
+   "id": "n_aip1hl",
+   "name": "Get reference list",
+   "position": {
+    "x": 60,
+    "y": 60
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "conditions": [
+     {
+      "expr": "$request.params.kind in [\"languages\", \"countries\"]",
+      "id": "c1",
+      "label": "Kept in the cache"
+     }
+    ]
+   },
+   "id": "n_ugnhu9",
+   "name": "Cached kind",
+   "position": {
+    "x": 360,
+    "y": 60
+   },
+   "type": "logic.choice"
+  },
+  {
+   "config": {
+    "bodyMode": "none",
+    "connection": "cx_a284dd3afecf",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [
+     {
+      "key": "operationName",
+      "value": "{{ $request.params.kind }}"
+     }
+    ],
+    "method": "GET",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "payload",
+    "retries": 0,
+    "retryDelayMs": 500,
+    "timeoutMs": 30000,
+    "url": "/seaware-cache-proc-api/v1/cache"
+   },
+   "id": "n_1bhvoi",
+   "name": "Read the cache",
+   "position": {
+    "x": 660,
+    "y": 60
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "input": "$",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "expr": "$request.params.kind",
+       "id": "r_qmfrui",
+       "kind": "expr",
+       "target": "kind"
+      },
+      {
+       "expr": "[$lookup(data, $request.params.kind).{ \"code\": key, \"name\": name }]",
+       "id": "r_45w9u6",
+       "kind": "expr",
+       "target": "items"
+      },
+      {
+       "expr": "$count($lookup(data, $request.params.kind))",
+       "id": "r_lax6qp",
+       "kind": "expr",
+       "target": "count"
+      },
+      {
+       "id": "r_3czd9b",
+       "kind": "const",
+       "target": "source",
+       "value": "cache"
+      }
+     ]
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_8yh8az",
+   "name": "Shape cached list",
+   "position": {
+    "x": 960,
+    "y": 60
+   },
+   "type": "transform.map"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_evvsi2",
+   "name": "Answer",
+   "position": {
+    "x": 1260,
+    "y": 60
+   },
+   "type": "respond"
+  },
+  {
+   "config": {
+    "entry": "http",
+    "flow": "fl_6f5d72ea4fff",
+    "input": "$",
+    "request": {
+     "method": "GET",
+     "path": "/reference/{{ $request.params.kind }}"
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_idzwbv",
+   "name": "Ask the system flow",
+   "position": {
+    "x": 660,
+    "y": 189
+   },
+   "type": "flow.call"
+  },
+  {
+   "config": {
+    "input": "$",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "id": "r_9km8mw",
+       "kind": "direct",
+       "source": "kind",
+       "target": "kind"
+      },
+      {
+       "id": "r_9oyj47",
+       "kind": "direct",
+       "source": "items",
+       "target": "items"
+      },
+      {
+       "id": "r_rhv82s",
+       "kind": "direct",
+       "source": "count",
+       "target": "count"
+      },
+      {
+       "id": "r_ubk7r2",
+       "kind": "const",
+       "target": "source",
+       "value": "system"
+      }
+     ]
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_bk1s6w",
+   "name": "Shape system list",
+   "position": {
+    "x": 960,
+    "y": 189
+   },
+   "type": "transform.map"
+  }
+ ],
+ "origin": {
+  "kind": "blank"
+ },
+ "revision": 2,
+ "settings": {
+  "basePath": "/e2e-1116180714-common-cache/v1",
+  "gateway": {
+   "publish": true,
+   "security": "oauth2",
+   "throttlingPolicy": "Unlimited",
+   "version": "v1"
+  },
+  "logPayloads": true,
+  "timeoutMs": 60000
+ },
+ "slug": "e2e-1116180714-common-cache",
+ "tags": [],
+ "updatedAt": "2026-11-16T18:07:55.314Z",
+ "updatedBy": "dev-tester"
+}
