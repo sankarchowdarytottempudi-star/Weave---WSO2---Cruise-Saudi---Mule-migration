@@ -1,0 +1,10 @@
+{
+  "files": {
+    "Ballerina.toml": "14f14441534ae37102d19cd0b6e08ecac82b30eab7cd4158f3b3fafcae68c0b0",
+    "config.bal": "568f103fc7b880b3088d9fb7f142ac945f13c330613ec0f0303bfbcffd55f165",
+    "service.bal": "06e293fd8cd8e65df22f7fe43b158399be3ae5f515efbc70e680ab39bb26702d",
+    "Config.toml.example": "9a7e77475ddbf2336030804fd94eafbb11311961de9ae136ae8e9b3d6f1e1e79",
+    "modules/core/transforms.bal": "8ca6cfe4134ea44249872c20421aee1f11048e7338cacaa15fa3f31d0b4597cf",
+    "modules/core/tests/transforms_test.bal": "b6dd93ff627981a958104191da5b38e8a1b0e0aa3a57cce8ddc38db6c9f978cc"
+  }
+}

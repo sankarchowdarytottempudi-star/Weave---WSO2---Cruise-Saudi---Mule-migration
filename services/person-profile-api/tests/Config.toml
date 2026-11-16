@@ -1,0 +1,13 @@
+# Settings for the tests of the HTTP layer: everything on this machine, nothing real.
+[aroya.person_profile_api]
+env = "test"
+httpPort = 18961
+httpHost = "127.0.0.1"
+otalioPath = "/otalio-sys-api-new/v1/integration-tasks"
+httpRetryCount = 1
+httpRetryFrequencySeconds = 0.1
+httpErrorTypes = ["SERVICE_UNAVAILABLE"]
+
+[aroya.person_profile_api.otalioSystemApi]
+url = "http://127.0.0.2:18971"
+timeoutSeconds = 5.0

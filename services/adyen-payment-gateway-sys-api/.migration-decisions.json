@@ -1,0 +1,37 @@
+{
+ "closed": [
+  {
+   "id": "op:POST /paymentMethods",
+   "kind": "op",
+   "title": "POST /paymentMethods",
+   "how": "passed on",
+   "detail": "POST /v1/paymentMethods on hTTPRequestAdyenSystem",
+   "t": "2026-11-15T11:40:12Z"
+  },
+  {
+   "id": "op:POST /payments",
+   "kind": "op",
+   "title": "POST /payments",
+   "how": "passed on",
+   "detail": "POST /v1/payments on hTTPRequestAdyenSystem",
+   "t": "2026-11-15T11:40:23Z"
+  },
+  {
+   "id": "op:POST /sessions",
+   "kind": "op",
+   "title": "POST /sessions",
+   "how": "passed on",
+   "detail": "POST /v1/sessions on hTTPRequestAdyenSystem",
+   "t": "2026-11-15T11:40:37Z"
+  },
+  {
+   "id": "backend:hTTPRequestAdyenSystem",
+   "kind": "backend",
+   "title": "hTTPRequestAdyenSystem",
+   "how": "address set",
+   "detail": "saved in deploy/vm/config/adyen-payment-gateway-sys-api.toml",
+   "t": "2026-11-15T11:49:27Z"
+  }
+ ],
+ "notes": {}
+}

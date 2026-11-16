@@ -1,0 +1,1 @@
+autoscaling: { minReplicas: 2, maxReplicas: 6 }

@@ -1,0 +1,18 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.reservation_common_services_process_api]
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+
+[aroya.reservation_common_services_process_api.stateRedis]
+enabled = "<kept on the server>"
+host = "<kept on the server>"
+port = "<kept on the server>"
+
+[aroya.reservation_common_services_process_api.audit]
+bootstrapServers = "<kept on the server>"
+errorTopic = "<kept on the server>"
+auditTopic = "<kept on the server>"
+errorEnabled = "<kept on the server>"
+auditEnabled = "<kept on the server>"

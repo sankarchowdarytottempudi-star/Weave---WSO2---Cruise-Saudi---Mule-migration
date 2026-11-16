@@ -1,0 +1,5 @@
+name: adyen-payment-gateway-sys-api
+layer: system
+image:
+  repository: REGISTRY/adyen-payment-gateway-sys-api
+port: 8081

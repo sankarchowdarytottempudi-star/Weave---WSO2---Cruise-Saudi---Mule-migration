@@ -1,0 +1,4 @@
+{
+  "about": "Redis (circuit-breaker state) is not in the closed room, so the trial keeps the breaker state in memory.",
+  "settings": {"breakerRedis.enabled": false, "circuitBreaker.enabled": false}
+}

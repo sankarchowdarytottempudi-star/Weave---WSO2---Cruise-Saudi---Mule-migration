@@ -1,0 +1,5 @@
+name: check-in-wrapper-api
+layer: system
+image:
+  repository: REGISTRY/check-in-wrapper-api
+port: 8081

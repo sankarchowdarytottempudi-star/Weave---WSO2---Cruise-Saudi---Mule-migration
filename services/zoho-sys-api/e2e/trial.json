@@ -1,0 +1,86 @@
+{
+  "about": "zoho-sys-api: /zoho with the CRM path in the zohoPath header (how the sync jobs call it) and /zoho/{module}; without any path the old 400-style refusal, no Zoho call. Redis is not in the closed room: the trial keeps the object-store state in memory.",
+  "replies": [
+    {
+      "backend": "hTTPRequestZohoAccessConfig",
+      "status": 200,
+      "body": {
+        "access_token": "stand-in",
+        "expires_in": 3600
+      },
+      "tag": "access token"
+    },
+    {
+      "backend": "zohoCRMAPIConfig",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "1"
+          }
+        ],
+        "info": {
+          "more_records": false
+        }
+      },
+      "tag": "crm read"
+    },
+    {
+      "backend": "zohoCRMAPIConfig",
+      "status": 201,
+      "body": {
+        "data": [
+          {
+            "code": "SUCCESS",
+            "status": "success",
+            "details": {
+              "id": "1"
+            }
+          }
+        ]
+      },
+      "tag": "crm write"
+    }
+  ],
+  "cases": [
+    {
+      "op": "GET /zoho",
+      "name": "search through the zohoPath header",
+      "headers": {
+        "zohoPath": "/crm/v6/Accounts/search"
+      },
+      "query": "criteria=(Name:equals:x)",
+      "expectStatus": [
+        200,
+        204
+      ]
+    },
+    {
+      "op": "POST /zoho",
+      "name": "upsert through the zohoPath header",
+      "headers": {
+        "zohoPath": "/crm/v6/Accounts/upsert"
+      },
+      "body": {
+        "data": [
+          {
+            "Name": "x"
+          }
+        ]
+      },
+      "expectStatus": [
+        200,
+        201
+      ]
+    },
+    {
+      "op": "GET /zoho",
+      "name": "no path at all",
+      "expectStatus": 400
+    }
+  ],
+  "settings": {
+    "stateRedis.enabled": false
+  }
+}

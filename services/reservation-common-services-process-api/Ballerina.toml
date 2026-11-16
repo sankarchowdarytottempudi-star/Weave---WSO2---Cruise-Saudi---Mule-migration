@@ -1,0 +1,8 @@
+[package]
+org = "aroya"
+name = "reservation_common_services_process_api"
+version = "0.1.0"
+distribution = "2201.13.4"
+
+[build-options]
+observabilityIncluded = true

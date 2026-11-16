@@ -1,0 +1,13 @@
+# Single-VM test cluster: local images, NodePort, one replica, no ServiceMonitor CRD.
+image: { repository: seaware-sys-api, tag: vm, pullPolicy: Never }
+imagePullSecrets: []
+service: { type: NodePort, nodePort: 30081 }
+autoscaling: { enabled: false }
+replicas: 1
+serviceMonitor: { enabled: false }
+# Tests call the API directly through the NodePort, which the layer policy would refuse.
+networkPolicy: { enabled: false }
+ingress: { enabled: false }
+resources:
+  requests: { cpu: 100m, memory: 384Mi }
+  limits: { cpu: "1", memory: 768Mi }

@@ -1,0 +1,42 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.payment_reconciliation_proc_api]
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+
+[aroya.payment_reconciliation_proc_api.scheduler]
+enabled = "<kept on the server>"
+frequencyMinutes = "<kept on the server>"
+
+[aroya.payment_reconciliation_proc_api.query]
+sql = "<kept on the server>"
+lookbackMinutes = "<kept on the server>"
+graceMinutes = "<kept on the server>"
+batchSize = "<kept on the server>"
+
+[aroya.payment_reconciliation_proc_api.dbSysApi]
+dbPath = "<kept on the server>"
+connectionKey = "<kept on the server>"
+sessionId = "<kept on the server>"
+
+[aroya.payment_reconciliation_proc_api.dBSysAPIHTTPRequestConfig]
+url = "<kept on the server>"
+
+[aroya.payment_reconciliation_proc_api.financialTransactions]
+processPaymentPath = "<kept on the server>"
+clientChannel = "<kept on the server>"
+
+[aroya.payment_reconciliation_proc_api.financialTransactionsHTTPRequestConfig]
+url = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.payment_reconciliation_proc_api.email]
+enabled = "<kept on the server>"
+sendEmailPath = "<kept on the server>"
+provider = "<kept on the server>"
+to = "<kept on the server>"
+subjectPrefix = "<kept on the server>"
+
+[aroya.payment_reconciliation_proc_api.emailSysAPIHTTPRequestConfig]
+url = "<kept on the server>"

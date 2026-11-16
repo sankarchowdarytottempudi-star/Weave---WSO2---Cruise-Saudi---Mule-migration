@@ -1,0 +1,5 @@
+name: telr-pay-gw-sys-api
+layer: system
+image:
+  repository: REGISTRY/telr-pay-gw-sys-api
+port: 8081

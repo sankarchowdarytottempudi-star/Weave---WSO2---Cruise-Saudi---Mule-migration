@@ -1,0 +1,52 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.cms_proc_api]
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+
+[aroya.cms_proc_api.strapi]
+url = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.cms_proc_api.strapiPaths]
+pages = "<kept on the server>"
+cabin-categories = "<kept on the server>"
+packages = "<kept on the server>"
+itineraries = "<kept on the server>"
+excursions = "<kept on the server>"
+add-ons = "<kept on the server>"
+destinations = "<kept on the server>"
+destination-experiences = "<kept on the server>"
+port-details = "<kept on the server>"
+destination-activities = "<kept on the server>"
+header = "<kept on the server>"
+footer = "<kept on the server>"
+onboardExcursion = "<kept on the server>"
+spas = "<kept on the server>"
+dinings = "<kept on the server>"
+offers = "<kept on the server>"
+docs = "<kept on the server>"
+embarkations = "<kept on the server>"
+travelTradePartners = "<kept on the server>"
+travelPartnersLists = "<kept on the server>"
+mobile-page-generals = "<kept on the server>"
+mobile-page-cruises = "<kept on the server>"
+mobile-page-pre-cruises = "<kept on the server>"
+configurations = "<kept on the server>"
+
+[aroya.cms_proc_api.errorMail]
+enabled = "<kept on the server>"
+url = "<kept on the server>"
+path = "<kept on the server>"
+toAddress = "<kept on the server>"
+ccAddress = "<kept on the server>"
+saveToSentItems = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.cms_proc_api.audit]
+bootstrapServers = "<kept on the server>"
+errorTopic = "<kept on the server>"
+auditTopic = "<kept on the server>"
+errorEnabled = "<kept on the server>"
+auditEnabled = "<kept on the server>"

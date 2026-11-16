@@ -1,0 +1,16 @@
+# seaware-sys-api: system layer. Only process APIs (and the Proc cache loader) may call it.
+name: seaware-sys-api
+layer: system
+image:
+  repository: REGISTRY/seaware-sys-api   # the pipeline sets repository and tag
+port: 8081
+networkPolicy:
+  # process: the normal callers. experience: only reservation-mgr-exp-api's flightpromotion
+  # operation (flightPromotion.enabled); remove it if that operation is decommissioned.
+  # The Proc pods (Kustomize manifests in their own repository) need the label
+  # integration.aroya/layer: process to be admitted.
+  allowFromLayers: [process, experience]
+  allowFromNamespaces: [observability]
+resources:
+  requests: { cpu: 250m, memory: 384Mi }
+  limits: { cpu: "1", memory: 768Mi }

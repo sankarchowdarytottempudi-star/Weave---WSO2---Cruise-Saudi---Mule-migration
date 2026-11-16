@@ -1,0 +1,21 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.person_profile_api]
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+otalioPath = "<kept on the server>"
+httpRetryCount = "<kept on the server>"
+httpRetryFrequencySeconds = "<kept on the server>"
+httpErrorTypes = "<kept on the server>"
+
+[aroya.person_profile_api.otalioSystemApi]
+url = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.person_profile_api.audit]
+bootstrapServers = "<kept on the server>"
+errorTopic = "<kept on the server>"
+auditTopic = "<kept on the server>"
+errorEnabled = "<kept on the server>"
+auditEnabled = "<kept on the server>"

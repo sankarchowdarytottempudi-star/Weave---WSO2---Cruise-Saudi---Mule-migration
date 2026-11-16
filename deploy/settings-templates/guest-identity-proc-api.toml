@@ -1,0 +1,46 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.guest_identity_proc_api]
+seawareSessionMaxAgeSeconds = "<kept on the server>"
+dbSystemPath = "<kept on the server>"
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+deploymentTarget = "<kept on the server>"
+sessionSigningKey = "<kept on the server>"
+emailLogoUrl = "<kept on the server>"
+appHomeUrl = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.reservationProcApi]
+url = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.zohoSysApi]
+url = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.identitySupportExpApi]
+url = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.seawareAgent]
+userName = "<kept on the server>"
+password = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.cmsContentApi]
+url = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.emailSysApi]
+url = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.dbSystemApi]
+url = "<kept on the server>"
+
+[aroya.guest_identity_proc_api.errorMail]
+enabled = "<kept on the server>"
+url = "<kept on the server>"
+path = "<kept on the server>"
+toAddress = "<kept on the server>"
+ccAddress = "<kept on the server>"
+app = "<kept on the server>"
+env = "<kept on the server>"

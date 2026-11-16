@@ -1,0 +1,47 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.identity_support_exp_api]
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+guestIdentityBasePath = "<kept on the server>"
+dbSystemPath = "<kept on the server>"
+
+[aroya.identity_support_exp_api.guestIdentityProcApi]
+url = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.identity_support_exp_api.dbSystemApi]
+url = "<kept on the server>"
+
+[aroya.identity_support_exp_api.kafkaAudit]
+enabled = "<kept on the server>"
+muleEnv = "<kept on the server>"
+deploymentTarget = "<kept on the server>"
+auditTopic = "<kept on the server>"
+errorTopic = "<kept on the server>"
+auditPayloads = "<kept on the server>"
+errorPayloads = "<kept on the server>"
+
+[aroya.identity_support_exp_api.errorMail]
+enabled = "<kept on the server>"
+url = "<kept on the server>"
+path = "<kept on the server>"
+toAddress = "<kept on the server>"
+ccAddress = "<kept on the server>"
+app = "<kept on the server>"
+env = "<kept on the server>"
+
+[aroya.identity_support_exp_api.kafkaProducers.uat]
+bootstrapServers = "<kept on the server>"
+
+[aroya.identity_support_exp_api.kafkaProducers.prodShip]
+bootstrapServers = "<kept on the server>"
+
+[aroya.identity_support_exp_api.kafkaProducers.prodShore]
+bootstrapServers = "<kept on the server>"
+
+[aroya.identity_support_exp_api.stateRedis]
+enabled = "<kept on the server>"
+host = "<kept on the server>"
+port = "<kept on the server>"

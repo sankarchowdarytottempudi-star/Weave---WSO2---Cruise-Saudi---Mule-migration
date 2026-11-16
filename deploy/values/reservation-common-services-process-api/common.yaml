@@ -1,0 +1,5 @@
+name: reservation-common-services-process-api
+layer: process
+image:
+  repository: REGISTRY/reservation-common-services-process-api
+port: 8081

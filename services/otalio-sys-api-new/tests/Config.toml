@@ -1,0 +1,7 @@
+# Settings for the tests: everything on this machine, nothing real.
+[aroya.otalio_sys_api_new]
+env = "test"
+httpPort = 18962
+
+[aroya.otalio_sys_api_new.stateRedis]
+enabled = false

@@ -1,0 +1,7 @@
+{
+  "about": "Old vs new comparison of zoho-sys-api. Only reads: a CRM search whose criterion matches no record.",
+  "requests": [
+    {"op": "GET /zoho", "name": "search that finds nothing", "query": "criteria=(Name:equals:parity-check-none)",
+     "headers": {"zohoPath": "/crm/v6/Cabin_Info/search"}}
+  ]
+}

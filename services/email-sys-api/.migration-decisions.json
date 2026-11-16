@@ -1,0 +1,29 @@
+{
+ "closed": [
+  {
+   "id": "entry:AccessToken_SchedulerFlow",
+   "kind": "entry",
+   "title": "AccessToken_SchedulerFlow",
+   "how": "not needed",
+   "detail": "this functionality was moved to seaprate zoho sys api",
+   "t": "2026-11-15T10:26:47Z"
+  },
+  {
+   "id": "op:POST /send-email-notification",
+   "kind": "op",
+   "title": "POST /send-email-notification",
+   "how": "passed on",
+   "detail": "POST / on sendEmailHTTPRequestConfig",
+   "t": "2026-11-15T10:28:04Z"
+  },
+  {
+   "id": "backend:sendEmailHTTPRequestConfig",
+   "kind": "backend",
+   "title": "sendEmailHTTPRequestConfig",
+   "how": "address set",
+   "detail": "saved in deploy/vm/config/email-sys-api.toml",
+   "t": "2026-11-15T10:32:30Z"
+  }
+ ],
+ "notes": {}
+}

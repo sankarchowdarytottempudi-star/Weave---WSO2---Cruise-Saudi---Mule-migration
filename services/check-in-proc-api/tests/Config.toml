@@ -1,0 +1,9 @@
+# Settings for the tests of the HTTP layer: everything on this machine, nothing real.
+[aroya.check_in_proc_api]
+env = "test"
+httpPort = 18941
+httpHost = "127.0.0.1"
+
+[aroya.check_in_proc_api.otalioSystemApi]
+url = "http://127.0.0.2:18951"
+timeoutSeconds = 10.0

@@ -1,0 +1,7 @@
+# Settings for the tests: everything on this machine, nothing real.
+[aroya.email_sys_api]
+env = "test"
+httpPort = 18963
+
+[aroya.email_sys_api.stateRedis]
+enabled = false

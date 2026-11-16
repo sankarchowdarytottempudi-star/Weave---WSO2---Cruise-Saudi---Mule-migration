@@ -1,0 +1,32 @@
+{
+ "closed": [
+  {
+   "id": "backend:hTTPDBSystemAPIConfig",
+   "kind": "backend",
+   "title": "hTTPDBSystemAPIConfig",
+   "how": "address set",
+   "detail": "saved in deploy/vm/config/financial-transactions-proc-api.toml",
+   "t": "2026-11-15T11:28:49Z"
+  },
+  {
+   "id": "backend:hTTPRequestAdyenSystemAPI",
+   "kind": "backend",
+   "title": "hTTPRequestAdyenSystemAPI",
+   "how": "address set",
+   "detail": "saved in deploy/vm/config/financial-transactions-proc-api.toml",
+   "t": "2026-11-15T12:14:09Z"
+  }
+ ],
+ "notes": {
+  "entry:currency-rateFlow": [
+   {
+    "t": "2026-11-15T11:36:07Z",
+    "text": "hTTPDBSystemAPIConfig: http://db-sys-api.wso2.svc:80\nHTTP_Request_configuration: http://email-sys-api.wso2.svc:80"
+   },
+   {
+    "t": "2026-11-15T12:15:39Z",
+    "text": "POST ${dbSystemApi.path} on hTTPDBSystemAPIConfig - http://db-sys-api.wso2.svc:80\nPOST ${httpRequest.path.emailApi} on HTTP_Request_configuration - http://email-sys-api.wso2.svc:80"
+   }
+  ]
+ }
+}

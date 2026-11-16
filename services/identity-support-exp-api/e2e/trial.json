@@ -1,0 +1,149 @@
+{
+  "about": "identity-support-exp-api: every operation passed to the guest identity stand-in; a refused call answers the old error and sends the old error e-mail (switched on for the trial only). Kafka needs a broker the closed room does not have. Kafka records are switched on against a broker address with nothing behind it (port 9 in the closed room): every operation must still answer as before. Redis is not in the closed room, so the error mappings are kept in memory for the trial.",
+  "settings": {
+    "errorMail.enabled": true,
+    "kafkaAudit.enabled": true,
+    "kafkaAudit.muleEnv": "uat",
+    "kafkaAudit.deploymentTarget": "shore",
+    "kafkaProducers.uat.bootstrapServers": "127.0.0.1:9",
+    "stateRedis.enabled": false
+  },
+  "replies": [
+    {
+      "backend": "guestIdentityProcApi",
+      "bodyHas": "refuse-me",
+      "status": 400,
+      "body": {
+        "message": "identifier is not valid",
+        "code": "BAD_REQUEST"
+      },
+      "tag": "guest identity (refused)"
+    },
+    {
+      "backend": "guestIdentityProcApi",
+      "path": "/otp/generate$",
+      "status": 202,
+      "body": {
+        "requestId": "r-1",
+        "expiresInSeconds": 300,
+        "maskedIdentifier": "***@example.invalid",
+        "status": "ACTIVE"
+      },
+      "tag": "otp generate"
+    },
+    {
+      "backend": "guestIdentityProcApi",
+      "path": "/otp/verify$",
+      "status": 200,
+      "body": {
+        "status": "VERIFIED",
+        "guestId": "g-1"
+      },
+      "tag": "otp verify"
+    },
+    {
+      "backend": "guestIdentityProcApi",
+      "status": 200,
+      "body": {
+        "status": "Success"
+      },
+      "tag": "guest identity"
+    },
+    {
+      "backend": "dbSystemApi",
+      "status": 200,
+      "body": [],
+      "tag": "error mapping"
+    },
+    {
+      "backend": "errorMail",
+      "status": 202,
+      "body": {
+        "status": "sent"
+      },
+      "tag": "error e-mail"
+    }
+  ],
+  "cases": [
+    {
+      "op": "POST /otp/generate",
+      "name": "code requested",
+      "headers": {
+        "client_channel": "web",
+        "x-operation-name": "generate"
+      },
+      "body": {
+        "identifier": "guest@example.invalid",
+        "channel": "email",
+        "context": "login"
+      },
+      "expectStatus": 200,
+      "expectCalls": [
+        "guestIdentityProcApi"
+      ],
+      "expectNoCalls": [
+        "errorMail"
+      ],
+      "expectBodyHas": [
+        "ACTIVE"
+      ]
+    },
+    {
+      "op": "POST /otp/generate",
+      "name": "refused by guest identity",
+      "body": {
+        "identifier": "refuse-me@example.invalid",
+        "channel": "email",
+        "context": "login"
+      },
+      "expectStatus": 400,
+      "expectCalls": [
+        "guestIdentityProcApi",
+        "errorMail"
+      ],
+      "expectBodyHas": [
+        "identifier is not valid"
+      ]
+    },
+    {
+      "op": "POST /otp/verify",
+      "name": "code verified",
+      "body": {
+        "requestId": "r-1",
+        "otp": "123456"
+      },
+      "expectStatus": 200,
+      "expectBodyHas": [
+        "VERIFIED"
+      ]
+    },
+    {
+      "op": "POST /processGuestIdentity",
+      "name": "guest processed",
+      "headers": {
+        "client_channel": "web"
+      },
+      "body": {
+        "identifier": "guest@example.invalid"
+      },
+      "expectStatus": 200
+    },
+    {
+      "op": "GET /getGuestId",
+      "name": "new guest id",
+      "expectStatus": 200,
+      "expectBodyHas": [
+        "guestId",
+        "Success"
+      ],
+      "expectNoCalls": [
+        "guestIdentityProcApi"
+      ]
+    },
+    {
+      "op": "GET /getLoyaltId",
+      "name": "new loyalty id",
+      "expectStatus": 200
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+ingress: { host: uat-int-api.aroyacruises.com }
+autoscaling: { minReplicas: 2, maxReplicas: 4 }

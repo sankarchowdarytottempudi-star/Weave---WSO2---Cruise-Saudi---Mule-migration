@@ -1,0 +1,247 @@
+{
+  "about": "Trial of person-profile-api: each old flow (one call to the Otalio System API with its operationName) and the old error branches: backend error body passed on, custom error when the backend gives no body, APIkit 400/415. Made-up data only.",
+  "cases": [
+    {
+      "op": "GET /getEventsFolio",
+      "name": "all four parameters go on",
+      "query": "page=1&search=pool&size=5&sort=name",
+      "expectStatus": 200,
+      "expectCalls": [
+        "otalioSystemApi"
+      ],
+      "expectTags": [
+        "GET getEventsFolio [page,search,size,sort]"
+      ],
+      "expectBodyHas": [
+        "getEventsFolio"
+      ]
+    },
+    {
+      "op": "GET /getEventsFolio",
+      "name": "page not a number -> APIkit 400",
+      "query": "page=x",
+      "expectStatus": 400,
+      "expectNoCalls": [
+        "otalioSystemApi"
+      ],
+      "expectBodyHas": [
+        "Bad request"
+      ]
+    },
+    {
+      "op": "GET /getEventsFolio",
+      "name": "backend 404 body passed on",
+      "query": "search=x",
+      "scenario": "not found",
+      "expectStatus": 404,
+      "expectBodyHas": [
+        "NOT_FOUND"
+      ]
+    },
+    {
+      "op": "GET /getamenity",
+      "name": "search goes on",
+      "query": "search=spa",
+      "expectStatus": 200,
+      "expectTags": [
+        "GET getamenity [search]"
+      ]
+    },
+    {
+      "op": "GET /getamenity",
+      "name": "backend error without body -> custom error",
+      "scenario": "no detail",
+      "expectStatus": 502,
+      "expectBodyHas": [
+        "errorDoesNotExist",
+        "BAD_GATEWAY"
+      ]
+    },
+    {
+      "op": "GET /getamenity-codes",
+      "name": "search goes on",
+      "query": "search=a",
+      "expectStatus": 200,
+      "expectTags": [
+        "GET getamenity-codes [search]"
+      ]
+    },
+    {
+      "op": "GET /pos/v1/packages",
+      "name": "only search goes on (old flow)",
+      "query": "search=spa&page=2&hierarchyId=9&size=3",
+      "expectStatus": 200,
+      "expectTags": [
+        "GET getPackages [search]"
+      ],
+      "expectNoTags": [
+        "GET getPackages [search,page,hierarchyId,size]"
+      ]
+    },
+    {
+      "op": "GET /reservation/v1/person-search",
+      "name": "every caller parameter goes on",
+      "query": "search=smith&page=0",
+      "expectStatus": 200,
+      "expectTags": [
+        "GET getPersonSearch [search,page]"
+      ]
+    },
+    {
+      "op": "GET /reservation/v1/person-search/{reservationId}",
+      "name": "shipId from the path",
+      "pathValues": {
+        "reservationId": "R100"
+      },
+      "query": "detail=full",
+      "expectStatus": 200,
+      "expectTags": [
+        "GET getPersonByReservationID [shipId,detail]"
+      ],
+      "expectBodyHas": [
+        "R100"
+      ]
+    },
+    {
+      "op": "GET /reservation/v1/person-search/{reservationId}",
+      "name": "backend 404 passed on",
+      "pathValues": {
+        "reservationId": "R0"
+      },
+      "scenario": "not found",
+      "expectStatus": 404
+    },
+    {
+      "op": "GET /reservation/v1/reservation-search/{reservationId}",
+      "name": "shipId from the path",
+      "pathValues": {
+        "reservationId": "R200"
+      },
+      "expectStatus": 200,
+      "expectTags": [
+        "GET getReservationByID [shipId]"
+      ],
+      "expectBodyHas": [
+        "R200"
+      ]
+    },
+    {
+      "op": "POST /integration/v1/messages",
+      "name": "array body goes on, client_name default MuleSoft",
+      "body": [
+        {
+          "messageType": "made-up",
+          "text": "hello"
+        }
+      ],
+      "expectStatus": 200,
+      "expectTags": [
+        "POST sendmessage [] client=MuleSoft"
+      ]
+    },
+    {
+      "op": "POST /integration/v1/messages",
+      "name": "client_name from the caller; backend 201 answered 200",
+      "headers": {
+        "client_name": "mobile-app"
+      },
+      "body": [
+        {
+          "text": "x"
+        }
+      ],
+      "scenario": "created",
+      "expectStatus": 200,
+      "expectTags": [
+        "POST sendmessage [] client=mobile-app"
+      ],
+      "expectBodyHas": [
+        "created"
+      ]
+    },
+    {
+      "op": "POST /integration/v1/messages",
+      "name": "object body -> APIkit 400",
+      "body": {
+        "text": "x"
+      },
+      "expectStatus": 400,
+      "expectNoCalls": [
+        "otalioSystemApi"
+      ],
+      "expectBodyHas": [
+        "Bad request"
+      ]
+    },
+    {
+      "op": "POST /integration/v1/messages",
+      "name": "text body -> APIkit 415",
+      "headers": {
+        "Content-Type": "text/plain"
+      },
+      "body": "[1]",
+      "expectStatus": 415,
+      "expectNoCalls": [
+        "otalioSystemApi"
+      ],
+      "expectBodyHas": [
+        "Unsupported media type"
+      ]
+    },
+    {
+      "op": "POST /integration/v1/messages/statuses",
+      "name": "array body goes on",
+      "body": [
+        {
+          "id": "m1",
+          "status": "read"
+        }
+      ],
+      "expectStatus": 200,
+      "expectTags": [
+        "POST statusmessage [] client=MuleSoft"
+      ]
+    },
+    {
+      "op": "POST /integration/v1/messages/statuses",
+      "name": "backend error without body",
+      "body": [
+        {
+          "id": "m1"
+        }
+      ],
+      "scenario": "no detail",
+      "expectStatus": 502,
+      "expectBodyHas": [
+        "errorDoesNotExist"
+      ]
+    },
+    {
+      "op": "POST /reservation/v1/person-reservations/actions/bulk-update",
+      "name": "object body, httpMethod=PATCH",
+      "body": {
+        "reservations": [
+          {
+            "id": "R1",
+            "status": "x"
+          }
+        ]
+      },
+      "expectStatus": 200,
+      "expectTags": [
+        "POST bulkUpdateReservations [httpMethod] client=MuleSoft"
+      ]
+    },
+    {
+      "op": "POST /reservation/v1/person-reservations/actions/bulk-update",
+      "name": "array body -> APIkit 400",
+      "body": [
+        1
+      ],
+      "expectStatus": 400,
+      "expectNoCalls": [
+        "otalioSystemApi"
+      ]
+    }
+  ]
+}

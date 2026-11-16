@@ -1,0 +1,5 @@
+name: person-profile-api
+layer: system
+image:
+  repository: REGISTRY/person-profile-api
+port: 8081

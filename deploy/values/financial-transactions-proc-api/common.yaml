@@ -1,0 +1,5 @@
+name: financial-transactions-proc-api
+layer: process
+image:
+  repository: REGISTRY/financial-transactions-proc-api
+port: 8081

@@ -1,0 +1,5 @@
+name: zoho-sys-api
+layer: system
+image:
+  repository: REGISTRY/zoho-sys-api
+port: 8081

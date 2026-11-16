@@ -1,0 +1,19 @@
+{
+  "about": "cms-proc-api: every operation against the content stand-ins; a failed content call answers the old error and sends the old error e-mail (switched on for the trial only).",
+  "settings": {
+    "errorMail.enabled": true
+  },
+  "cases": [
+    {
+      "op": "GET /cms/content/{slug}",
+      "name": "content page",
+      "pathValues": {
+        "slug": "faq"
+      },
+      "expectStatus": 200,
+      "expectCalls": [
+        "strapi"
+      ]
+    }
+  ]
+}

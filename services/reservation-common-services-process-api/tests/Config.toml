@@ -1,0 +1,12 @@
+# Settings for the tests: everything on this machine, nothing real.
+[aroya.reservation_common_services_process_api]
+env = "test"
+httpPort = 18964
+basePath = "/test-api/v1"
+sysApiUrl = "http://127.0.0.2:18965"
+sysTimeoutSeconds = 2.0
+cacheUrl = "http://127.0.0.2:18965"
+cacheTimeoutSeconds = 1.0
+
+[aroya.reservation_common_services_process_api.stateRedis]
+enabled = false

@@ -1,0 +1,48 @@
+# Test settings: every backend is the stand-in in tests/standin_test.bal (127.0.0.2 is used because
+# localhost / 127.0.0.1 count as "address not set"). Made-up values only.
+[aroya.guest_identity_proc_api]
+env = "test"
+httpPort = 19781
+basePath = "/guest-identity-proc-api/v1"
+sessionSigningKey = "test-signing-key-not-real-0123456789"
+warmUpAtStart = false
+httpRetryCount = 1
+httpRetryFrequencySeconds = 0.1
+seawareSessionMaxAgeSeconds = 3
+seawareSessionPoolSize = 4
+tripsCacheSeconds = 0
+otpEmailAfterAnswer = false
+
+[aroya.guest_identity_proc_api.reservationProcApi]
+url = "http://127.0.0.2:19771/_b/reservationProcApi"
+timeoutSeconds = 5.0
+
+[aroya.guest_identity_proc_api.zohoSysApi]
+url = "http://127.0.0.2:19771/_b/zohoSysApi"
+timeoutSeconds = 5.0
+
+[aroya.guest_identity_proc_api.identitySupportExpApi]
+url = "http://127.0.0.2:19771/_b/identitySupportExpApi"
+timeoutSeconds = 5.0
+
+[aroya.guest_identity_proc_api.dbSystemApi]
+url = "http://127.0.0.2:19771/_b/dbSystemApi"
+timeoutSeconds = 5.0
+
+[aroya.guest_identity_proc_api.emailSysApi]
+url = "http://127.0.0.2:19771/_b/emailSysApi"
+timeoutSeconds = 5.0
+
+[aroya.guest_identity_proc_api.cmsContentApi]
+url = "http://127.0.0.2:19771/_b/cmsContentApi"
+timeoutSeconds = 5.0
+
+[aroya.guest_identity_proc_api.seawareAgent]
+userName = "test-agent"
+password = "test-password"
+
+[aroya.guest_identity_proc_api.errorMail]
+enabled = true
+url = "http://127.0.0.2:19771/_b/errorMail"
+toAddress = "ops@example.invalid"
+ccAddress = "cc@example.invalid"

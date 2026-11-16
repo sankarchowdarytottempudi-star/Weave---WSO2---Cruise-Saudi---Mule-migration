@@ -1,0 +1,8 @@
+[package]
+org = "aroya"
+name = "reservation_mgr_exp_api"
+version = "1.0.0"
+distribution = "2201.13.4"
+
+[build-options]
+observabilityIncluded = true

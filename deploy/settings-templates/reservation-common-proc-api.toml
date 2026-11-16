@@ -1,0 +1,6 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.reservation_common_proc_api]
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"

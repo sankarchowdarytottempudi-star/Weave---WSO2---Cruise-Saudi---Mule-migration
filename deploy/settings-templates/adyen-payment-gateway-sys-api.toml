@@ -1,0 +1,9 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.adyen_payment_gateway_sys_api]
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+
+[aroya.adyen_payment_gateway_sys_api.hTTPRequestAdyenSystem]
+url = "<kept on the server>"

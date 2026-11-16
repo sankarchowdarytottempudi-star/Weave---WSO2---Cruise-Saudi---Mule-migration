@@ -1,0 +1,5 @@
+name: identity-support-exp-api
+layer: experience
+image:
+  repository: REGISTRY/identity-support-exp-api
+port: 8081

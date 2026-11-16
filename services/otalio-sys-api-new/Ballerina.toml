@@ -1,0 +1,8 @@
+[package]
+org = "aroya"
+name = "otalio_sys_api_new"
+version = "0.1.0"
+distribution = "2201.13.4"
+
+[build-options]
+observabilityIncluded = true

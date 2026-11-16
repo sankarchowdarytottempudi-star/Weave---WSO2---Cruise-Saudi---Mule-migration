@@ -1,0 +1,5 @@
+name: payment-reconciliation-proc-api
+layer: process
+image:
+  repository: REGISTRY/payment-reconciliation-proc-api
+port: 8081

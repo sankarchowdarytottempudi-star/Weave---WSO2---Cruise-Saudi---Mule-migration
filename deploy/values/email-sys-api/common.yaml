@@ -1,0 +1,5 @@
+name: email-sys-api
+layer: system
+image:
+  repository: REGISTRY/email-sys-api
+port: 8081

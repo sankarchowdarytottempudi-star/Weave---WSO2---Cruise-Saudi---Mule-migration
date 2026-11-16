@@ -1,0 +1,7 @@
+# Settings for the tests: everything on this machine, nothing real.
+[aroya.zoho_sys_api]
+env = "test"
+httpPort = 18961
+
+[aroya.zoho_sys_api.stateRedis]
+enabled = false

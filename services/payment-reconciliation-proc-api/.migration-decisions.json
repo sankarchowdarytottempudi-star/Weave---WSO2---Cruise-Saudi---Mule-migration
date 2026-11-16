@@ -1,0 +1,15 @@
+{
+ "closed": [],
+ "notes": {
+  "entry:payment-reconciliation-scheduler-flow": [
+   {
+    "t": "2026-11-15T12:37:40Z",
+    "text": "${financialTransactions.processPaymentPath} on financialTransactionsHTTPRequestConfig http://financial-transactions-proc-api.wso2.svc:80\n${dbSysApi.dbPath} on dBSysAPIHTTPRequestConfig http://db-sys-api.wso2.svc:80\n${emailSysApi.sendEmailPath} on emailSysAPIHTTPRequestConfig http://email-sys-api.wso2.svc:80"
+   },
+   {
+    "t": "2026-11-15T12:38:44Z",
+    "text": "${financialTransactions.processPaymentPath} on financialTransactionsHTTPRequestConfig - http://financial-transactions-proc-api.wso2.svc:80 \n\n${dbSysApi.dbPath} on dBSysAPIHTTPRequestConfig - http://db-sys-api.wso2.svc:80 \n\n${emailSysApi.sendEmailPath} on emailSysAPIHTTPRequestConfig - http://email-sys-api.wso2.svc:80"
+   }
+  ]
+ }
+}

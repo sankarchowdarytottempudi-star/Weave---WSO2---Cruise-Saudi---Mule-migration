@@ -1,0 +1,18 @@
+[aroya.identity_support_exp_api]
+env = "test"
+httpPort = 18761
+warmUpAtStart = false
+errorMappingPrefetch = false
+errorMappingCacheSeconds = 300
+errorMappingStaleSeconds = 3600
+
+[aroya.identity_support_exp_api.dbSystemApi]
+url = "http://127.0.0.2:9"
+timeoutSeconds = 2
+
+[aroya.identity_support_exp_api.guestIdentityProcApi]
+url = "http://127.0.0.2:9"
+timeoutSeconds = 2
+
+[aroya.identity_support_exp_api.stateRedis]
+enabled = false

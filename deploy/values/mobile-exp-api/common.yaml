@@ -1,0 +1,5 @@
+name: mobile-exp-api
+layer: experience
+image:
+  repository: REGISTRY/mobile-exp-api
+port: 8081

@@ -1,0 +1,15 @@
+# reservation-mgr-exp-api: experience layer, reached by web and mobile through the gateway.
+name: reservation-mgr-exp-api
+layer: experience
+image:
+  repository: REGISTRY/reservation-mgr-exp-api
+port: 8081
+networkPolicy:
+  allowFromNamespaces: [ingress-nginx, wso2-apim, observability]
+ingress:
+  enabled: true
+  className: nginx-internal
+  path: /reservation-mgr-exp-api
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"

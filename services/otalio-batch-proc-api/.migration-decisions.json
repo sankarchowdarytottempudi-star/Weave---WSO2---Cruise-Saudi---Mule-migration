@@ -1,0 +1,21 @@
+{
+ "closed": [
+  {
+   "id": "backend:guestIdentityProc",
+   "kind": "backend",
+   "title": "guestIdentityProc",
+   "how": "address set",
+   "detail": "saved in deploy/vm/config/otalio-batch-proc-api.toml",
+   "t": "2026-11-15T11:16:58Z"
+  },
+  {
+   "id": "backend:dbSys",
+   "kind": "backend",
+   "title": "dbSys",
+   "how": "address set",
+   "detail": "saved in deploy/vm/config/otalio-batch-proc-api.toml",
+   "t": "2026-11-15T11:17:15Z"
+  }
+ ],
+ "notes": {}
+}

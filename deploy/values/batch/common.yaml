@@ -1,0 +1,5 @@
+name: batch
+layer: system
+image:
+  repository: REGISTRY/batch
+port: 8081

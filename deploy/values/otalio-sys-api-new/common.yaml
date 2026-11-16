@@ -1,0 +1,5 @@
+name: otalio-sys-api-new
+layer: system
+image:
+  repository: REGISTRY/otalio-sys-api-new
+port: 8081

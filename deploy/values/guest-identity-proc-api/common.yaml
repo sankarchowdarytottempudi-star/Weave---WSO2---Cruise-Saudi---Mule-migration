@@ -1,0 +1,5 @@
+name: guest-identity-proc-api
+layer: process
+image:
+  repository: REGISTRY/guest-identity-proc-api
+port: 8081

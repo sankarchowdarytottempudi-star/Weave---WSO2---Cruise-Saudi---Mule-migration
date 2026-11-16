@@ -1,0 +1,6 @@
+name: reservation-common-proc-api
+layer: process
+image: { repository: REGISTRY/reservation-common-proc-api }
+port: 8081
+networkPolicy: { allowFromLayers: [experience, process], allowFromNamespaces: [observability] }
+resources: { requests: { cpu: 250m, memory: 384Mi }, limits: { cpu: "1", memory: 768Mi } }

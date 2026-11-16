@@ -1,0 +1,11 @@
+image: { repository: telr-pay-gw-sys-api, tag: vm, pullPolicy: Never }
+imagePullSecrets: []
+service: { type: NodePort, nodePort: 30136 }
+autoscaling: { enabled: false }
+replicas: 1
+serviceMonitor: { enabled: false }
+networkPolicy: { enabled: false }
+ingress: { enabled: false }
+resources:
+  requests: { cpu: 100m, memory: 384Mi }
+  limits: { cpu: "1", memory: 768Mi }

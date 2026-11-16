@@ -1,0 +1,3817 @@
+{
+ "operations": [
+  {
+   "operation": "GET /mobile-exp-api/v1/activity-planner/v1/activities",
+   "status": "ported",
+   "flow": "get:\\activity-planner\\v1\\activities:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/activity-planner/v1/activity-items",
+   "status": "ported",
+   "flow": "get:\\activity-planner\\v1\\activity-items:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/activity-planner/v1/event-bookings",
+   "status": "ported",
+   "flow": "get:\\activity-planner\\v1\\event-bookings:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/core/v1/itinerary-voyages",
+   "status": "ported",
+   "flow": "get:\\core\\v1\\itinerary-voyages:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/core/v1/itinerary-voyages/active-itinerary-voyage",
+   "status": "ported",
+   "flow": "get:\\core\\v1\\itinerary-voyages\\active-itinerary-voyage:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/dining/v1/reservation-vendor/inventory",
+   "status": "ported",
+   "flow": "get:\\dining\\v1\\reservation-vendor\\inventory:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/dining/v1/reservation-vendor/location",
+   "status": "ported",
+   "flow": "get:\\dining\\v1\\reservation-vendor\\location:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/dining/v1/reservation-vendor/reservation/passenger",
+   "status": "ported",
+   "flow": "get:\\dining\\v1\\reservation-vendor\\reservation\\passenger:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/excursion/v1/bookable-tours",
+   "status": "ported",
+   "flow": "get:\\excursion\\v1\\bookable-tours:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/excursion/v1/bookable-tours/with-sales-channels",
+   "status": "ported",
+   "flow": "get:\\excursion\\v1\\bookable-tours\\with-sales-channels:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/excursion/v1/bookings",
+   "status": "ported",
+   "flow": "get:\\excursion\\v1\\bookings:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/excursion/v1/departure-age-groups",
+   "status": "ported",
+   "flow": "get:\\excursion\\v1\\departure-age-groups:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/galley-display/v1/menu-schedulers",
+   "status": "ported",
+   "flow": "get:\\galley-display\\v1\\menu-schedulers:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/ism/v1/amenity",
+   "status": "ported",
+   "flow": "get:\\ism\\v1\\amenity:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/ism/v1/amenity-codes",
+   "status": "ported",
+   "flow": "get:\\ism\\v1\\amenity-codes:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/pms/v1/travel-documents",
+   "status": "ported",
+   "flow": "get:\\pms\\v1\\travel-documents:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/pms/v1/travel-documents/(id)",
+   "status": "ported",
+   "flow": "get:\\pms\\v1\\travel-documents\\(id):mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/activity-planner/v1/event-bookings/create-multiple-bookings",
+   "status": "ported",
+   "flow": "post:\\activity-planner\\v1\\event-bookings\\create-multiple-bookings:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/activity-planner/v1/event-bookings/post-multiple-bookings",
+   "status": "ported",
+   "flow": "post:\\activity-planner\\v1\\event-bookings\\post-multiple-bookings:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/dining/v1/reservation-vendor/reservation/actions/activate",
+   "status": "ported",
+   "flow": "post:\\dining\\v1\\reservation-vendor\\reservation\\actions\\activate:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/dining/v1/reservation-vendor/reservation",
+   "status": "ported",
+   "flow": "post:\\dining\\v1\\reservation-vendor\\reservation:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/payment-gateway/v1/payment-method-authorization",
+   "status": "ported",
+   "flow": "post:\\payment-gateway\\v1\\payment-method-authorization:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/pms/v1/travel-documents/(id)/file",
+   "status": "ported",
+   "flow": "post:\\pms\\v1\\travel-documents\\(id)\\file:multipart\\form-data:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/pms/v1/travel-documents",
+   "status": "ported",
+   "flow": "post:\\pms\\v1\\travel-documents:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/reservation/v1/person-search",
+   "status": "ported",
+   "flow": "get:\\reservation\\v1\\person-search:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/pos/v1/packages",
+   "status": "ported",
+   "flow": "get:\\pos\\v1\\packages:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/excursion/v1/bookings/book",
+   "status": "ported",
+   "flow": "post:\\excursion\\v1\\bookings\\book:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/mobile-backend/(webhook-type)",
+   "status": "ported",
+   "flow": "post:\\mobile-backend\\(webhook-type):application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/pms/v1/person-profiles/(profileId)/picture",
+   "status": "ported",
+   "flow": "post:\\pms\\v1\\person-profiles\\(profileId)\\picture:multipart\\form-data:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/integration-tasks/graphql",
+   "status": "ported",
+   "flow": "post:\\integration-tasks\\graphql:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/excursion/v1/bookings/create-multiple-bookings",
+   "status": "ported",
+   "flow": "post:\\excursion\\v1\\bookings\\create-multiple-bookings:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "PUT /mobile-exp-api/v1/updateEmergencyContact",
+   "status": "ported",
+   "flow": "put:\\updateEmergencyContact:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "GET /mobile-exp-api/v1/getLinkedPerson",
+   "status": "ported",
+   "flow": "get:\\getLinkedPerson:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/pms/v1/custom-attribute-values",
+   "status": "ported",
+   "flow": "post:\\pms\\v1\\custom-attribute-values:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/excursion/v1/bookings/post-bookings",
+   "status": "ported",
+   "flow": "post:\\excursion\\v1\\bookings\\post-bookings:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "POST /mobile-exp-api/v1/ism/v1/service-item-requests",
+   "status": "ported",
+   "flow": "post:\\ism\\v1\\service-item-requests:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "PATCH /mobile-exp-api/v1/reservation/v1/person-reservations/actions/bulk-update",
+   "status": "ported",
+   "flow": "patch:\\reservation\\v1\\person-reservations\\actions\\bulk-update:application\\json:mobile-exp-api-config",
+   "notPorted": []
+  },
+  {
+   "operation": "DELETE /mobile-exp-api/v1/pms/v1/custom-attribute-values/(id)",
+   "status": "ported",
+   "flow": "delete:\\pms\\v1\\custom-attribute-values\\(id):mobile-exp-api-config",
+   "notPorted": []
+  }
+ ],
+ "steps": {
+  "steps": 962,
+  "ported": 962,
+  "placeholders": 0
+ },
+ "notPorted": [],
+ "usesState": false,
+ "apikit": {
+  "checked": 36,
+  "source": "mobile-exp-api-1.0.51-raml.zip:mobile-exp-api.raml",
+  "note": null,
+  "fallback": true
+ },
+ "contracts": {
+  "GET /mobile-exp-api/v1/activity-planner/v1/activities": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/activity-planner/v1/activity-items": {
+   "q": [
+    {
+     "n": "search",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "buyer==876trdfyuio"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/activity-planner/v1/event-bookings": {
+   "q": [
+    {
+     "n": "page",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "1"
+     }
+    },
+    {
+     "n": "search",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "buyer==45678uhgfd"
+     }
+    },
+    {
+     "n": "size",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "10"
+     }
+    },
+    {
+     "n": "sort",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "createdAt,desc"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/core/v1/itinerary-voyages": {
+   "q": [
+    {
+     "n": "shipId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    },
+    {
+     "n": "search",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "buyer==876trdfyuio"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/core/v1/itinerary-voyages/active-itinerary-voyage": {
+   "q": [
+    {
+     "n": "shipId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/dining/v1/reservation-vendor/inventory": {
+   "q": [
+    {
+     "n": "hierarchyId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    },
+    {
+     "n": "startDate",
+     "r": false,
+     "s": {
+      "t": "date",
+      "style": "raml"
+     }
+    },
+    {
+     "n": "endDate",
+     "r": false,
+     "s": {
+      "t": "date",
+      "style": "raml"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/dining/v1/reservation-vendor/location": {
+   "q": [
+    {
+     "n": "hierarchyId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    },
+    {
+     "n": "search",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "buyer==876trdfyuio"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/dining/v1/reservation-vendor/reservation/passenger": {
+   "q": [
+    {
+     "n": "hierarchyId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    },
+    {
+     "n": "passengerIdList",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/excursion/v1/bookable-tours": {
+   "q": [
+    {
+     "n": "hierarchyId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    },
+    {
+     "n": "passengerIdList",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/excursion/v1/bookable-tours/with-sales-channels": {
+   "q": [
+    {
+     "n": "shipId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/excursion/v1/bookings": {
+   "q": [
+    {
+     "n": "hierarchyId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    },
+    {
+     "n": "passengerIdList",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/excursion/v1/departure-age-groups": {
+   "q": [
+    {
+     "n": "shipId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/galley-display/v1/menu-schedulers": {
+   "q": [
+    {
+     "n": "hierarchyId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "8dcc009689ab11e8be3dfa2819c4da71"
+     }
+    },
+    {
+     "n": "locationId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    },
+    {
+     "n": "eventDate",
+     "r": false,
+     "s": {
+      "t": "date",
+      "style": "raml"
+     }
+    },
+    {
+     "n": "includeArticleInfo",
+     "r": false,
+     "s": {
+      "t": "boolean",
+      "style": "raml"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/ism/v1/amenity": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/ism/v1/amenity-codes": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/pms/v1/travel-documents": {
+   "q": [
+    {
+     "n": "page",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "1"
+     }
+    },
+    {
+     "n": "search",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "passport"
+     }
+    },
+    {
+     "n": "size",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "10"
+     }
+    },
+    {
+     "n": "sort",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "createdAt,desc"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "GET /mobile-exp-api/v1/pms/v1/travel-documents/(id)": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [
+    {
+     "n": "id",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "0000956654d511efaf92cd99eeecbee6"
+     }
+    }
+   ],
+   "b": null
+  },
+  "POST /mobile-exp-api/v1/activity-planner/v1/event-bookings/create-multiple-bookings": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "eventId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "guests": {
+       "t": "array",
+       "style": "raml",
+       "items": {
+        "t": "object",
+        "style": "raml",
+        "props": {
+         "participantId": {
+          "t": "string",
+          "style": "raml"
+         },
+         "eventItemId": {
+          "t": "string",
+          "style": "raml"
+         }
+        },
+        "req": []
+       }
+      },
+      "rvcId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "workstationId": {
+       "t": "string",
+       "style": "raml"
+      }
+     },
+     "req": [],
+     "ex": {
+      "eventId": "c5df2852713011efaeb37fd5f56f30c2",
+      "guests": [
+       {
+        "participantId": "92e6739b561c11e9a3389532bb4ce5d5",
+        "eventItemId": "c656f063713011efaeb321a9acfb55a1"
+       }
+      ],
+      "rvcId": "997718463ee011ef8702fa1f983d301b",
+      "workstationId": "afeb4f99799a11eab09a0a580af4005e"
+     }
+    },
+    "ex": {
+     "eventId": "c5df2852713011efaeb37fd5f56f30c2",
+     "guests": [
+      {
+       "participantId": "92e6739b561c11e9a3389532bb4ce5d5",
+       "eventItemId": "c656f063713011efaeb321a9acfb55a1"
+      }
+     ],
+     "rvcId": "997718463ee011ef8702fa1f983d301b",
+     "workstationId": "afeb4f99799a11eab09a0a580af4005e"
+    }
+   }
+  },
+  "POST /mobile-exp-api/v1/activity-planner/v1/event-bookings/post-multiple-bookings": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": null,
+    "ex": {
+     "eventId": "c5df2852713011efaeb37fd5f56f30c2",
+     "bookings": [
+      {
+       "bookingId": "45feda7351ac11f0bc54c56180802443"
+      }
+     ],
+     "rvcId": "997718463ee011ef8702fa1f983d301b",
+     "workstationId": "afeb4f99799a11eab09a0a580af4005e"
+    }
+   }
+  },
+  "POST /mobile-exp-api/v1/dining/v1/reservation-vendor/reservation/actions/activate": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    },
+    {
+     "n": "Content-Type",
+     "r": true,
+     "s": {
+      "t": "string",
+      "enum": [
+       "application/json"
+      ],
+      "style": "raml"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "hierarchyId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "idList": {
+       "t": "array",
+       "items": {
+        "t": "string",
+        "style": "raml"
+       },
+       "style": "raml"
+      }
+     },
+     "req": [
+      "hierarchyId",
+      "idList"
+     ]
+    },
+    "ex": null
+   }
+  },
+  "POST /mobile-exp-api/v1/dining/v1/reservation-vendor/reservation": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    },
+    {
+     "n": "Accept",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "application/json"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "canShareTable": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "diningBookerId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "diningDateTime": {
+       "t": "datetime",
+       "style": "raml"
+      },
+      "diningGuestCountRequested": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "diningInventoryIds": {
+       "t": "array",
+       "style": "raml",
+       "items": {
+        "t": "object",
+        "style": "raml",
+        "props": {
+         "inventoryAmount": {
+          "t": "integer",
+          "style": "raml"
+         },
+         "inventoryBlockId": {
+          "t": "string",
+          "style": "raml"
+         },
+         "inventoryId": {
+          "t": "string",
+          "style": "raml"
+         },
+         "inventoryItemId": {
+          "t": "string",
+          "style": "raml"
+         }
+        },
+        "req": []
+       }
+      },
+      "diningProcessorExternalId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "diningReservationIdExternal": {
+       "t": "string",
+       "style": "raml"
+      },
+      "diningRoomId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "diningTableIds": {
+       "t": "array",
+       "style": "raml",
+       "items": {
+        "t": "string",
+        "style": "raml"
+       }
+      },
+      "duration": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "eventSeatingTimeId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "guests": {
+       "t": "array",
+       "style": "raml",
+       "items": {
+        "t": "object",
+        "style": "raml",
+        "props": {
+         "delegateId": {
+          "t": "string",
+          "style": "raml"
+         },
+         "delegateNote": {
+          "t": "string",
+          "style": "raml"
+         },
+         "delegateStatus": {
+          "t": "string",
+          "style": "raml"
+         },
+         "personReservationId": {
+          "t": "string",
+          "style": "raml"
+         },
+         "tableRequestedId": {
+          "t": "string",
+          "style": "raml"
+         },
+         "tableSeatedId": {
+          "t": "string",
+          "style": "raml"
+         }
+        },
+        "req": []
+       }
+      },
+      "hierarchyId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "id": {
+       "t": "string",
+       "style": "raml"
+      },
+      "isGuestAllowAddGuest": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "isGuestAllowEditReservation": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "isGuestAllowViewGuestList": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "isPrivate": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "note": {
+       "t": "string",
+       "style": "raml"
+      },
+      "productTypeId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "reservationType": {
+       "t": "string",
+       "style": "raml"
+      },
+      "seatingNumber": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "sharingAvailableNow": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "sourceReservationId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "status": {
+       "t": "string",
+       "style": "raml",
+       "enum": [
+        "CANCELLED",
+        "DECLINED",
+        "EXPECTED",
+        "FINISHED",
+        "INHOUSE",
+        "NO_SHOW",
+        "PARTIAL",
+        "TEMPORARY",
+        "WAITLIST"
+       ]
+      }
+     },
+     "req": []
+    },
+    "ex": null
+   }
+  },
+  "POST /mobile-exp-api/v1/payment-gateway/v1/payment-method-authorization": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    },
+    {
+     "n": "Accept",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "application/json"
+     }
+    },
+    {
+     "n": "Content-Type",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "application/json"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "accountId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "adjustAuthorisationData": {
+       "t": "string",
+       "style": "raml"
+      },
+      "amount": {
+       "t": "string",
+       "style": "raml"
+      },
+      "authCode": {
+       "t": "string",
+       "style": "raml"
+      },
+      "authorized": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "cardCountryCode": {
+       "t": "string",
+       "style": "raml"
+      },
+      "cardHolderName": {
+       "t": "string",
+       "style": "raml"
+      },
+      "checkId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "checkNo": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "checkNumber": {
+       "t": "string",
+       "style": "raml"
+      },
+      "checkSn": {
+       "t": "string",
+       "style": "raml"
+      },
+      "creditCardShortCode": {
+       "t": "string",
+       "style": "raml"
+      },
+      "currencyConversion": {
+       "t": "object",
+       "style": "raml",
+       "props": {
+        "commission": {
+         "t": "string",
+         "style": "raml"
+        },
+        "convertedAmount": {
+         "t": "object",
+         "style": "raml",
+         "props": {
+          "currency": {
+           "t": "string",
+           "style": "raml"
+          },
+          "value": {
+           "t": "number",
+           "style": "raml"
+          }
+         },
+         "req": [
+          "currency",
+          "value"
+         ]
+        },
+        "customerApprovedFlag": {
+         "t": "boolean",
+         "style": "raml"
+        },
+        "declaration": {
+         "t": "string",
+         "style": "raml"
+        },
+        "markup": {
+         "t": "string",
+         "style": "raml"
+        },
+        "rate": {
+         "t": "string",
+         "style": "raml"
+        }
+       },
+       "req": [
+        "commission",
+        "convertedAmount",
+        "customerApprovedFlag",
+        "declaration",
+        "markup",
+        "rate"
+       ]
+      },
+      "errorMessage": {
+       "t": "string",
+       "style": "raml"
+      },
+      "expiryMonth": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "expiryYear": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "externalId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "financeDepartmentTypeEnum": {
+       "t": "string",
+       "style": "raml"
+      },
+      "fundingSource": {
+       "t": "string",
+       "style": "raml"
+      },
+      "lastFourDigit": {
+       "t": "string",
+       "style": "raml"
+      },
+      "manualAuthReason": {
+       "t": "string",
+       "style": "raml"
+      },
+      "merchantReference": {
+       "t": "string",
+       "style": "raml"
+      },
+      "pspReference": {
+       "t": "string",
+       "style": "raml"
+      },
+      "settlementPspReference": {
+       "t": "string",
+       "style": "raml"
+      },
+      "signature": {
+       "t": "string",
+       "style": "raml"
+      },
+      "sqbOrderSn": {
+       "t": "string",
+       "style": "raml"
+      },
+      "storeNo": {
+       "t": "string",
+       "style": "raml"
+      },
+      "subDepartmentEntityId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "temporaryToken": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "tenderSn": {
+       "t": "string",
+       "style": "raml"
+      },
+      "terminalId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "token": {
+       "t": "string",
+       "style": "raml"
+      },
+      "transactionId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "treateAsDeposit": {
+       "t": "boolean",
+       "style": "raml"
+      }
+     },
+     "req": [
+      "accountId",
+      "adjustAuthorisationData",
+      "amount",
+      "authCode",
+      "authorized",
+      "cardCountryCode",
+      "cardHolderName",
+      "checkId",
+      "checkNo",
+      "checkNumber",
+      "checkSn",
+      "creditCardShortCode",
+      "currencyConversion",
+      "errorMessage",
+      "expiryMonth",
+      "expiryYear",
+      "externalId",
+      "financeDepartmentTypeEnum",
+      "fundingSource",
+      "lastFourDigit",
+      "manualAuthReason",
+      "merchantReference",
+      "pspReference",
+      "settlementPspReference",
+      "signature",
+      "sqbOrderSn",
+      "storeNo",
+      "subDepartmentEntityId",
+      "temporaryToken",
+      "tenderSn",
+      "terminalId",
+      "token",
+      "transactionId",
+      "treateAsDeposit"
+     ]
+    },
+    "ex": null
+   }
+  },
+  "POST /mobile-exp-api/v1/pms/v1/travel-documents/(id)/file": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [
+    {
+     "n": "id",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "0000956654d511efaf92cd99eeecbee6"
+     }
+    }
+   ],
+   "b": {
+    "r": true,
+    "types": [
+     "multipart/form-data"
+    ],
+    "s": {
+     "t": "object",
+     "props": {
+      "file": {
+       "t": "file",
+       "style": "raml"
+      }
+     },
+     "req": [
+      "file"
+     ],
+     "style": "raml"
+    },
+    "ex": null
+   }
+  },
+  "POST /mobile-exp-api/v1/pms/v1/travel-documents": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "personProfileId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "primaryDocument": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "travelDocType": {
+       "t": "string",
+       "style": "raml"
+      },
+      "allowedDuration": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "birthPlace": {
+       "t": "string",
+       "style": "raml"
+      },
+      "documentHolderBirthDate": {
+       "t": "date",
+       "style": "raml"
+      },
+      "documentHolderFirstName": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "documentHolderGender": {
+       "t": "string",
+       "style": "raml"
+      },
+      "documentHolderLastName": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "documentHolderMiddleName": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "documentMrz1": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "documentMrz2": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "documentMrz3": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "documentNr": {
+       "t": "string",
+       "style": "raml"
+      },
+      "expiryDate": {
+       "t": "date",
+       "style": "raml"
+      },
+      "externalId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "issueAuthority": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "issueDate": {
+       "t": "any",
+       "any": [
+        {
+         "t": "date",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "issueNation": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "issuePlace": {
+       "t": "string",
+       "style": "raml"
+      },
+      "nationality": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "numberOfEntries": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "overwriteFields": {
+       "t": "array",
+       "items": {
+        "t": "string",
+        "style": "raml"
+       },
+       "style": "raml"
+      },
+      "updatedAt": {
+       "t": "string",
+       "style": "raml"
+      },
+      "validFrom": {
+       "t": "any",
+       "any": [
+        {
+         "t": "date",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "visaType": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      }
+     },
+     "req": [
+      "personProfileId",
+      "primaryDocument",
+      "travelDocType",
+      "allowedDuration",
+      "birthPlace",
+      "documentHolderBirthDate",
+      "documentHolderFirstName",
+      "documentHolderGender",
+      "documentHolderLastName",
+      "documentHolderMiddleName",
+      "documentMrz1",
+      "documentMrz2",
+      "documentMrz3",
+      "documentNr",
+      "expiryDate",
+      "externalId",
+      "issueAuthority",
+      "issueDate",
+      "issueNation",
+      "issuePlace",
+      "nationality",
+      "numberOfEntries",
+      "overwriteFields",
+      "updatedAt",
+      "validFrom",
+      "visaType"
+     ],
+     "ex": {
+      "personProfileId": "fb3d8ee154d411efaf92df8984030d02",
+      "primaryDocument": true,
+      "travelDocType": "PSPT",
+      "allowedDuration": 0,
+      "birthPlace": "",
+      "documentHolderBirthDate": "1997-01-06",
+      "documentHolderFirstName": null,
+      "documentHolderGender": "d1add31d716b11e99f5e0a580af4006e",
+      "documentHolderLastName": null,
+      "documentHolderMiddleName": null,
+      "documentMrz1": null,
+      "documentMrz2": null,
+      "documentMrz3": null,
+      "documentNr": "XX241",
+      "expiryDate": "2034-02-13",
+      "externalId": "194149393",
+      "issueAuthority": null,
+      "issueDate": null,
+      "issueNation": null,
+      "issuePlace": "",
+      "nationality": null,
+      "numberOfEntries": 0,
+      "overwriteFields": [],
+      "updatedAt": "1",
+      "validFrom": null,
+      "visaType": null
+     }
+    },
+    "ex": {
+     "personProfileId": "fb3d8ee154d411efaf92df8984030d02",
+     "primaryDocument": true,
+     "travelDocType": "PSPT",
+     "allowedDuration": 0,
+     "birthPlace": "",
+     "documentHolderBirthDate": "1997-01-06",
+     "documentHolderFirstName": null,
+     "documentHolderGender": "d1add31d716b11e99f5e0a580af4006e",
+     "documentHolderLastName": null,
+     "documentHolderMiddleName": null,
+     "documentMrz1": null,
+     "documentMrz2": null,
+     "documentMrz3": null,
+     "documentNr": "XX241",
+     "expiryDate": "2034-02-13",
+     "externalId": "194149393",
+     "issueAuthority": null,
+     "issueDate": null,
+     "issueNation": null,
+     "issuePlace": "",
+     "nationality": null,
+     "numberOfEntries": 0,
+     "overwriteFields": [],
+     "updatedAt": "1",
+     "validFrom": null,
+     "visaType": null
+    }
+   }
+  },
+  "GET /mobile-exp-api/v1/reservation/v1/person-search": {
+   "q": [
+    {
+     "n": "search",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "buyer==876trdfyuio"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "POST /mobile-exp-api/v1/excursion/v1/bookings/book": {
+   "q": [
+    {
+     "n": "shipId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    },
+    {
+     "n": "workstationId",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "ex": {
+      "ageGroup": "ADULT",
+      "ageGroupPricingId": "2188eb79f8bd11eaa7d8e7e723b1842b",
+      "attendeeStatus": "ATTENDED",
+      "bookableTourDepartureId": "9a364d6754d211efbe707bf4a96675f0",
+      "bookableTourId": "46c7657954d311efbe70ebe58f9b2dcf",
+      "bookableTourTicketTypeId": null,
+      "bookingBy": null,
+      "bookingDate": "2025-06-24T14:15:22Z",
+      "bookingStatus": "TEMPORARY",
+      "cabinCode": null,
+      "cabinPortSide": true,
+      "comments": null,
+      "deckCode": null,
+      "deleted": false,
+      "discount": null,
+      "discountAmount": null,
+      "discountComments": null,
+      "discountReason": null,
+      "discountTemplateAmount": null,
+      "discountTemplatePercentage": null,
+      "embarkationDate": "2025-08-02",
+      "externalBookingId": null,
+      "firstName": null,
+      "foreignCurrencyCode": null,
+      "foreignCurrencyNetAmount": null,
+      "grossAmount": null,
+      "groupId": null,
+      "housekeepingSectionCode": null,
+      "housekeepingSectionDescription": null,
+      "languageCode": "st",
+      "languageCodeSource": "PERSON_PROFILE",
+      "lastName": null,
+      "longComments": null,
+      "movingReason": null,
+      "netAmount": null,
+      "originalParticipantId": null,
+      "packageId": null,
+      "participantHeight": null,
+      "participantId": "1f4e759c752511efa141e3042c474700",
+      "participantWeight": null,
+      "payerId": null,
+      "postingCheckDetailId": null,
+      "postingCheckId": null,
+      "prepaid": true,
+      "quantity": 1,
+      "reservationStatus": "NO_SHOW",
+      "rvcId": "997718463ee011ef8702fa1f983d301b",
+      "salesChannelId": "21982dbbf8bd11eaa7d8f76724916147",
+      "signatureDocumentId": null,
+      "ticketPrintedCount": 0,
+      "tourBrochureId": null,
+      "transportationId": null,
+      "voidId": null,
+      "waitlistNo": 0,
+      "workstationId": "fe3f4977a12f11ef945646f984ea3e6f"
+     }
+    },
+    "ex": {
+     "ageGroup": "ADULT",
+     "ageGroupPricingId": "2188eb79f8bd11eaa7d8e7e723b1842b",
+     "attendeeStatus": "ATTENDED",
+     "bookableTourDepartureId": "9a364d6754d211efbe707bf4a96675f0",
+     "bookableTourId": "46c7657954d311efbe70ebe58f9b2dcf",
+     "bookableTourTicketTypeId": null,
+     "bookingBy": null,
+     "bookingDate": "2025-06-24T14:15:22Z",
+     "bookingStatus": "TEMPORARY",
+     "cabinCode": null,
+     "cabinPortSide": true,
+     "comments": null,
+     "deckCode": null,
+     "deleted": false,
+     "discount": null,
+     "discountAmount": null,
+     "discountComments": null,
+     "discountReason": null,
+     "discountTemplateAmount": null,
+     "discountTemplatePercentage": null,
+     "embarkationDate": "2025-08-02",
+     "externalBookingId": null,
+     "firstName": null,
+     "foreignCurrencyCode": null,
+     "foreignCurrencyNetAmount": null,
+     "grossAmount": null,
+     "groupId": null,
+     "housekeepingSectionCode": null,
+     "housekeepingSectionDescription": null,
+     "languageCode": "st",
+     "languageCodeSource": "PERSON_PROFILE",
+     "lastName": null,
+     "longComments": null,
+     "movingReason": null,
+     "netAmount": null,
+     "originalParticipantId": null,
+     "packageId": null,
+     "participantHeight": null,
+     "participantId": "1f4e759c752511efa141e3042c474700",
+     "participantWeight": null,
+     "payerId": null,
+     "postingCheckDetailId": null,
+     "postingCheckId": null,
+     "prepaid": true,
+     "quantity": 1,
+     "reservationStatus": "NO_SHOW",
+     "rvcId": "997718463ee011ef8702fa1f983d301b",
+     "salesChannelId": "21982dbbf8bd11eaa7d8f76724916147",
+     "signatureDocumentId": null,
+     "ticketPrintedCount": 0,
+     "tourBrochureId": null,
+     "transportationId": null,
+     "voidId": null,
+     "waitlistNo": 0,
+     "workstationId": "fe3f4977a12f11ef945646f984ea3e6f"
+    }
+   }
+  },
+  "POST /mobile-exp-api/v1/pms/v1/person-profiles/(profileId)/picture": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [
+    {
+     "n": "profileId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    }
+   ],
+   "b": {
+    "r": true,
+    "types": [
+     "multipart/form-data"
+    ],
+    "s": {
+     "t": "object",
+     "props": {
+      "file": {
+       "t": "file",
+       "style": "raml"
+      }
+     },
+     "req": [
+      "file"
+     ],
+     "style": "raml"
+    },
+    "ex": null
+   }
+  },
+  "POST /mobile-exp-api/v1/integration-tasks/graphql": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "query": {
+       "t": "string",
+       "style": "raml"
+      },
+      "variables": {
+       "t": "object",
+       "style": "raml"
+      }
+     },
+     "req": [
+      "query"
+     ],
+     "ex": {
+      "query": "query BookableToursWithSalesChannels($shipId: ID!, $search: String) { bookableToursWithSalesChannels(shipId: $shipId, search: $search) { id code date } }",
+      "variables": {
+       "shipId": "8dcc009689ab11e8be3dfa2819c4da71",
+       "search": "date>=2026-01-10;date<=2026-01-10"
+      }
+     }
+    },
+    "ex": {
+     "query": "query BookableToursWithSalesChannels($shipId: ID!, $search: String) { bookableToursWithSalesChannels(shipId: $shipId, search: $search) { id code date } }",
+     "variables": {
+      "shipId": "8dcc009689ab11e8be3dfa2819c4da71",
+      "search": "date>=2026-01-10;date<=2026-01-10"
+     }
+    }
+   }
+  },
+  "POST /mobile-exp-api/v1/excursion/v1/bookings/create-multiple-bookings": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    },
+    {
+     "n": "Content-Type",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "application/json"
+     }
+    },
+    {
+     "n": "Accept",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "application/json"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "quantity": {
+       "t": "integer",
+       "style": "raml"
+      },
+      "bookableTourDepartureId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "bookableTourId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "bookingStatus": {
+       "t": "string",
+       "style": "raml"
+      },
+      "discount": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "guests": {
+       "t": "array",
+       "style": "raml",
+       "items": {
+        "t": "object",
+        "style": "raml",
+        "props": {
+         "ageGroup": {
+          "t": "string",
+          "style": "raml"
+         },
+         "ageGroupPricingId": {
+          "t": "string",
+          "style": "raml"
+         },
+         "id": {
+          "t": "any",
+          "any": [
+           {
+            "t": "string",
+            "style": "raml"
+           },
+           {
+            "t": "null",
+            "style": "raml"
+           }
+          ],
+          "style": "raml"
+         },
+         "languageCode": {
+          "t": "string",
+          "style": "raml"
+         },
+         "participantId": {
+          "t": "string",
+          "style": "raml"
+         }
+        },
+        "req": [
+         "ageGroup",
+         "ageGroupPricingId",
+         "id",
+         "languageCode",
+         "participantId"
+        ],
+        "addl": true
+       }
+      },
+      "id": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "rvcId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "salesChannelId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "workstationId": {
+       "t": "string",
+       "style": "raml"
+      }
+     },
+     "req": [
+      "quantity",
+      "bookableTourDepartureId",
+      "bookableTourId",
+      "bookingStatus",
+      "discount",
+      "guests",
+      "id",
+      "rvcId",
+      "salesChannelId",
+      "workstationId"
+     ],
+     "addl": true,
+     "ex": {
+      "quantity": 1,
+      "bookableTourDepartureId": "13de6aadbaac11f09d76ffac94a8bb3e",
+      "bookableTourId": "13dc6ed8baac11f09d76af8d6f05ee44",
+      "bookingStatus": "TEMPORARY",
+      "discount": null,
+      "guests": [
+       {
+        "ageGroup": "ADULT",
+        "ageGroupPricingId": "00154fd851c111f08e9c63382784b4a4",
+        "id": null,
+        "languageCode": "en",
+        "participantId": "10b164d9482b11f09ae2c5001e6216d7"
+       },
+       {
+        "ageGroup": "ADULT",
+        "ageGroupPricingId": "00154fd851c111f08e9c63382784b4a4",
+        "id": null,
+        "languageCode": "en",
+        "participantId": "10b164d8482b11f09ae22bf1ee2e38fa"
+       }
+      ],
+      "id": null,
+      "rvcId": "997718463ee011ef8702fa1f983d301b",
+      "salesChannelId": "e539118faaf411f09ca5b75c0625dc11",
+      "workstationId": "b72c9a76b14811ef87ad66b7275d0a68"
+     }
+    },
+    "ex": {
+     "quantity": 1,
+     "bookableTourDepartureId": "13de6aadbaac11f09d76ffac94a8bb3e",
+     "bookableTourId": "13dc6ed8baac11f09d76af8d6f05ee44",
+     "bookingStatus": "TEMPORARY",
+     "discount": null,
+     "guests": [
+      {
+       "ageGroup": "ADULT",
+       "ageGroupPricingId": "00154fd851c111f08e9c63382784b4a4",
+       "id": null,
+       "languageCode": "en",
+       "participantId": "10b164d9482b11f09ae2c5001e6216d7"
+      },
+      {
+       "ageGroup": "ADULT",
+       "ageGroupPricingId": "00154fd851c111f08e9c63382784b4a4",
+       "id": null,
+       "languageCode": "en",
+       "participantId": "10b164d8482b11f09ae22bf1ee2e38fa"
+      }
+     ],
+     "id": null,
+     "rvcId": "997718463ee011ef8702fa1f983d301b",
+     "salesChannelId": "e539118faaf411f09ca5b75c0625dc11",
+     "workstationId": "b72c9a76b14811ef87ad66b7275d0a68"
+    }
+   }
+  },
+  "PUT /mobile-exp-api/v1/updateEmergencyContact": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": null,
+    "ex": [
+     {
+      "id": "",
+      "emergencyContact": true,
+      "relation": "",
+      "linkedPerson": {
+       "id": "",
+       "firstName": "\u0646\u0648\u0631\u0647",
+       "lastName": "\u0627\u0644\u0647\u0648\u064a\u0645\u0644"
+      },
+      "linkedPersonAddress": [],
+      "linkedPersonCommunication": [
+       {
+        "id": null,
+        "communicationTypeId": "12c6cbf1fe4911eeb555d2bc2be678e3",
+        "recordValue": "96667321322",
+        "preferredMethod": true
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "GET /mobile-exp-api/v1/getLinkedPerson": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "POST /mobile-exp-api/v1/pms/v1/custom-attribute-values": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    },
+    {
+     "n": "Content-Type",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "application/json"
+     }
+    },
+    {
+     "n": "Accept",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "application/json"
+     }
+    },
+    {
+     "n": "body",
+     "r": true,
+     "s": {
+      "t": "object",
+      "style": "raml",
+      "props": {
+       "attributeId": {
+        "t": "string",
+        "style": "raml"
+       },
+       "linkedId": {
+        "t": "string",
+        "style": "raml"
+       },
+       "value": {
+        "t": "string",
+        "style": "raml"
+       }
+      },
+      "req": [],
+      "ex": {
+       "attributeId": "220f2c9c1d0011ef872d67261eb4fc49",
+       "linkedId": "3e92f3cc459f11f09ae2af0c2f7d1212",
+       "value": "2026-02-22,14:49:00"
+      }
+     }
+    }
+   ],
+   "u": [],
+   "b": null
+  },
+  "POST /mobile-exp-api/v1/excursion/v1/bookings/post-bookings": {
+   "q": [
+    {
+     "n": "bookableTourId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    },
+    {
+     "n": "rvcId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    },
+    {
+     "n": "shipId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    },
+    {
+     "n": "workstationId",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml"
+     }
+    }
+   ],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "array",
+     "style": "raml",
+     "items": {
+      "t": "string",
+      "style": "raml"
+     },
+     "ex": [
+      "2dff67c9577c11f18b9d4f0ace8cb7ed"
+     ]
+    },
+    "ex": [
+     "2dff67c9577c11f18b9d4f0ace8cb7ed"
+    ]
+   }
+  },
+  "POST /mobile-exp-api/v1/ism/v1/service-item-requests": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "affectedPersons": {
+       "t": "any",
+       "any": [
+        {
+         "t": "array",
+         "items": {
+          "t": "string",
+          "style": "raml"
+         },
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "complaint": {
+       "t": "any",
+       "any": [
+        {
+         "t": "boolean",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "contactedById": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "contactedHowId": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "createdBy": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "creationDTTM": {
+       "t": "any",
+       "any": [
+        {
+         "t": "datetime",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "documentIds": {
+       "t": "any",
+       "any": [
+        {
+         "t": "array",
+         "items": {
+          "t": "string",
+          "style": "raml"
+         },
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "firstExperience": {
+       "t": "any",
+       "any": [
+        {
+         "t": "datetime",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "originIsMaintenance": {
+       "t": "any",
+       "any": [
+        {
+         "t": "boolean",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "personMaintenanceRequestIds": {
+       "t": "any",
+       "any": [
+        {
+         "t": "array",
+         "items": {
+          "t": "string",
+          "style": "raml"
+         },
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "physicalCabinId": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "physicalLocationId": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "portId": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "safety": {
+       "t": "any",
+       "any": [
+        {
+         "t": "boolean",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "security": {
+       "t": "any",
+       "any": [
+        {
+         "t": "boolean",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "serviceItemCodeRequestId": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "serviceRequestType": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "shipId": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "status": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "tags": {
+       "t": "any",
+       "any": [
+        {
+         "t": "array",
+         "items": {
+          "t": "string",
+          "style": "raml"
+         },
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "updatedBy": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "updatedDTTM": {
+       "t": "any",
+       "any": [
+        {
+         "t": "datetime",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "voyageId": {
+       "t": "any",
+       "any": [
+        {
+         "t": "string",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      },
+      "watchList": {
+       "t": "any",
+       "any": [
+        {
+         "t": "boolean",
+         "style": "raml"
+        },
+        {
+         "t": "null",
+         "style": "raml"
+        }
+       ],
+       "style": "raml"
+      }
+     },
+     "req": [],
+     "ex": {
+      "affectedPersons": [
+       "539b4197496e11f1bf322becbb9b2337"
+      ],
+      "complaint": false,
+      "contactedById": "539b4197496e11f1bf322becbb9b2337",
+      "contactedHowId": "feb5360a56ec11e996740a580af4005e",
+      "createdBy": "system",
+      "creationDTTM": "2026-07-19T11:16:56.243Z",
+      "documentIds": [],
+      "firstExperience": "2026-07-19T11:16:56.243Z",
+      "originIsMaintenance": false,
+      "personMaintenanceRequestIds": [],
+      "physicalCabinId": "3c4d99dbfe8811eeb555d2bc2be678e3",
+      "physicalLocationId": null,
+      "portId": null,
+      "safety": false,
+      "security": false,
+      "serviceItemCodeRequestId": "034abd26b38411f08eaa155e0746cbc1",
+      "serviceRequestType": "PERSONAL",
+      "shipId": "8dcc009689ab11e8be3dfa2819c4da71",
+      "status": "PENDING",
+      "tags": [],
+      "updatedBy": null,
+      "updatedDTTM": "2026-07-19T11:16:56.243Z",
+      "voyageId": "e62ec620207a11f18d582306eaee054b",
+      "watchList": false
+     }
+    },
+    "ex": {
+     "affectedPersons": [
+      "539b4197496e11f1bf322becbb9b2337"
+     ],
+     "complaint": false,
+     "contactedById": "539b4197496e11f1bf322becbb9b2337",
+     "contactedHowId": "feb5360a56ec11e996740a580af4005e",
+     "createdBy": "system",
+     "creationDTTM": "2026-07-19T11:16:56.243Z",
+     "documentIds": [],
+     "firstExperience": "2026-07-19T11:16:56.243Z",
+     "originIsMaintenance": false,
+     "personMaintenanceRequestIds": [],
+     "physicalCabinId": "3c4d99dbfe8811eeb555d2bc2be678e3",
+     "physicalLocationId": null,
+     "portId": null,
+     "safety": false,
+     "security": false,
+     "serviceItemCodeRequestId": "034abd26b38411f08eaa155e0746cbc1",
+     "serviceRequestType": "PERSONAL",
+     "shipId": "8dcc009689ab11e8be3dfa2819c4da71",
+     "status": "PENDING",
+     "tags": [],
+     "updatedBy": null,
+     "updatedDTTM": "2026-07-19T11:16:56.243Z",
+     "voyageId": "e62ec620207a11f18d582306eaee054b",
+     "watchList": false
+    }
+   }
+  },
+  "PATCH /mobile-exp-api/v1/reservation/v1/person-reservations/actions/bulk-update": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [],
+   "b": {
+    "r": true,
+    "types": [
+     "application/json"
+    ],
+    "s": {
+     "t": "object",
+     "style": "raml",
+     "props": {
+      "alternateLifeboatId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "alternateMusterstationId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "cabinId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "cabinMoveComment": {
+       "t": "string",
+       "style": "raml"
+      },
+      "cabinMoveDate": {
+       "t": "string",
+       "style": "raml"
+      },
+      "disembarkationAirportId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "disembarkationGroupEntityId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "embarkationAirportId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "exemptFromServiceCharge": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "externalBoardcardId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "externalBookingNumber": {
+       "t": "string",
+       "style": "raml"
+      },
+      "futureCabinId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "hasInsurance": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "insuranceNr": {
+       "t": "string",
+       "style": "raml"
+      },
+      "lateCheckout": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "medicalClearance": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "onboard": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "paperlessInvoice": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "postingAllowed": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "postingStatusComment": {
+       "t": "string",
+       "style": "raml"
+      },
+      "prepaidServiceCharge": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "priorityBoarding": {
+       "t": "boolean",
+       "style": "raml"
+      },
+      "scheduledDisembarkationDate": {
+       "t": "string",
+       "style": "raml"
+      },
+      "scheduledDisembarkationPortId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "scheduledEmbarkationDate": {
+       "t": "string",
+       "style": "raml"
+      },
+      "scheduledEmbarkationPortId": {
+       "t": "string",
+       "style": "raml"
+      },
+      "travelAgent": {
+       "t": "string",
+       "style": "raml"
+      }
+     },
+     "req": [],
+     "ex": {
+      "dto": {
+       "alternateLifeboatId": "string",
+       "alternateMusterstationId": "string",
+       "cabinId": "string",
+       "cabinMoveComment": "string",
+       "cabinMoveDate": "2026-09-01",
+       "disembarkationAirportId": "string",
+       "disembarkationGroupEntityId": "string",
+       "embarkationAirportId": "string",
+       "exemptFromServiceCharge": true,
+       "externalBoardcardId": "string",
+       "externalBookingNumber": "string",
+       "futureCabinId": "string",
+       "hasInsurance": true,
+       "insuranceNr": "string",
+       "lateCheckout": true,
+       "medicalClearance": true,
+       "onboard": true,
+       "paperlessInvoice": false,
+       "postingAllowed": true,
+       "postingStatusComment": "string",
+       "prepaidServiceCharge": true,
+       "priorityBoarding": true,
+       "scheduledDisembarkationDate": "2026-09-01",
+       "scheduledDisembarkationPortId": "string",
+       "scheduledEmbarkationDate": "2026-09-01",
+       "scheduledEmbarkationPortId": "string",
+       "travelAgent": "string"
+      },
+      "ids": [
+       "string"
+      ]
+     }
+    },
+    "ex": {
+     "dto": {
+      "alternateLifeboatId": "string",
+      "alternateMusterstationId": "string",
+      "cabinId": "string",
+      "cabinMoveComment": "string",
+      "cabinMoveDate": "2026-09-01",
+      "disembarkationAirportId": "string",
+      "disembarkationGroupEntityId": "string",
+      "embarkationAirportId": "string",
+      "exemptFromServiceCharge": true,
+      "externalBoardcardId": "string",
+      "externalBookingNumber": "string",
+      "futureCabinId": "string",
+      "hasInsurance": true,
+      "insuranceNr": "string",
+      "lateCheckout": true,
+      "medicalClearance": true,
+      "onboard": true,
+      "paperlessInvoice": false,
+      "postingAllowed": true,
+      "postingStatusComment": "string",
+      "prepaidServiceCharge": true,
+      "priorityBoarding": true,
+      "scheduledDisembarkationDate": "2026-09-01",
+      "scheduledDisembarkationPortId": "string",
+      "scheduledEmbarkationDate": "2026-09-01",
+      "scheduledEmbarkationPortId": "string",
+      "travelAgent": "string"
+     },
+     "ids": [
+      "string"
+     ]
+    }
+   }
+  },
+  "DELETE /mobile-exp-api/v1/pms/v1/custom-attribute-values/(id)": {
+   "q": [],
+   "h": [
+    {
+     "n": "Authorization",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "Bearer <accessToken>"
+     }
+    },
+    {
+     "n": "client_id",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-id"
+     }
+    },
+    {
+     "n": "client_secret",
+     "r": false,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "your-client-secret"
+     }
+    }
+   ],
+   "u": [
+    {
+     "n": "id",
+     "r": true,
+     "s": {
+      "t": "string",
+      "style": "raml",
+      "ex": "0001008fbd0011ef821bcb37ad03830c"
+     }
+    }
+   ],
+   "b": null
+  }
+ }
+}

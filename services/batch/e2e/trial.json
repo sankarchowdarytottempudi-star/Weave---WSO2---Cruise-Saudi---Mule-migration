@@ -1,0 +1,129 @@
+{
+  "about": "Trial run of batch (Seaware CRM Data Sync - Incremental). Expectations come from the old Mule flows: interfaceFlow -> batch-implSub_Flow (Seaware, oss-implSub_Flow) -> Batch_zoho_modules (reservations, contacts via guest identity, linking, cabin info, add-ons, group/agency, voyages, invoices; shorex is switched off in the old code) -> error rows (db-sys) for refused records; Global_Error_Handler e-mails flow errors. Redis is not in the closed room, so progress is kept in memory. The trial switches the OSS copy on in the closed room, whatever the live setting says.",
+  "settings": {
+    "sync.retryWaitSeconds": 1.0,
+    "stateRedis.enabled": false,
+    "oss.enabled": true
+  },
+  "parts": {
+    "interfaceFlow": [
+      {
+        "name": "normal delta run",
+        "about": "two pages from Seaware: page kept in OSS, every CRM module written as in Batch_zoho_modules; guests without cabin or add-ons give error rows",
+        "expectTags": [
+          "Seaware sign-in",
+          "write Accounts",
+          "guests",
+          "search Reservation_Names",
+          "write Reservation_Names",
+          "search Cabin_Info",
+          "write Cabin_Info",
+          "search Addons",
+          "write Addons",
+          "write Group_Agency",
+          "write Voyages",
+          "write Finance",
+          "OSS page copy",
+          "error rows"
+        ],
+        "expectNoTags": [
+          "write Shorex",
+          "error e-mail"
+        ],
+        "seconds": 20
+      },
+      {
+        "name": "nothing new",
+        "about": "Seaware has no changed reservations: nothing is written, nothing kept, no e-mail",
+        "expectTags": [
+          "Seaware reservations page (0 found)"
+        ],
+        "expectNoCalls": [
+          "zohoSys",
+          "guestIdentityProc",
+          "oss",
+          "mail"
+        ],
+        "seconds": 12,
+        "scenario": "nothing new"
+      },
+      {
+        "name": "zoho down",
+        "about": "the CRM answers 500: retried (old http-error-retrySub_Flow), then the block is kept as failed (old Batch_Step_Failure) and the run goes on; no e-mail",
+        "expectTags": [
+          "write Accounts (refused)",
+          "OSS page copy"
+        ],
+        "expectNoCalls": [
+          "mail"
+        ],
+        "seconds": 20,
+        "scenario": "zoho down"
+      },
+      {
+        "name": "seaware sign-in refused",
+        "about": "old Global_Error_Handler: the error is e-mailed, nothing is written",
+        "expectTags": [
+          "Seaware sign-in (refused)",
+          "error e-mail"
+        ],
+        "expectNoCalls": [
+          "zohoSys",
+          "oss",
+          "guestIdentityProc"
+        ],
+        "seconds": 12,
+        "scenario": "seaware sign-in refused"
+      },
+      {
+        "name": "guest service down",
+        "about": "guest identity answers 503: the guests are refused and written as error rows, the other modules go on",
+        "expectTags": [
+          "guests (refused)",
+          "error rows",
+          "write Cabin_Info",
+          "write Finance"
+        ],
+        "expectNoCalls": [
+          "mail"
+        ],
+        "seconds": 20,
+        "scenario": "guest service down"
+      },
+      {
+        "name": "links exist",
+        "about": "the CRM already links a guest who left the reservation: the link is set inactive with PUT (old zohoUpdate_linkingRequest_Sub_Flow)",
+        "scenario": "links exist",
+        "expectTags": [
+          "update Reservation_Names"
+        ],
+        "seconds": 20
+      },
+      {
+        "name": "oss down",
+        "about": "OSS refuses the page copy: as in the old flow the run stops before the CRM and the error is e-mailed",
+        "scenario": "oss down",
+        "expectTags": [
+          "OSS page copy (refused)",
+          "error e-mail"
+        ],
+        "expectNoCalls": [
+          "zohoSys"
+        ],
+        "seconds": 12
+      },
+      {
+        "name": "shorex switched on",
+        "about": "with sync.writeShorex = true the ported shorex step searches and writes Shorex",
+        "settings": {
+          "sync.writeShorex": true
+        },
+        "expectTags": [
+          "search Shorex",
+          "write Shorex"
+        ],
+        "seconds": 20
+      }
+    ]
+  }
+}

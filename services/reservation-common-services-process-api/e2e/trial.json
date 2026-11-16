@@ -1,0 +1,6 @@
+{
+  "settings": {
+    "stateRedis.enabled": false
+  },
+  "about": "Redis is not in the closed room: the trial keeps the Seaware token in memory."
+}

@@ -1,0 +1,20 @@
+# Key names of the service's settings. The values are kept on the server only.
+
+[aroya.seaware_sys_api]
+env = "<kept on the server>"
+httpPort = "<kept on the server>"
+basePath = "<kept on the server>"
+seawarePath = "<kept on the server>"
+
+[aroya.seaware_sys_api.seaware]
+url = "<kept on the server>"
+tlsValidation = "<kept on the server>"
+timeoutSeconds = "<kept on the server>"
+
+[aroya.seaware_sys_api.retryPolicy]
+count = "<kept on the server>"
+intervalSeconds = "<kept on the server>"
+
+[ballerina.observe]
+metricsEnabled = "<kept on the server>"
+metricsReporter = "<kept on the server>"

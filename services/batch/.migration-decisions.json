@@ -1,0 +1,21 @@
+{
+ "closed": [
+  {
+   "id": "backend:dbSys",
+   "kind": "backend",
+   "title": "dbSys",
+   "how": "address set",
+   "detail": "saved in deploy/vm/config/batch.toml",
+   "t": "2026-11-15T11:14:28Z"
+  },
+  {
+   "id": "backend:guestIdentityProc",
+   "kind": "backend",
+   "title": "guestIdentityProc",
+   "how": "address set",
+   "detail": "saved in deploy/vm/config/batch.toml",
+   "t": "2026-11-15T11:16:35Z"
+  }
+ ],
+ "notes": {}
+}

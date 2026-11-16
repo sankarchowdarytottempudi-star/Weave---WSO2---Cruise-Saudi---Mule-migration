@@ -1,0 +1,11 @@
+# Settings for the tests: everything on this machine, nothing real.
+[aroya.reservation_common_proc_api]
+env = "test"
+httpPort = 18974
+basePath = "/test-proc/v1"
+sysApiUrl = "http://127.0.0.2:18975"
+sysTimeoutSeconds = 2.0
+cacheUrl = "http://127.0.0.2:18975"
+cacheTimeoutSeconds = 1.0
+paymentsUrl = "http://127.0.0.2:18975"
+paymentsTimeoutSeconds = 2.0

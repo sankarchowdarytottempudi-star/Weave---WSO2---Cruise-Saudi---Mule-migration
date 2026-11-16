@@ -1,0 +1,9 @@
+[package]
+org = "aroya"
+name = "integration_commons"
+version = "0.1.0"
+distribution = "2201.13.4"
+readme = "README.md"
+
+[build-options]
+observabilityIncluded = true

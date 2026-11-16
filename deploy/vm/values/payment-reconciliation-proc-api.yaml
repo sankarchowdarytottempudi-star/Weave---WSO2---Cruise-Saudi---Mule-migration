@@ -1,0 +1,13 @@
+image: { repository: payment-reconciliation-proc-api, tag: vm, pullPolicy: Never }
+imagePullSecrets: []
+# A timed job, not an API: nothing calls it. Reached inside the cluster only (health checks). No direct port on the server.
+service: { type: ClusterIP }
+autoscaling: { enabled: false }
+# Keep ONE copy. Every copy would run the job by itself, and payments would be reconciled twice.
+replicas: 1
+serviceMonitor: { enabled: false }
+networkPolicy: { enabled: false }
+ingress: { enabled: false }
+resources:
+  requests: { cpu: 100m, memory: 384Mi }
+  limits: { cpu: "1", memory: 768Mi }

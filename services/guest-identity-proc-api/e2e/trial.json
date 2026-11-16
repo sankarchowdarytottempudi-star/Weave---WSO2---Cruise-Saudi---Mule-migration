@@ -1,0 +1,31 @@
+{
+  "about": "guest-identity-proc-api: the old flows' paths against made-up stand-ins (e2e/standin.py). Sign-in codes: generate for e-mail and phone, repeated request id, not registered, already registered; verify right code, wrong code, expired, missing; trips by client id with cabins; guest store down. Error e-mail switched on for the trial only.",
+  "settings": {"errorMail.enabled": true, "sessionSigningKey": "trial-signing-key-not-real-0123456789", "warmUpAtStart": false,
+               "seawareAgent.userName": "trial-agent", "seawareAgent.password": "trial-password"},
+  "cases": [
+    {"op": "POST /otp/generate", "name": "login code by e-mail", "body": {"identifier": "Guest@Example.invalid ", "channel": "email", "context": "login", "requestId": "3f0c1a2b-1111-4222-8333-444455556666"},
+     "expectStatus": 202, "expectCalls": ["dbSystemApi", "zohoSysApi", "emailSysApi"], "expectTags": ["insert otp row", "e-mail"],
+     "expectNoTags": ["insert otp row (bad shape)"], "expectBodyHas": ["\"expiresInSeconds\":300", "\"status\":\"ACTIVE\"", "3f0c1a2b-1111-4222-8333-444455556666"]},
+    {"op": "POST /otp/generate", "name": "same request id again (old app inserts again)", "body": {"identifier": "guest@example.invalid", "channel": "email", "context": "login", "requestId": "3f0c1a2b-1111-4222-8333-444455556666"},
+     "expectStatus": 202, "expectTags": ["insert otp row", "e-mail"]},
+    {"op": "POST /otp/generate", "name": "login code by phone", "body": {"identifier": "+900555000000", "channel": "phone", "context": "login"},
+     "expectStatus": 202, "expectTags": ["insert otp row"]},
+    {"op": "POST /otp/generate", "name": "login, not registered", "scenario": "not registered", "body": {"identifier": "nobody@example.invalid", "channel": "email", "context": "login"},
+     "expectStatus": 400, "expectBodyHas": ["USER_NOT_REGISTERED"], "expectNoTags": ["insert otp row", "e-mail"]},
+    {"op": "POST /otp/generate", "name": "signup, already registered", "body": {"identifier": "guest@example.invalid", "channel": "email", "context": "signup", "metadata": {"firstName": "Trial"}},
+     "expectStatus": 400, "expectBodyHas": ["ALREADY_REGISTERED"], "expectNoTags": ["insert otp row"]},
+    {"op": "POST /otp/verify", "name": "right code", "scenario": "otp ok", "body": {"identifier": "guest@example.invalid", "channel": "email", "context": "login", "otpCode": "246810"},
+     "expectStatus": 200, "expectTags": ["mark used", "guest verified"], "expectBodyHas": ["\"status\":\"VERIFIED\"", "accessToken"]},
+    {"op": "POST /otp/verify", "name": "wrong code", "scenario": "otp ok", "body": {"identifier": "guest@example.invalid", "channel": "email", "context": "login", "otpCode": "111111"},
+     "expectStatus": 409, "expectTags": ["count wrong code"], "expectNoTags": ["mark used"], "expectBodyHas": ["OTP_INVALID", "\"remainingAttempts\":2"]},
+    {"op": "POST /otp/verify", "name": "expired code", "scenario": "otp expired", "body": {"identifier": "guest@example.invalid", "channel": "email", "context": "login", "otpCode": "246810"},
+     "expectStatus": 410, "expectTags": ["mark expired"], "expectNoTags": ["mark used"], "expectBodyHas": ["OTP_EXPIRED"]},
+    {"op": "POST /otp/verify", "name": "no code stored", "scenario": "otp missing", "body": {"identifier": "guest@example.invalid", "channel": "email", "context": "login", "otpCode": "246810"},
+     "expectStatus": 404, "expectNoTags": ["mark used", "guest verified"], "expectBodyHas": ["OTP_NOT_FOUND"]},
+    {"op": "POST /guest-profiles/{guestId}", "name": "trips with cabins", "pathValues": {"guestId": "1001"},
+     "expectStatus": 200, "expectCalls": ["reservationProcApi"], "expectTags": ["seaware reservations"],
+     "expectBodyHas": ["\"cabins\"", "\"number\":\"8012\"", "\"clientId\":\"1001\"", "\"fullName\":\"Trial Guest\"", "\"primarySailor\":true"]},
+    {"op": "POST /otp/generate", "name": "guest store down", "scenario": "db down", "body": {"identifier": "guest@example.invalid", "channel": "email", "context": "login"},
+     "expectStatus": [500, 502, 503], "expectTags": ["guest store (refused)"], "expectNoTags": ["insert otp row"]}
+  ]
+}

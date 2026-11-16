@@ -1,0 +1,5 @@
+name: otalio-batch-proc-api
+layer: process
+image:
+  repository: REGISTRY/otalio-batch-proc-api
+port: 8081

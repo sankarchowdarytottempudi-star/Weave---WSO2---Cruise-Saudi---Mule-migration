@@ -1,0 +1,5 @@
+name: loyalty-exp-api
+layer: experience
+image:
+  repository: REGISTRY/loyalty-exp-api
+port: 8081

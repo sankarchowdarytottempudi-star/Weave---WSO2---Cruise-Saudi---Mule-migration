@@ -1,0 +1,12 @@
+[package]
+org = "aroya"
+name = "otalio_batch_proc_api"
+version = "0.1.0"
+distribution = "2201.13.4"
+
+[build-options]
+observabilityIncluded = true
+
+# Phone number parsing, the same library and version the old application shipped.
+[[platform.java21.dependency]]
+path = "libs/libphonenumber-8.13.31.jar"
