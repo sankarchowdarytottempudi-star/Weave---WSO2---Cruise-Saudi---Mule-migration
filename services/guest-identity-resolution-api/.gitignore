@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.coverage
+.pytest_cache/
+htmlcov/
+test-results.xml
+.it-pg-pw

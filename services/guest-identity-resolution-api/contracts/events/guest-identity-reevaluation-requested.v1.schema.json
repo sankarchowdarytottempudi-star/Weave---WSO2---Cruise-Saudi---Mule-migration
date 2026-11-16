@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aroya.example/schemas/guest-identity/guest-identity-reevaluation-requested.v1.schema.json",
+  "title": "Guest identity re-evaluation requested",
+  "description": "Kafka topic guest.identity.reevaluation.requested.v1. Full identity snapshot (D14).",
+  "x-topic": "guest.identity.reevaluation.requested.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "eventType",
+    "correlationId",
+    "sourceSystem",
+    "sourceRecordId",
+    "crmGuestRecordId",
+    "crmModifiedTime"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Mandatory; other versions are rejected (11.4)."
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "idempotencyKey": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 300,
+      "description": "sourceSystem:sourceRecordId:crmModifiedTime; recomputed by Python."
+    },
+    "correlationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "sourceSystem": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "examples": [
+        "SEAWARE",
+        "CRM_DIRECT",
+        "MOBILE"
+      ]
+    },
+    "sourceRecordId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "crmGuestRecordId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "crmModifiedTime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC with offset; stale events are rejected."
+    },
+    "firstName": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 200
+    },
+    "lastName": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 200
+    },
+    "dateOfBirth": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 40,
+      "description": "Original value; normalized only inside Python."
+    },
+    "phone": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 60,
+      "description": "Primary personal phone (CRM Mobile)."
+    },
+    "alternatePhone": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 60,
+      "description": "Second phone (CRM Phone); also phone evidence."
+    },
+    "email": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 320
+    },
+    "countryCode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2,
+      "description": "ISO 3166-1 alpha-2; phone context #2."
+    },
+    "citizenshipCode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2,
+      "description": "ISO 3166-1 alpha-2; phone context #3."
+    },
+    "sourceCode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 50,
+      "description": "Direct-scope condition 1 (exact after trim+casefold)."
+    },
+    "agencyCode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 50,
+      "description": "Carried for audit; scope fallback only."
+    },
+    "agencyName": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 200,
+      "description": "Direct-scope condition 2 (exact after trim+casefold)."
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "currentGlobalId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 50
+    },
+    "currentLoyaltyId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 50
+    },
+    "currentIdentityId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 100,
+      "description": "CRM Guest Identity record ID if already linked."
+    },
+    "eventType": {
+      "type": "string",
+      "const": "GUEST_IDENTITY_REEVALUATION_REQUESTED"
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "firstName"
+      ],
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "required": [
+        "lastName"
+      ],
+      "properties": {
+        "lastName": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "required": [
+        "dateOfBirth"
+      ],
+      "properties": {
+        "dateOfBirth": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "required": [
+        "phone"
+      ],
+      "properties": {
+        "phone": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "required": [
+        "alternatePhone"
+      ],
+      "properties": {
+        "alternatePhone": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "required": [
+        "email"
+      ],
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  ]
+}

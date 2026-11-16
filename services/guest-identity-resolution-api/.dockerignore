@@ -1,0 +1,12 @@
+tests
+tools
+contracts
+config
+deploy
+docs
+*.md
+.pytest_cache
+**/__pycache__
+.coverage
+htmlcov
+requirements-dev.*

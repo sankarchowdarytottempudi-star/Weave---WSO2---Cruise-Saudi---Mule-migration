@@ -1,0 +1,118 @@
+# Configuration catalogue - AROYA Direct Guest Identity Resolution (plan v2.1 sections 20.1, 24.2).
+# Every entry is an environment variable read by app/config.py (secrets via <NAME>_FILE mounts).
+# status:
+#   CLIENT-APPROVED       given by the owner on 2026-11-16 - authoritative
+#   ASSUMPTION            industry-practice default; TO CONFIRM WITH CLIENT (PDPL where marked)
+#   TO BE PROVIDED BY CLIENT  no value yet; the default is TEST-ONLY and must be replaced before UAT
+#   FIXED                 must not change in Phase 1
+version: "1.0"
+
+feature_flags:                       # section 20.1, names exactly as the plan
+  certain_reuse_enabled:        {env: GIR_CERTAIN_REUSE_ENABLED, default: true, status: CLIENT-APPROVED}
+  four_field_review_enabled:    {env: GIR_FOUR_FIELD_REVIEW_ENABLED, default: true, status: CLIENT-APPROVED}
+  weighted_shadow_enabled:      {env: GIR_WEIGHTED_SHADOW_ENABLED, default: true, status: CLIENT-APPROVED}
+  weighted_auto_enabled:        {env: none, default: false, status: FIXED, note: "D11 - not configurable in Phase 1"}
+  phone_tail_evidence_enabled:  {env: none, default: false, status: FIXED, note: "D08 - tail is shadow-only"}
+  crm_direct_event_enabled:     {env: GIR_CRM_DIRECT_EVENT_ENABLED, default: true, status: CLIENT-APPROVED}
+  over_shared_threshold_version: {env: GIR_OVER_SHARED_THRESHOLD_VERSION, default: "ASSUMPTION-1", status: ASSUMPTION}
+  active_rule_version:          {env: GIR_ACTIVE_RULE_VERSION, default: "1.0", status: CLIENT-APPROVED}
+  shadow_only_enabled:          {env: GIR_SHADOW_ONLY_ENABLED, default: false, status: CLIENT-APPROVED, extension: true,
+                                 note: "Rollout step 1: record decisions only (no pair, link, case or CRM update)."}
+
+rollout:                             # section 22.2, order CLIENT-APPROVED; each step is a flag change only
+  - step: 1 shadow evaluation
+    set: {GIR_SHADOW_ONLY_ENABLED: true, GIR_CERTAIN_REUSE_ENABLED: false, GIR_FOUR_FIELD_REVIEW_ENABLED: false, GIR_WEIGHTED_SHADOW_ENABLED: true}
+  - step: 2 new permanent pairs when no deterministic candidate
+    set: {GIR_SHADOW_ONLY_ENABLED: false, GIR_CERTAIN_REUSE_ENABLED: false, GIR_FOUR_FIELD_REVIEW_ENABLED: false}
+    note: "With CERTAIN off, a would-be CERTAIN match falls to four-field (off) and then to a new pair - acceptable per 22.3."
+  - step: 3 CERTAIN reuse pilot (limited direct sources)
+    set: {GIR_CERTAIN_REUSE_ENABLED: true, GIR_DIRECT_SOURCE_CODES: "<pilot subset of the approved list>"}
+  - step: 4 four-field and conflict review cases
+    set: {GIR_FOUR_FIELD_REVIEW_ENABLED: true, GIR_DIRECT_SOURCE_CODES: "<full approved list>"}
+  - step: 5 historical batches with reconciliation
+    note: "Needs the baseline extract - separate explicit go; NOT part of this iteration."
+  - step: 6 weighted automatic reuse
+    note: "Future separate approval only; weighted_auto_enabled is fixed false."
+rollback: "Set GIR_CERTAIN_REUSE_ENABLED=false (new pairs and review keep working); in-flight decisions finish under their rule version."
+
+direct_scope:                        # section 12.1 - CLIENT-APPROVED; both conditions required
+  matching: "exact after trim + case-fold (inner whitespace collapsed); otherwise EXCLUDED_NON_DIRECT"
+  direct_source_codes:
+    env: GIR_DIRECT_SOURCE_CODES
+    status: CLIENT-APPROVED
+    default: [INT-ASSC, INT-CON, NEWINT-CON, MOBAPP, WHATSAPP, IN HOUSE]
+    note: "INT-AGENT is OUT. The source code alone admits 56 agencies, hence the agency condition."
+  direct_agency_names:
+    env: GIR_DIRECT_AGENCY_NAMES
+    status: CLIENT-APPROVED
+    default: [AROYA CRUISES MAIN OFFICE, AROYA CRUISES MAIN OFFICE USD, AROYA CRUISES MAIN OFFICE EUR,
+              AROYA CRUISES MAIN OFFICE GBP, FUTURE CRUISES, RIYADH SEASON, WHATSAPP]
+    note: "Event field agencyName (agencyCode accepted as fallback carrier)."
+
+normalization:                       # section 12.2
+  name_placeholders:   {env: GIR_NAME_PLACEHOLDERS, default: [test, unknown, na, n a, none, guest, x, xx, xxx], status: ASSUMPTION}
+  approved_name_punctuation: {env: none, default: ".,'’`\"-_/", status: ASSUMPTION}
+  dob_placeholders:    {env: GIR_DOB_PLACEHOLDERS, default: ["1900-01-01", "1899-12-31", "0001-01-01", "1800-01-01"], status: ASSUMPTION}
+  dob_suspicious:      {env: GIR_DOB_SUSPICIOUS, default: ["1970-01-01"], status: ASSUMPTION,
+                        note: "Counts as a real DOB unless shared by more than dob_suspicious_threshold distinct active identities."}
+  dob_suspicious_threshold: {env: GIR_DOB_SUSPICIOUS_THRESHOLD, default: 3, status: ASSUMPTION}
+  dob_max_age_years:   {env: GIR_DOB_MAX_AGE_YEARS, default: 120, status: ASSUMPTION, note: "Future dates and age > 120 are invalid."}
+  email_placeholders:  {env: GIR_EMAIL_PLACEHOLDERS, default: [noemail@noemail.com, test@test.com, na@na.com, no@email.com], status: ASSUMPTION}
+  phone_country_context:
+    status: ASSUMPTION
+    rule: "1) country code in the number (+ or 00) -> HIGH_E164 if valid; 2) Guest countryCode; 3) Guest citizenshipCode; 4) otherwise LOW - never HIGH_E164, never a forced +966."
+  phone_default_region: {env: GIR_PHONE_DEFAULT_REGION, default: null, status: ASSUMPTION, note: "Unset. If ever set, gives MEDIUM only (never production evidence)."}
+  over_shared_phone_threshold: {env: GIR_OVER_SHARED_PHONE_THRESHOLD, default: 3, status: ASSUMPTION,
+                                note: "Shared by MORE than 3 distinct active identities -> suppressed. Tune from the baseline distribution."}
+  over_shared_email_threshold: {env: GIR_OVER_SHARED_EMAIL_THRESHOLD, default: 3, status: ASSUMPTION}
+  candidate_guardrail: {env: GIR_CANDIDATE_GUARDRAIL, default: 100, status: CLIENT-APPROVED, note: "Plan 8.3."}
+  validation_sample: {status: TO BE PROVIDED BY CLIENT, note: "Masked production sample for phone/email/name rules (12.2) - needs the baseline go."}
+
+id_generation:                       # CLIENT-APPROVED: ported from Mule identity-support-exp-api
+  id_allocation_strategy: {env: GIR_ID_ALLOCATION_STRATEGY, default: MULE_COMPAT, status: CLIENT-APPROVED, note: "SEQUENCE = diagnostics/tests only."}
+  global_id: {status: CLIENT-APPROVED, rule: "ULID (sulky ULID 8.3.0 nextULID): 26 chars Crockford base32, upper case."}
+  loyalty_id_prefix: {env: GIR_LOYALTY_ID_PREFIX, default: "12", status: CLIENT-APPROVED}
+  loyalty_id_random_digits: {env: GIR_LOYALTY_ID_RANDOM_DIGITS, default: 7, status: CLIENT-APPROVED}
+  loyalty_check_digit: {status: CLIENT-APPROVED, rule: "Mule luhnCheckDigit exactly (reversed base, ODD positions doubled) - NOT textbook Luhn; confirm intent with client."}
+  id_allocation_max_attempts: {env: GIR_ID_ALLOCATION_MAX_ATTEMPTS, default: 5, status: ASSUMPTION, note: "Uniqueness re-draws; Mule had no uniqueness check."}
+  existing_pair_eligibility: {status: CLIENT-APPROVED, rule: "Both IDs present and Global ID without '-' (Mule rule)."}
+  global_id_format: {env: GIR_GLOBAL_ID_FORMAT, default: "G{n:08d}", status: TEST-ONLY, note: "SEQUENCE strategy only."}
+  loyalty_id_format: {env: GIR_LOYALTY_ID_FORMAT, default: "L{n:08d}", status: TEST-ONLY, note: "SEQUENCE strategy only."}
+
+review:                              # section 15
+  reviewer_roles: {status: ASSUMPTION, values: [IDENTITY_REVIEWER, IDENTITY_SUPERVISOR, CRM_ADMINISTRATOR, AUDIT_REPORTING], note: "Per 15.3; CRM profile mapping in the CRM configuration spec."}
+  sla_conflict_business_days: {env: GIR_SLA_CONFLICT_DAYS, default: 1, status: ASSUMPTION, note: "MULTIPLE_IDENTITY_CONFLICT / PAIR_REPAIR / GUARDRAIL; escalate to supervisor on breach."}
+  sla_four_field_business_days: {env: GIR_SLA_FOUR_FIELD_DAYS, default: 2, status: ASSUMPTION, note: "Escalate to supervisor on breach."}
+  business_calendar: {status: TO BE PROVIDED BY CLIENT, note: "Working week and holidays (KSA)."}
+  workbench: {status: ASSUMPTION, note: "Weave-hosted page embedded in Zoho CRM as a Web Tab (no widget/marketplace licence), authenticated via the Integration Service. Decide later - not in this iteration."}
+
+retention:                           # ASSUMPTION - to confirm with client (PDPL)
+  payloads: {status: ASSUMPTION, rule: "Store payload hashes, never payloads (processing_request.payload_hash)."}
+  protected_display_values: {status: ASSUMPTION, rule: "Only while the Guest is active and in direct scope; purge job in iteration 3."}
+  decisions_and_audit: {status: ASSUMPTION, rule: "5 years."}
+  dlq_messages: {status: ASSUMPTION, rule: "References + payload hash only; 30 days."}
+
+deployment:                          # owner 2026-11-16: same k3s integration cluster; existing customer PG/Kafka
+  kubernetes_namespace: {status: CLIENT-APPROVED, value: "wso2 (or a dedicated namespace)", note: "Manifests in deploy/k8s - NOT deployed in this iteration."}
+  db_host: {env: GIR_DB_HOST, status: TO BE PROVIDED BY CLIENT, note: "EXISTING customer PostgreSQL (Tencent) - reachable from 2026-11-17."}
+  db_port: {env: GIR_DB_PORT, default: 5432, status: TO BE PROVIDED BY CLIENT}
+  db_name: {env: GIR_DB_NAME, status: TO BE PROVIDED BY CLIENT}
+  db_user: {env: GIR_DB_USER, status: TO BE PROVIDED BY CLIENT, note: "gir_app for the API, gir_owner for the migration Job."}
+  db_password: {env: GIR_DB_PASSWORD_FILE, status: TO BE PROVIDED BY CLIENT, secret: true}
+  db_sslmode: {env: GIR_DB_SSLMODE, default: verify-full, status: ASSUMPTION}
+  db_sslrootcert: {env: GIR_DB_SSLROOTCERT, status: TO BE PROVIDED BY CLIENT, note: "Path of the mounted CA bundle (Secret gir-db-ca)."}
+  db_pool: {env: GIR_DB_POOL_SIZE, default: 5, status: ASSUMPTION, note: "Plus GIR_DB_MAX_OVERFLOW=5 per pod."}
+  db_max_overflow: {env: GIR_DB_MAX_OVERFLOW, default: 5, status: ASSUMPTION}
+  app_db_role: {env: GIR_APP_DB_ROLE, status: ASSUMPTION, note: "Migration Job grants DML on the schema to this role."}
+  database_schema: {env: GIR_DATABASE_SCHEMA, default: gir, status: ASSUMPTION}
+  database_url_override: {env: GIR_DATABASE_URL_FILE, status: TEST-ONLY, secret: true}
+  kafka_bootstrap_servers: {wso2_env: KAFKA_BOOTSTRAP_SERVERS, status: TO BE PROVIDED BY CLIENT, note: "EXISTING customer Kafka; consumed by the WSO2 worker (iteration 3), not by Python."}
+  kafka_security: {wso2_env: KAFKA_SECURITY_PROTOCOL / KAFKA_SASL_MECHANISM, status: TO BE PROVIDED BY CLIENT, secret: true}
+  kafka_topics: {status: CLIENT-APPROVED, values: [guest.identity.evaluation.requested.v1, guest.identity.reevaluation.requested.v1, guest.identity.processing.dlq.v1]}
+  schema_registry: {status: TO BE PROVIDED BY CLIENT, note: "If the customer cluster uses one; schemas in contracts/events."}
+
+secrets:                             # mounted files; never logged or returned
+  GIR_DB_PASSWORD_FILE: {status: TO BE PROVIDED BY CLIENT, note: "Separate secrets for gir_app and gir_owner."}
+  GIR_DATA_KEY_FILE: {status: TO BE PROVIDED BY CLIENT, note: "32-byte AES-256-GCM key, base64; key id in GIR_DATA_KEY_ID."}
+  GIR_HMAC_KEY_FILE: {status: TO BE PROVIDED BY CLIENT, note: "HMAC key for Global/Loyalty uniqueness hashes."}
+  GIR_SERVICE_TOKEN_FILE: {status: TO BE PROVIDED BY CLIENT, note: "Bearer credential issued to the Integration Service only."}

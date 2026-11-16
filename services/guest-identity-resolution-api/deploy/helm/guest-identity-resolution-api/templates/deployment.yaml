@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gir.name" . }}
+  labels: {{- include "gir.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
+  strategy: {type: RollingUpdate, rollingUpdate: {maxUnavailable: 0, maxSurge: 1}}
+  selector:
+    matchLabels: {{- include "gir.selector" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "gir.labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      serviceAccountName: {{ include "gir.name" . }}
+      securityContext: {{- include "gir.podSecurity" . | nindent 8 }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {{- include "gir.selector" . | nindent 14 }}
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["uvicorn", "--factory", "app.main:app_factory", "--host", "0.0.0.0", "--port", "8080",
+                 "--workers", "{{ .Values.workers }}", "--no-server-header"]
+          ports: [{name: http, containerPort: 8080}]
+          envFrom: [{configMapRef: {name: {{ include "gir.name" . }}}}]
+          env:
+            {{- include "gir.dbEnv" . | nindent 12 }}
+            - {name: GIR_DB_USER, value: {{ .Values.database.appUser | quote }}}
+            - {name: GIR_DB_POOL_SIZE, value: {{ .Values.database.poolSize | quote }}}
+            - {name: GIR_DB_MAX_OVERFLOW, value: {{ .Values.database.maxOverflow | quote }}}
+            - {name: GIR_DB_PASSWORD_FILE, value: /var/run/secrets/gir/db/password}
+            - {name: GIR_DATA_KEY_FILE, value: /var/run/secrets/gir/keys/data-key}
+            - {name: GIR_HMAC_KEY_FILE, value: /var/run/secrets/gir/keys/hmac-key}
+            - {name: GIR_SERVICE_TOKEN_FILE, value: /var/run/secrets/gir/token/token}
+          readinessProbe:
+            httpGet: {path: /health/ready, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: {path: /health/live, port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 3
+          startupProbe:
+            httpGet: {path: /health/live, port: http}
+            periodSeconds: 3
+            failureThreshold: 20
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          securityContext: {{- include "gir.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: db, mountPath: /var/run/secrets/gir/db, readOnly: true}
+            - {name: db-ca, mountPath: /var/run/secrets/gir/db-ca, readOnly: true}
+            - {name: keys, mountPath: /var/run/secrets/gir/keys, readOnly: true}
+            - {name: token, mountPath: /var/run/secrets/gir/token, readOnly: true}
+      volumes:
+        - {name: tmp, emptyDir: {medium: Memory, sizeLimit: 32Mi}}
+        - {name: db, secret: {secretName: {{ .Values.secrets.appDbPassword }}, defaultMode: 0400}}
+        - {name: db-ca, secret: {secretName: {{ .Values.secrets.dbCa }}, defaultMode: 0444}}
+        - {name: keys, secret: {secretName: {{ .Values.secrets.dataKey }}, defaultMode: 0400}}
+        - {name: token, secret: {secretName: {{ .Values.secrets.serviceToken }}, defaultMode: 0400}}

@@ -1,0 +1,123 @@
+# AROYA Direct Guest Identity Resolution - frozen catalogues (iteration 0, plan v2.1).
+# The Python enums (app/domain/enums.py, app/domain/reason_codes.py) and the database CHECK
+# constraints (migrations/versions/0001_initial.py) carry exactly these sets; tests/contract
+# fails if they drift. "extension: true" = needed by the implementation, not in the plan's
+# appendix; to be confirmed at contract freeze.
+version: "1.0"
+
+identity_statuses:            # Appendix A (CRM Guest "Identity Status")
+  PENDING_IDENTITY: Guest exists in CRM but identity processing is incomplete
+  IDENTITY_REUSED_CERTAIN: One existing identity reused through deterministic CERTAIN
+  NEW_IDENTITY_CREATED: No deterministic candidate and new permanent pair committed
+  NEW_IDENTITY_PENDING_REVIEW: New provisional pair committed and review case opened
+  MULTIPLE_IDENTITY_CONFLICT: More than one distinct reusable identity qualified
+  PAIR_REPAIR_REQUIRED: Existing candidate pair incomplete or conflicting
+  REVIEW_DECISION_PREPARED: Reviewer action validated and awaiting final CRM freshness check
+  REVIEW_DATA_CHANGED: Selected CRM data changed and the reviewer must assess the refreshed case
+  CONFIRMED_SAME_PERSON: Reviewer linked Guest to surviving identity
+  CONFIRMED_DIFFERENT_PERSON: Reviewer retained separate identity
+  HOUSEHOLD_RELATIONSHIP: Separate identities recorded as a household
+  EXCLUDED_NON_DIRECT: Guest does not meet direct-scope rule
+  IDENTITY_PROCESSING_FAILED: Technical or invalid-data failure requires retry or intervention
+
+reason_codes:                 # Appendix B
+  EXACT_CANONICAL_FIRST_NAME: {meaning: Canonical first names exactly equal}
+  EXACT_CANONICAL_LAST_NAME: {meaning: Canonical last names exactly equal}
+  EXACT_CANONICAL_NAMES: {meaning: Both canonical names exactly equal (as used in the 11.3 example)}
+  EXACT_REAL_DOB: {meaning: Valid non-placeholder DOB exactly equal}
+  PERSONAL_E164_PHONE_MATCH: {meaning: High-confidence exact phone and not over-shared}
+  PERSONAL_EMAIL_MATCH: {meaning: Normalized exact email and not over-shared}
+  PHONE_TAIL_MATCH_SHADOW_ONLY: {meaning: Tail key matched but cannot support production action}
+  OVER_SHARED_PHONE_SUPPRESSED: {meaning: Phone exceeds distinct-identity threshold}
+  OVER_SHARED_EMAIL_SUPPRESSED: {meaning: Email exceeds distinct-identity threshold}
+  PLACEHOLDER_DOB_SUPPRESSED: {meaning: DOB configured as placeholder (or suspicious DOB over-shared)}
+  FOUR_EXACT_VALID_FIELDS: {meaning: Four production-eligible fields exactly agree}
+  MULTIPLE_DISTINCT_IDENTITIES: {meaning: Different identity IDs qualify and block reuse}
+  CURRENT_ID_MAPPING_CONFLICT: {meaning: Existing identity pair is inconsistent}
+  MATCHED_IDENTITY_NOT_READY: {meaning: Candidate exists but complete reusable pair is unavailable}
+  STALE_CRM_EVENT_REJECTED: {meaning: Event Modified Time is older than current index}
+  REVIEW_VERSION_CHANGED: {meaning: A Guest shown to the reviewer changed in PostgreSQL}
+  CRM_FRESHNESS_CHECK_FAILED: {meaning: The final CRM read differed from the prepared expectation}
+  REVIEW_DECISION_COMMITTED: {meaning: Manual decision committed}
+  ONE_DISTINCT_REUSABLE_IDENTITY: {meaning: Exactly one reusable identity qualified (11.3 example)}
+  NO_DETERMINISTIC_CANDIDATE: {meaning: No CERTAIN or four-field candidate; new permanent pair, extension: true}
+  EXCLUDED_NON_DIRECT: {meaning: Outside the approved direct scope, extension: true}
+  CANDIDATE_GUARDRAIL_EXCEEDED: {meaning: Candidate query exceeded the guardrail (100), extension: true}
+  EXISTING_IDENTITY_KEPT: {meaning: Re-evaluation kept the Guest's existing pair (D04), extension: true}
+  REEVALUATION_CONFLICT: {meaning: Re-evaluation found a new conflict; review opened, extension: true}
+  SHADOW_ONLY_NOT_APPLIED: {meaning: Rollout step 1 - decision recorded, nothing applied, extension: true}
+  LEGACY_GLOBAL_ID_NOT_REUSABLE: {meaning: "Existing Global ID contains '-' (Mule eligibility rule)", extension: true}
+
+decisions:                    # 11.3 "decision"
+  REUSE_EXISTING_IDENTITY: Link the Guest to one existing reusable identity (CERTAIN)
+  CREATE_NEW_IDENTITY: Reserve and commit a new permanent pair
+  CREATE_PROVISIONAL_IDENTITY: Reserve a provisional pair and open a review case
+  KEEP_EXISTING_IDENTITY: Re-evaluation - IDs never change automatically (D04)
+  EXCLUDED_NON_DIRECT: No identity action under this feature
+
+decision_types:               # 7.1 "Identity Decision Type"
+  CERTAIN_PHONE: Names + real DOB + personal E.164 phone
+  CERTAIN_EMAIL: Names + real DOB + personal email
+  FOUR_FIELD: Four exact valid fields - review, never automatic
+  NEW: No deterministic candidate
+  MULTIPLE_IDENTITY: More than one distinct identity qualified
+  PAIR_REPAIR: The matched identity is not reusable
+  MANUAL: Set by a committed reviewer action
+  GUARDRAIL: {meaning: Candidate guardrail exceeded, extension: true}
+  NONE: Excluded or unchanged
+
+processing_states:            # 8.4
+  RECEIVED: Request recorded, decision not yet persisted
+  DECIDED_PENDING_CRM: Decision persisted; Integration must write CRM, then commit or fail
+  COMMITTED: CRM write confirmed (or no CRM write needed)
+  CRM_UPDATE_FAILED: Retryable CRM failure; retry with the SAME reserved pair
+  REJECTED_STALE: Event older than the indexed CRM Modified Time
+  FAILED: Terminal failure; needs intervention
+processing_transitions:
+  RECEIVED: [DECIDED_PENDING_CRM, COMMITTED, REJECTED_STALE, FAILED]
+  DECIDED_PENDING_CRM: [COMMITTED, CRM_UPDATE_FAILED, FAILED]
+  CRM_UPDATE_FAILED: [COMMITTED, CRM_UPDATE_FAILED, FAILED]
+  COMMITTED: []
+  REJECTED_STALE: []
+  FAILED: []
+
+review_states:                # 8.5
+  REVIEW_OPEN: Case waiting for a reviewer
+  REVIEW_DECISION_PREPARED: Action validated against DB versions; awaiting the final CRM read
+  REVIEW_DATA_CHANGED: Freshness failed or data changed; refreshed case needs a new decision
+  REVIEW_CRM_UPDATE_PENDING: CRM update failed retryably; retry the same prepared patch
+  REVIEW_COMMITTED: Manual decision applied; case closed
+  REVIEW_FAILED: Prepared action cancelled or terminally failed
+review_transitions:
+  REVIEW_OPEN: [REVIEW_DECISION_PREPARED]
+  REVIEW_DATA_CHANGED: [REVIEW_DECISION_PREPARED]
+  REVIEW_DECISION_PREPARED: [REVIEW_COMMITTED, REVIEW_DATA_CHANGED, REVIEW_CRM_UPDATE_PENDING, REVIEW_OPEN]
+  REVIEW_CRM_UPDATE_PENDING: [REVIEW_COMMITTED, REVIEW_DATA_CHANGED, REVIEW_OPEN, REVIEW_CRM_UPDATE_PENDING]
+  REVIEW_COMMITTED: []
+
+reviewer_actions:             # 14.4
+  CONFIRM_SAME_PERSON: {treatment: Link Guest to surviving identity, retire provisional pair as alias, roles: [IDENTITY_REVIEWER, IDENTITY_SUPERVISOR]}
+  CONFIRM_DIFFERENT_PEOPLE: {treatment: Keep provisional pair, make it permanent, close case, roles: [IDENTITY_REVIEWER, IDENTITY_SUPERVISOR]}
+  CONFIRM_HOUSEHOLD: {treatment: Keep separate identities, record household, close conflict, roles: [IDENTITY_REVIEWER, IDENTITY_SUPERVISOR]}
+  DEFER: {treatment: Keep provisional pair and case open with reason and follow-up date, roles: [IDENTITY_REVIEWER, IDENTITY_SUPERVISOR]}
+  REVERSE_DECISION: {treatment: Restore/create correct identity, reassign Guest, alias history, roles: [IDENTITY_SUPERVISOR]}
+
+reviewer_roles:               # 15.3
+  IDENTITY_REVIEWER: View; decide same/different/household; add evidence; defer
+  IDENTITY_SUPERVISOR: Reassign cases; reverse decisions; approve exceptional actions
+  CRM_ADMINISTRATOR: Configure fields, permissions and Web Tab; no business decision by default
+  AUDIT_REPORTING: Read-only decisions, metrics and history (no protected display values)
+
+review_kinds:                 # 15.2 queues
+  MULTIPLE_IDENTITY_CONFLICT: {priority: HIGH}
+  FOUR_FIELD_REVIEW: {priority: NORMAL}
+  PAIR_REPAIR: {priority: NORMAL}
+  REEVALUATION_CONFLICT: {priority: NORMAL (HIGH when multiple identities)}
+  GUARDRAIL: {priority: HIGH, extension: true}
+
+identity_lifecycle: [RESERVED, ACTIVE, PROVISIONAL, RETIRED, ALIAS, BLOCKED]
+pair_integrity: [COMPLETE, INCOMPLETE, CONFLICT]
+phone_confidence: [HIGH_E164, MEDIUM, LOW, INVALID, MISSING]
+field_results: [EXACT, CONFLICT, MISSING, SUPPRESSED, LOW_CONFIDENCE]
+shadow_labels: [SHADOW_AUTO_CANDIDATE, SHADOW_REVIEW_CANDIDATE, SHADOW_SEPARATE]
+error_codes: [INVALID_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, IDEMPOTENCY_CONFLICT, STALE_CRM_EVENT, INVALID_STATE, REVIEW_DATA_CHANGED, INTERNAL_ERROR]

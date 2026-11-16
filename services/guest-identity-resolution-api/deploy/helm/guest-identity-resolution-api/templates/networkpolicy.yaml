@@ -1,0 +1,25 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "gir.name" . }}
+  labels: {{- include "gir.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "gir.selector" . | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from: {{- toYaml .Values.networkPolicy.allowFrom | nindent 8 }}
+      ports: [{port: 8080, protocol: TCP}]
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: {{ .Values.networkPolicy.allowMetricsFromNamespace }}}
+      ports: [{port: 8080, protocol: TCP}]
+  egress:
+    - to:                           # DNS
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}
+      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+    - to:                           # the customer PostgreSQL only - no other egress (no CRM, no internet)
+        - ipBlock: {cidr: {{ required "database.egressCidr is required" .Values.database.egressCidr | quote }}}
+      ports: [{port: {{ .Values.database.port }}, protocol: TCP}]
+{{- end }}

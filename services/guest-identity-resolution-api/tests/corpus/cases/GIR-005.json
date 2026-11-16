@@ -1,0 +1,88 @@
+{
+  "caseId": "GIR-005",
+  "title": "Two distinct identities qualify",
+  "plan21_4": 9,
+  "provenance": "SYNTHETIC",
+  "ruleVersion": "1.0",
+  "existing": [
+    {
+      "snapshot": {
+        "schemaVersion": "1.0",
+        "eventId": "E-C5A",
+        "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+        "correlationId": "CORR-C5A",
+        "sourceSystem": "SEAWARE",
+        "sourceRecordId": "S-C5A",
+        "crmGuestRecordId": "C5A",
+        "crmModifiedTime": "2026-11-16T10:00:00Z",
+        "firstName": "Zztest",
+        "lastName": "Fakeperson",
+        "dateOfBirth": "1984-04-04",
+        "phone": "+1 202 555 0177",
+        "email": "a5@gir-synthetic.invalid",
+        "sourceCode": "MOBAPP",
+        "agencyName": "AROYA CRUISES MAIN OFFICE"
+      },
+      "commit": true
+    },
+    {
+      "snapshot": {
+        "schemaVersion": "1.0",
+        "eventId": "E-C5B",
+        "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+        "correlationId": "CORR-C5B",
+        "sourceSystem": "SEAWARE",
+        "sourceRecordId": "S-C5B",
+        "crmGuestRecordId": "C5B",
+        "crmModifiedTime": "2026-11-16T10:00:00Z",
+        "firstName": "Zztest",
+        "lastName": "Fakeperson",
+        "dateOfBirth": "1984-04-04",
+        "phone": "+1 202 555 0178",
+        "email": "zz.fake@gir-synthetic.invalid",
+        "sourceCode": "MOBAPP",
+        "agencyName": "AROYA CRUISES MAIN OFFICE"
+      },
+      "commit": true
+    }
+  ],
+  "input": {
+    "schemaVersion": "1.0",
+    "eventId": "E-C5C",
+    "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+    "correlationId": "CORR-C5C",
+    "sourceSystem": "SEAWARE",
+    "sourceRecordId": "S-C5C",
+    "crmGuestRecordId": "C5C",
+    "crmModifiedTime": "2026-11-16T10:00:00Z",
+    "firstName": "Zztest",
+    "lastName": "Fakeperson",
+    "dateOfBirth": "1984-04-04",
+    "phone": "+1 202 555 0177",
+    "email": "zz.fake@gir-synthetic.invalid",
+    "sourceCode": "MOBAPP",
+    "agencyName": "AROYA CRUISES MAIN OFFICE"
+  },
+  "expectedNormalization": {
+    "firstName": "zztest",
+    "lastName": "fakeperson",
+    "dob": "1984-04-04",
+    "phoneE164": "+12025550177",
+    "phoneConfidence": "HIGH_E164",
+    "email": "zz.fake@gir-synthetic.invalid"
+  },
+  "expected": {
+    "decision": "CREATE_PROVISIONAL_IDENTITY",
+    "decisionType": "MULTIPLE_IDENTITY",
+    "reasonCodesInclude": [
+      "MULTIPLE_DISTINCT_IDENTITIES"
+    ],
+    "reviewRequired": true,
+    "reusesExistingNumber": null,
+    "crmPatch": {
+      "identityStatus": "MULTIPLE_IDENTITY_CONFLICT",
+      "identityDecisionType": "MULTIPLE_IDENTITY"
+    },
+    "finalState": "COMMITTED"
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aroya.example/schemas/guest-identity/guest-identity-processing-dlq.v1.schema.json",
+  "title": "Guest identity processing dead letter",
+  "x-topic": "guest.identity.processing.dlq.v1",
+  "description": "Written by the Integration error handler after bounded retries. Carries references and a payload HASH only - never the identity values (retention ASSUMPTION, PDPL).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "correlationId",
+    "originalTopic",
+    "originalEventId",
+    "crmGuestRecordId",
+    "failureStage",
+    "errorCode",
+    "retryable",
+    "attempts",
+    "firstFailureTime",
+    "lastFailureTime",
+    "payloadHash"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "correlationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "originalTopic": {
+      "type": "string",
+      "enum": [
+        "guest.identity.evaluation.requested.v1",
+        "guest.identity.reevaluation.requested.v1"
+      ]
+    },
+    "originalEventId": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "idempotencyKey": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 300
+    },
+    "crmGuestRecordId": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "decisionId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 40
+    },
+    "failureStage": {
+      "type": "string",
+      "enum": [
+        "VALIDATION",
+        "PYTHON_EVALUATE",
+        "CRM_UPDATE",
+        "PYTHON_COMMIT",
+        "PYTHON_FAIL",
+        "UNKNOWN"
+      ]
+    },
+    "errorCode": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "httpStatus": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "retryable": {
+      "type": "boolean"
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "firstFailureTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lastFailureTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payloadHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the original payload."
+    },
+    "replayable": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

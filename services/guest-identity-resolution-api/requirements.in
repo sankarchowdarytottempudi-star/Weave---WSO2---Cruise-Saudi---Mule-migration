@@ -1,0 +1,10 @@
+# Runtime dependencies (no HTTP client library on purpose: Python never calls CRM).
+fastapi==0.115.6
+uvicorn==0.34.0
+pydantic==2.10.4
+sqlalchemy==2.0.36
+psycopg[binary]==3.2.3
+alembic==1.14.0
+phonenumbers==8.13.52
+cryptography==44.0.0
+prometheus-client==0.21.1

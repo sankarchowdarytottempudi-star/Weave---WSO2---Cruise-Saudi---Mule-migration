@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gir.name" . }}
+  labels: {{- include "gir.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP                 # internal only; never a NodePort / gateway route
+  selector: {{- include "gir.selector" . | nindent 4 }}
+  ports: [{name: http, port: {{ .Values.service.port }}, targetPort: http}]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "gir.name" . }}
+  labels: {{- include "gir.labels" . | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "gir.name" . }}
+  labels: {{- include "gir.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {{- include "gir.selector" . | nindent 6 }}

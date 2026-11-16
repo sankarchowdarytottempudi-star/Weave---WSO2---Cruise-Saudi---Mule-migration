@@ -1,0 +1,503 @@
+openapi: 3.1.0
+info:
+  title: AROYA Guest Identity Resolution API
+  version: 1.0.0
+  summary: Phase 1 direct-Guest identity resolution (plan v2.1, section 9.2).
+  description: |
+    Called only by the Integration Service (WSO2). Python never calls CRM.
+    Examples are the section 11 examples of the plan (synthetic values).
+    Every response error uses the stable `Error` model (section 9.8).
+servers:
+  - url: http://guest-identity-resolution-api.{namespace}.svc:8080
+    variables:
+      namespace: {default: wso2}
+security:
+  - serviceToken: []
+tags:
+  - {name: evaluation}
+  - {name: decisions}
+  - {name: review}
+  - {name: bootstrap}
+  - {name: health}
+paths:
+  /v1/guest-identities/evaluate:
+    post:
+      tags: [evaluation]
+      operationId: evaluateGuestIdentity
+      summary: Evaluate a newly upserted Guest and reserve the outcome.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/GuestIdentityEvent'}
+            examples:
+              section11_2: {$ref: '#/components/examples/EvaluationEvent'}
+      responses:
+        '200': {$ref: '#/components/responses/Decision'}
+        '401': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+  /v1/guest-identities/re-evaluate:
+    post:
+      tags: [evaluation]
+      operationId: reevaluateGuestIdentity
+      summary: Process a direct CRM identity-field change (section 14.3). IDs never change automatically.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/GuestIdentityEvent'}
+            examples:
+              reevaluation: {$ref: '#/components/examples/ReevaluationEvent'}
+      responses:
+        '200': {$ref: '#/components/responses/Decision'}
+        '401': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+  /v1/guest-identities/decisions/{id}:
+    get:
+      tags: [decisions]
+      operationId: getDecision
+      summary: Retrieve idempotent decision state.
+      parameters: [{$ref: '#/components/parameters/DecisionId'}]
+      responses:
+        '200': {$ref: '#/components/responses/Decision'}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/guest-identities/decisions/{id}/commit:
+    post:
+      tags: [decisions]
+      operationId: commitDecision
+      summary: Confirm a successful CRM write. Repeating a commit is idempotent.
+      parameters: [{$ref: '#/components/parameters/DecisionId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CommitRequest'}
+            example: {crmIdentityRecordId: "5725767000099999999", crmGuestModifiedTime: "2026-11-16T10:20:35Z", correlationId: "CORR-10001"}
+      responses:
+        '200': {$ref: '#/components/responses/Decision'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+  /v1/guest-identities/decisions/{id}/fail:
+    post:
+      tags: [decisions]
+      operationId: failDecision
+      summary: Record a retryable (CRM_UPDATE_FAILED) or terminal (FAILED) CRM failure. The reserved pair stays bound.
+      parameters: [{$ref: '#/components/parameters/DecisionId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/FailRequest'}
+            example: {retryable: true, errorCode: "CRM_TIMEOUT", correlationId: "CORR-10001"}
+      responses:
+        '200': {$ref: '#/components/responses/Decision'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+  /v1/review-cases/{caseId}:
+    get:
+      tags: [review]
+      operationId: getReviewCase
+      summary: DB-backed case, candidates, versions and evidence. Never reads CRM.
+      parameters:
+        - {$ref: '#/components/parameters/CaseId'}
+        - {$ref: '#/components/parameters/ReviewerId'}
+        - {$ref: '#/components/parameters/ReviewerRoles'}
+        - {$ref: '#/components/parameters/CorrelationId'}
+      responses:
+        '200':
+          description: Review case.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReviewCase'}
+              examples:
+                section11_5: {$ref: '#/components/examples/ReviewCase'}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/review-cases/{caseId}/decision-preparations:
+    post:
+      tags: [review]
+      operationId: prepareReviewDecision
+      summary: Validate action and DB versions, then prepare the CRM change (not committed).
+      parameters:
+        - {$ref: '#/components/parameters/CaseId'}
+        - {$ref: '#/components/parameters/ReviewerId'}
+        - {$ref: '#/components/parameters/ReviewerRoles'}
+        - {$ref: '#/components/parameters/CorrelationId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DecisionPreparationRequest'}
+            examples:
+              section11_6: {$ref: '#/components/examples/DecisionPreparationRequest'}
+      responses:
+        '200':
+          description: Prepared decision.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PreparedDecision'}
+              examples:
+                section11_7: {$ref: '#/components/examples/PreparedDecision'}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409':
+          description: REVIEW_DATA_CHANGED, IDEMPOTENCY_CONFLICT or INVALID_STATE.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: REVIEW_DATA_CHANGED, message: "A Guest changed after the case was displayed; refresh it.", reasonCodes: [REVIEW_VERSION_CHANGED], changedRecords: [R200]}
+        '422': {$ref: '#/components/responses/Error'}
+  /v1/review-decisions/{id}/freshness-failed:
+    post:
+      tags: [review]
+      operationId: reviewFreshnessFailed
+      summary: Apply the latest CRM snapshots, cancel the prepared action and re-evaluate.
+      parameters: [{$ref: '#/components/parameters/ReviewDecisionId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/FreshnessFailedRequest'}
+      responses:
+        '200':
+          description: Case returned to REVIEW_DATA_CHANGED with refreshed candidates.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/FreshnessFailedResponse'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+  /v1/review-decisions/{id}/commit:
+    post:
+      tags: [review]
+      operationId: commitReviewDecision
+      summary: Finalize a successful CRM manual decision. Idempotent.
+      parameters: [{$ref: '#/components/parameters/ReviewDecisionId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ReviewCommitRequest'}
+      responses:
+        '200':
+          description: Committed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PreparedDecision'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+  /v1/review-decisions/{id}/fail:
+    post:
+      tags: [review]
+      operationId: failReviewDecision
+      summary: Record a retryable (REVIEW_CRM_UPDATE_PENDING) or terminal (REVIEW_FAILED) failure.
+      parameters: [{$ref: '#/components/parameters/ReviewDecisionId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/FailRequest'}
+      responses:
+        '200':
+          description: Recorded.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PreparedDecision'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+  /v1/bootstrap/batches:
+    post:
+      tags: [bootstrap]
+      operationId: loadBootstrapBatch
+      summary: Bulk index load (plan 16) - up to 5,000 snapshots, idempotent per batchId, no CRM, no pair allocation.
+      parameters:
+        - {name: batchId, in: query, required: false, schema: {type: string}, description: Required with NDJSON bodies.}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/BootstrapBatch'}
+          application/x-ndjson:
+            schema: {type: string, description: One BootstrapRecord JSON object per line.}
+      responses:
+        '200':
+          description: Counts per outcome (replayed=true for a repeated identical batch).
+          content: {application/json: {schema: {$ref: '#/components/schemas/BootstrapResult'}}}
+        '409': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+  /v1/bootstrap/status:
+    get:
+      tags: [bootstrap]
+      operationId: bootstrapStatus
+      responses:
+        '200': {description: Index and batch counts., content: {application/json: {schema: {type: object}}}}
+  /v1/bootstrap/dry-run:
+    post:
+      tags: [bootstrap]
+      operationId: bootstrapDryRun
+      summary: Phase 1 rules in dry-run mode over indexed direct Guests (paged); writes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                afterGuestId: {type: [string, 'null']}
+                limit: {type: integer, minimum: 1, maximum: 5000, default: 2000}
+                onlyWithoutIdentity: {type: boolean, default: false}
+      responses:
+        '200': {description: Outcome counts and next cursor., content: {application/json: {schema: {type: object}}}}
+  /health/live:
+    get:
+      tags: [health]
+      operationId: live
+      security: []
+      responses:
+        '200': {description: Process is up., content: {application/json: {schema: {$ref: '#/components/schemas/Health'}}}}
+  /health/ready:
+    get:
+      tags: [health]
+      operationId: ready
+      security: []
+      responses:
+        '200': {description: Database reachable and migrated., content: {application/json: {schema: {$ref: '#/components/schemas/Health'}}}}
+        '503': {description: Not ready., content: {application/json: {schema: {$ref: '#/components/schemas/Health'}}}}
+components:
+  securitySchemes:
+    serviceToken:
+      type: http
+      scheme: bearer
+      description: Service credential issued to the Integration Service only (mounted secret).
+  parameters:
+    DecisionId: {name: id, in: path, required: true, schema: {type: string, pattern: '^IDDEC-[A-Z0-9]+$'}}
+    ReviewDecisionId: {name: id, in: path, required: true, schema: {type: string, pattern: '^RD-[A-Z0-9]+$'}}
+    CaseId: {name: caseId, in: path, required: true, schema: {type: string, pattern: '^RC-[A-Z0-9]+$'}}
+    ReviewerId: {name: X-Reviewer-Id, in: header, required: true, schema: {type: string, maxLength: 100}, description: 'Authenticated CRM user, asserted by the Integration Service.'}
+    ReviewerRoles:
+      name: X-Reviewer-Roles
+      in: header
+      required: true
+      description: Comma-separated section 15.3 roles.
+      schema: {type: string, example: IDENTITY_REVIEWER}
+    CorrelationId: {name: X-Correlation-Id, in: header, required: true, schema: {type: string, maxLength: 100}}
+  responses:
+    Decision:
+      description: Decision (section 11.3).
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/DecisionResponse'}
+          examples:
+            section11_3: {$ref: '#/components/examples/DecisionResponse'}
+    Error:
+      description: Stable error (section 9.8).
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+  schemas:
+    GuestIdentityEvent:
+      oneOf:
+        - $ref: './events/guest-identity-evaluation-requested.v1.schema.json'
+        - $ref: './events/guest-identity-reevaluation-requested.v1.schema.json'
+    DecisionResponse:
+      type: object
+      required: [decisionId, decision, decisionType, identityStatus, reviewRequired, ruleVersion, reasonCodes, processingState]
+      properties:
+        decisionId: {type: string}
+        decision: {$ref: '#/components/schemas/Decision'}
+        decisionType: {$ref: '#/components/schemas/DecisionType'}
+        identityStatus: {$ref: '#/components/schemas/IdentityStatus'}
+        crmIdentityRecordId: {type: [string, 'null']}
+        identityId: {type: [string, 'null'], description: Internal identity reference (UUID).}
+        globalId: {type: [string, 'null'], description: 'ULID, 26 characters (ported Mule format).'}
+        loyaltyId: {type: [string, 'null'], description: '"12" + 7 digits + check digit (ported Mule format).'}
+        provisional: {type: boolean}
+        reviewRequired: {type: boolean}
+        reviewCaseId: {type: [string, 'null']}
+        reviewPriority: {type: [string, 'null'], enum: [HIGH, NORMAL, null]}
+        crmUpdateRequired: {type: boolean}
+        ruleVersion: {type: string}
+        reasonCodes: {type: array, items: {$ref: '#/components/schemas/ReasonCode'}}
+        reasonSummary: {type: string}
+        processingState: {$ref: '#/components/schemas/ProcessingState'}
+        shadow: {type: [object, 'null'], description: Shadow Jaro-Winkler/weighted evidence - stored only, never used for the decision.}
+    CommitRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        crmIdentityRecordId: {type: [string, 'null'], maxLength: 100, description: Required when the decision reserved a new pair.}
+        crmGuestModifiedTime: {type: [string, 'null'], format: date-time}
+        correlationId: {type: [string, 'null'], maxLength: 100}
+    FailRequest:
+      type: object
+      additionalProperties: false
+      required: [retryable, errorCode]
+      properties:
+        retryable: {type: boolean}
+        errorCode: {type: string, minLength: 1, maxLength: 100}
+        correlationId: {type: [string, 'null'], maxLength: 100}
+    GuestView:
+      type: object
+      properties:
+        crmGuestRecordId: {type: string}
+        crmModifiedTime: {type: string, format: date-time}
+        display:
+          type: object
+          description: Protected values, decrypted only for IDENTITY_REVIEWER / IDENTITY_SUPERVISOR.
+          properties: {firstName: {type: [string, 'null']}, lastName: {type: [string, 'null']}, dob: {type: [string, 'null']}, phone: {type: [string, 'null']}, email: {type: [string, 'null']}}
+        normalized: {type: object}
+        fieldResults: {type: object, additionalProperties: {$ref: '#/components/schemas/FieldResult'}}
+        reasonCodes: {type: array, items: {type: string}}
+        crmIdentityRecordId: {type: [string, 'null']}
+        identityId: {type: [string, 'null']}
+    ReviewCase:
+      type: object
+      required: [caseId, caseStatus, ruleVersion, incoming, candidates]
+      properties:
+        caseId: {type: string}
+        caseStatus: {$ref: '#/components/schemas/ReviewState'}
+        kind: {type: string, enum: [MULTIPLE_IDENTITY_CONFLICT, FOUR_FIELD_REVIEW, PAIR_REPAIR, REEVALUATION_CONFLICT, GUARDRAIL]}
+        priority: {type: string, enum: [HIGH, NORMAL]}
+        ruleVersion: {type: string}
+        reasonCodes: {type: array, items: {type: string}}
+        incoming: {$ref: '#/components/schemas/GuestView'}
+        provisionalIdentity: {type: [object, 'null']}
+        candidates: {type: array, items: {$ref: '#/components/schemas/GuestView'}}
+    DecisionPreparationRequest:
+      type: object
+      additionalProperties: false
+      required: [caseId, reviewerId, action, versionsShown, idempotencyKey]
+      properties:
+        caseId: {type: string}
+        reviewerId: {type: string}
+        action: {$ref: '#/components/schemas/ReviewerAction'}
+        selectedIdentityId: {type: [string, 'null']}
+        comment: {type: [string, 'null'], maxLength: 2000}
+        versionsShown:
+          type: array
+          minItems: 1
+          items: {type: object, required: [crmGuestRecordId, crmModifiedTime], properties: {crmGuestRecordId: {type: string}, crmModifiedTime: {type: string, format: date-time}}}
+        idempotencyKey: {type: string}
+        followUpDate: {type: [string, 'null'], format: date, description: Required for DEFER.}
+    PreparedDecision:
+      type: object
+      required: [reviewDecisionId, state, crmRecordsToCheck, compareFields, crmPatch]
+      properties:
+        reviewDecisionId: {type: string}
+        caseId: {type: string}
+        state: {$ref: '#/components/schemas/ReviewState'}
+        action: {$ref: '#/components/schemas/ReviewerAction'}
+        crmRecordsToCheck:
+          type: array
+          items: {type: object, properties: {crmGuestRecordId: {type: string}, expectedModifiedTime: {type: string, format: date-time}}}
+        compareFields: {type: array, items: {type: string}}
+        crmPatch: {type: object, description: Opaque approved instruction; Integration must not recalculate matching.}
+        errorCode: {type: [string, 'null']}
+    FreshnessFailedRequest:
+      type: object
+      additionalProperties: false
+      required: [snapshots]
+      properties:
+        snapshots: {type: array, minItems: 1, items: {$ref: '#/components/schemas/GuestIdentityEvent'}}
+        correlationId: {type: [string, 'null']}
+    FreshnessFailedResponse:
+      type: object
+      properties:
+        reviewDecisionId: {type: string}
+        caseId: {type: string}
+        state: {const: REVIEW_DATA_CHANGED}
+        reasonCodes: {type: array, items: {type: string}}
+    ReviewCommitRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        crmModifiedTimes: {type: [array, 'null']}
+        correlationId: {type: [string, 'null']}
+    BootstrapRecord:
+      type: object
+      additionalProperties: false
+      required: [crmGuestRecordId, crmModifiedTime]
+      properties:
+        crmGuestRecordId: {type: string}
+        sourceSystem: {type: string, default: CRM_BASELINE}
+        sourceRecordId: {type: [string, 'null']}
+        crmModifiedTime: {type: string, format: date-time}
+        firstName: {type: [string, 'null']}
+        lastName: {type: [string, 'null']}
+        dateOfBirth: {type: [string, 'null']}
+        phone: {type: [string, 'null']}
+        alternatePhone: {type: [string, 'null']}
+        email: {type: [string, 'null']}
+        countryCode: {type: [string, 'null']}
+        citizenshipCode: {type: [string, 'null']}
+        sourceCode: {type: [string, 'null']}
+        agencyCode: {type: [string, 'null']}
+        agencyName: {type: [string, 'null']}
+        active: {type: boolean, default: true}
+        currentIdentityId: {type: [string, 'null']}
+        currentGlobalId: {type: [string, 'null']}
+        currentLoyaltyId: {type: [string, 'null']}
+    BootstrapBatch:
+      type: object
+      additionalProperties: false
+      required: [batchId, records]
+      properties:
+        batchId: {type: string, pattern: '^[A-Za-z0-9._:-]+$'}
+        records: {type: array, minItems: 1, maxItems: 5000, items: {$ref: '#/components/schemas/BootstrapRecord'}}
+    BootstrapResult:
+      type: object
+      properties:
+        batchId: {type: string}
+        replayed: {type: boolean}
+        received: {type: integer}
+        indexed: {type: integer}
+        staleSkipped: {type: integer}
+        directScope: {type: integer}
+        excludedNonDirect: {type: integer}
+        linkedToIdentity: {type: integer}
+        pendingIdentity: {type: integer}
+        inactive: {type: integer}
+        durationMs: {type: integer}
+    Health:
+      type: object
+      properties: {status: {type: string, enum: [UP, DOWN]}, database: {type: string}, schema: {type: string}}
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: {type: string, enum: [INVALID_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, IDEMPOTENCY_CONFLICT, STALE_CRM_EVENT, INVALID_STATE, REVIEW_DATA_CHANGED, INTERNAL_ERROR]}
+        message: {type: string}
+        reasonCodes: {type: array, items: {type: string}}
+        fields: {type: array, items: {type: object}}
+      additionalProperties: true
+    Decision: {type: string, enum: [REUSE_EXISTING_IDENTITY, CREATE_NEW_IDENTITY, CREATE_PROVISIONAL_IDENTITY, KEEP_EXISTING_IDENTITY, EXCLUDED_NON_DIRECT]}
+    DecisionType: {type: string, enum: [CERTAIN_PHONE, CERTAIN_EMAIL, FOUR_FIELD, NEW, MULTIPLE_IDENTITY, PAIR_REPAIR, MANUAL, GUARDRAIL, NONE]}
+    IdentityStatus: {type: string, enum: [PENDING_IDENTITY, IDENTITY_REUSED_CERTAIN, NEW_IDENTITY_CREATED, NEW_IDENTITY_PENDING_REVIEW, MULTIPLE_IDENTITY_CONFLICT, PAIR_REPAIR_REQUIRED, REVIEW_DECISION_PREPARED, REVIEW_DATA_CHANGED, CONFIRMED_SAME_PERSON, CONFIRMED_DIFFERENT_PERSON, HOUSEHOLD_RELATIONSHIP, EXCLUDED_NON_DIRECT, IDENTITY_PROCESSING_FAILED]}
+    ProcessingState: {type: string, enum: [RECEIVED, DECIDED_PENDING_CRM, COMMITTED, CRM_UPDATE_FAILED, REJECTED_STALE, FAILED]}
+    ReviewState: {type: string, enum: [REVIEW_OPEN, REVIEW_DECISION_PREPARED, REVIEW_DATA_CHANGED, REVIEW_CRM_UPDATE_PENDING, REVIEW_COMMITTED, REVIEW_FAILED]}
+    ReviewerAction: {type: string, enum: [CONFIRM_SAME_PERSON, CONFIRM_DIFFERENT_PEOPLE, CONFIRM_HOUSEHOLD, DEFER, REVERSE_DECISION]}
+    FieldResult: {type: string, enum: [EXACT, CONFLICT, MISSING, SUPPRESSED, LOW_CONFIDENCE]}
+    ReasonCode: {type: string, description: See contracts/catalogues.yaml (Appendix B plus marked extensions).}
+  examples:
+    EvaluationEvent:
+      summary: Section 11.2 evaluation event (agencyName added for the approved direct scope).
+      value: {schemaVersion: "1.0", eventId: "01JEXAMPLE0001", eventType: GUEST_IDENTITY_EVALUATION_REQUESTED, idempotencyKey: "SEAWARE:123456:2026-11-16T10:20:30Z", correlationId: "CORR-10001", sourceSystem: SEAWARE, sourceRecordId: "123456", crmGuestRecordId: "5725767000012345678", crmModifiedTime: "2026-11-16T10:20:30Z", firstName: Muhammad, lastName: Ali, dateOfBirth: "1985-05-10", phone: "+966 55 123 4567", email: muhammad.ali@example.com, countryCode: SA, sourceCode: MOBAPP, agencyCode: AROYA, agencyName: AROYA CRUISES MAIN OFFICE, currentGlobalId: null, currentLoyaltyId: null, currentIdentityId: null}
+    ReevaluationEvent:
+      value: {schemaVersion: "1.0", eventId: "01JEXAMPLE0002", eventType: GUEST_IDENTITY_REEVALUATION_REQUESTED, correlationId: "CORR-10002", sourceSystem: CRM_DIRECT, sourceRecordId: "5725767000012345678", crmGuestRecordId: "5725767000012345678", crmModifiedTime: "2026-11-17T08:00:00Z", firstName: Muhammad, lastName: Ali, dateOfBirth: "1985-05-10", phone: "+966 55 123 4567", email: m.ali@example.com, countryCode: SA, sourceCode: MOBAPP, agencyName: AROYA CRUISES MAIN OFFICE, currentGlobalId: "01JD8Z6Q5W3F0B4N2K7XGQ1M9T", currentLoyaltyId: "1200000014", currentIdentityId: "5725767000099999999"}
+    DecisionResponse:
+      summary: Section 11.3 decision response.
+      value: {decisionId: "IDDEC-10001", decision: REUSE_EXISTING_IDENTITY, decisionType: CERTAIN_PHONE, identityStatus: IDENTITY_REUSED_CERTAIN, crmIdentityRecordId: "5725767000099999999", globalId: "G10001234", loyaltyId: "L10001234", reviewRequired: false, ruleVersion: "1.0", reasonCodes: [EXACT_CANONICAL_NAMES, EXACT_REAL_DOB, PERSONAL_E164_PHONE_MATCH, ONE_DISTINCT_REUSABLE_IDENTITY], processingState: DECIDED_PENDING_CRM}
+    ReviewCase:
+      summary: Section 11.5 review case response.
+      value: {caseId: "RC-10001", caseStatus: REVIEW_OPEN, ruleVersion: "1.0", incoming: {crmGuestRecordId: R100, crmModifiedTime: "2026-11-16T10:00:00Z", display: {firstName: Ali, lastName: Khan, dob: "1990-05-10", phone: "0551234567", email: ali@example.com}}, candidates: [{crmGuestRecordId: R200, crmIdentityRecordId: I200, crmModifiedTime: "2026-11-16T09:40:00Z", fieldResults: {firstName: EXACT, lastName: EXACT, dob: CONFLICT, phone: EXACT, email: EXACT}, reasonCodes: [FOUR_EXACT_VALID_FIELDS]}]}
+    DecisionPreparationRequest:
+      summary: Section 11.6 manual decision preparation request.
+      value: {caseId: "RC-10001", reviewerId: "CRMUSER-77", action: CONFIRM_SAME_PERSON, selectedIdentityId: I200, comment: "Verified through approved operational evidence", versionsShown: [{crmGuestRecordId: R100, crmModifiedTime: "2026-11-16T10:00:00Z"}, {crmGuestRecordId: R200, crmModifiedTime: "2026-11-16T09:40:00Z"}], idempotencyKey: "RC-10001:CRMUSER-77:01"}
+    PreparedDecision:
+      summary: Section 11.7 manual decision preparation response.
+      value: {reviewDecisionId: "RD-90001", state: REVIEW_DECISION_PREPARED, crmRecordsToCheck: [{crmGuestRecordId: R100, expectedModifiedTime: "2026-11-16T10:00:00Z"}, {crmGuestRecordId: R200, expectedModifiedTime: "2026-11-16T09:40:00Z"}], compareFields: [firstName, lastName, dateOfBirth, phone, email, guestIdentityId], crmPatch: {guestIdentityId: I200, identityStatus: CONFIRMED_SAME_PERSON}}

@@ -1,0 +1,45 @@
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "gir.name" . }}-migrate-{{ .Release.Revision }}
+  labels: {{- include "gir.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.migration.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds }}
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        {{- include "gir.selector" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      serviceAccountName: {{ include "gir.name" . }}
+      securityContext: {{- include "gir.podSecurity" . | nindent 8 }}
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["alembic", "upgrade", "head"]
+          env:
+            {{- include "gir.dbEnv" . | nindent 12 }}
+            - {name: GIR_DB_USER, value: {{ .Values.database.migrationUser | quote }}}
+            - {name: GIR_DB_PASSWORD_FILE, value: /var/run/secrets/gir/db/password}
+            - {name: GIR_APP_DB_ROLE, value: {{ .Values.database.appUser | quote }}}
+          resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {cpu: 500m, memory: 256Mi}}
+          securityContext: {{- include "gir.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: db, mountPath: /var/run/secrets/gir/db, readOnly: true}
+            - {name: db-ca, mountPath: /var/run/secrets/gir/db-ca, readOnly: true}
+      volumes:
+        - {name: tmp, emptyDir: {medium: Memory, sizeLimit: 16Mi}}
+        - {name: db, secret: {secretName: {{ .Values.secrets.migrationDbPassword }}, defaultMode: 0400}}
+        - {name: db-ca, secret: {secretName: {{ .Values.secrets.dbCa }}, defaultMode: 0444}}
+{{- end }}

@@ -1,0 +1,20 @@
+[project]
+name = "guest-identity-resolution-api"
+version = "1.0.0"
+description = "AROYA Direct Guest Identity Resolution - Phase 1 Python service"
+requires-python = ">=3.12,<3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = ["integration: needs a real PostgreSQL (GIR_TEST_DATABASE_URL)"]
+filterwarnings = ["ignore::DeprecationWarning:jsonschema.*"]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = true

@@ -1,0 +1,68 @@
+{
+  "caseId": "GIR-004",
+  "title": "Local phone without country context is LOW and never CERTAIN",
+  "plan21_4": 5,
+  "provenance": "SYNTHETIC",
+  "ruleVersion": "1.0",
+  "existing": [
+    {
+      "snapshot": {
+        "schemaVersion": "1.0",
+        "eventId": "E-C4A",
+        "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+        "correlationId": "CORR-C4A",
+        "sourceSystem": "SEAWARE",
+        "sourceRecordId": "S-C4A",
+        "crmGuestRecordId": "C4A",
+        "crmModifiedTime": "2026-11-16T10:00:00Z",
+        "firstName": "Zztest",
+        "lastName": "Fakeperson",
+        "dateOfBirth": "1984-04-04",
+        "phone": "+1 202 555 0177",
+        "email": null,
+        "sourceCode": "MOBAPP",
+        "agencyName": "AROYA CRUISES MAIN OFFICE"
+      },
+      "commit": true
+    }
+  ],
+  "input": {
+    "schemaVersion": "1.0",
+    "eventId": "E-C4B",
+    "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+    "correlationId": "CORR-C4B",
+    "sourceSystem": "SEAWARE",
+    "sourceRecordId": "S-C4B",
+    "crmGuestRecordId": "C4B",
+    "crmModifiedTime": "2026-11-16T10:00:00Z",
+    "firstName": "Zztest",
+    "lastName": "Fakeperson",
+    "dateOfBirth": "1984-04-04",
+    "phone": "202 555 0177",
+    "email": null,
+    "sourceCode": "MOBAPP",
+    "agencyName": "AROYA CRUISES MAIN OFFICE"
+  },
+  "expectedNormalization": {
+    "firstName": "zztest",
+    "lastName": "fakeperson",
+    "dob": "1984-04-04",
+    "phoneE164": null,
+    "phoneConfidence": "LOW",
+    "email": null
+  },
+  "expected": {
+    "decision": "CREATE_NEW_IDENTITY",
+    "decisionType": "NEW",
+    "reasonCodesInclude": [
+      "NO_DETERMINISTIC_CANDIDATE"
+    ],
+    "reviewRequired": false,
+    "reusesExistingNumber": null,
+    "crmPatch": {
+      "identityStatus": "NEW_IDENTITY_CREATED",
+      "identityDecisionType": "NEW"
+    },
+    "finalState": "COMMITTED"
+  }
+}

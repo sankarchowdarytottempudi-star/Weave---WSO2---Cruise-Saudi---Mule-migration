@@ -1,0 +1,68 @@
+{
+  "caseId": "GIR-003",
+  "title": "Four exact fields, conflicting DOB",
+  "plan21_4": 3,
+  "provenance": "SYNTHETIC",
+  "ruleVersion": "1.0",
+  "existing": [
+    {
+      "snapshot": {
+        "schemaVersion": "1.0",
+        "eventId": "E-C3A",
+        "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+        "correlationId": "CORR-C3A",
+        "sourceSystem": "SEAWARE",
+        "sourceRecordId": "S-C3A",
+        "crmGuestRecordId": "C3A",
+        "crmModifiedTime": "2026-11-16T10:00:00Z",
+        "firstName": "Zztest",
+        "lastName": "Fakeperson",
+        "dateOfBirth": "1984-04-04",
+        "phone": "+1 202 555 0177",
+        "email": "zz.fake@gir-synthetic.invalid",
+        "sourceCode": "MOBAPP",
+        "agencyName": "AROYA CRUISES MAIN OFFICE"
+      },
+      "commit": true
+    }
+  ],
+  "input": {
+    "schemaVersion": "1.0",
+    "eventId": "E-C3B",
+    "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+    "correlationId": "CORR-C3B",
+    "sourceSystem": "SEAWARE",
+    "sourceRecordId": "S-C3B",
+    "crmGuestRecordId": "C3B",
+    "crmModifiedTime": "2026-11-16T10:00:00Z",
+    "firstName": "Zztest",
+    "lastName": "Fakeperson",
+    "dateOfBirth": "1985-04-04",
+    "phone": "+1 202 555 0177",
+    "email": "zz.fake@gir-synthetic.invalid",
+    "sourceCode": "MOBAPP",
+    "agencyName": "AROYA CRUISES MAIN OFFICE"
+  },
+  "expectedNormalization": {
+    "firstName": "zztest",
+    "lastName": "fakeperson",
+    "dob": "1985-04-04",
+    "phoneE164": "+12025550177",
+    "phoneConfidence": "HIGH_E164",
+    "email": "zz.fake@gir-synthetic.invalid"
+  },
+  "expected": {
+    "decision": "CREATE_PROVISIONAL_IDENTITY",
+    "decisionType": "FOUR_FIELD",
+    "reasonCodesInclude": [
+      "FOUR_EXACT_VALID_FIELDS"
+    ],
+    "reviewRequired": true,
+    "reusesExistingNumber": null,
+    "crmPatch": {
+      "identityStatus": "NEW_IDENTITY_PENDING_REVIEW",
+      "identityDecisionType": "FOUR_FIELD"
+    },
+    "finalState": "COMMITTED"
+  }
+}

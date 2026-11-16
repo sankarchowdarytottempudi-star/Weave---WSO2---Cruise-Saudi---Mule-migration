@@ -1,0 +1,57 @@
+# Values for the integration k3s cluster. Nothing here is a secret: credentials and keys come
+# from pre-created Kubernetes Secrets (names below) that the platform team creates.
+image:
+  repository: guest-identity-resolution-api
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent        # k3s import (as other services on this cluster use)
+replicaCount: 2
+
+service:
+  port: 8080
+
+resources:
+  requests: {cpu: 100m, memory: 192Mi}
+  limits: {cpu: "1", memory: 512Mi}
+workers: 1                        # one process per pod (correct Prometheus counters); scale with replicas
+
+database:                         # customer PostgreSQL (Tencent) - values arrive with the connection
+  host: ""                        # e.g. postgres.<customer-private-domain>
+  port: 5432
+  name: ""
+  schema: gir
+  sslmode: verify-full
+  appUser: gir_app                # runtime role (DML only)
+  migrationUser: gir_owner        # schema owner (DDL), used only by the migration Job
+  poolSize: 5
+  maxOverflow: 5
+  egressCidr: ""                  # customer DB private CIDR for the NetworkPolicy, e.g. 10.0.0.0/24
+
+secrets:                          # existing Secret names (create before install; see docs/DB-READINESS-CHECKLIST.md)
+  appDbPassword: gir-db-app             # key: password
+  migrationDbPassword: gir-db-owner     # key: password
+  dbCa: gir-db-ca                       # key: ca.crt
+  dataKey: gir-data-key                 # keys: data-key (base64 32 bytes), hmac-key
+  serviceToken: gir-service-token       # key: token (shared with the WSO2 Integration Service)
+
+config:                           # non-secret flags (config/config-catalogue.yaml); rollout step 1 = shadow
+  GIR_SHADOW_ONLY_ENABLED: "true"
+  GIR_CERTAIN_REUSE_ENABLED: "false"
+  GIR_FOUR_FIELD_REVIEW_ENABLED: "false"
+  GIR_WEIGHTED_SHADOW_ENABLED: "true"
+  GIR_CRM_DIRECT_EVENT_ENABLED: "true"
+  GIR_ACTIVE_RULE_VERSION: "1.0"
+  GIR_ID_ALLOCATION_STRATEGY: MULE_COMPAT
+  GIR_DATA_KEY_ID: k1
+
+networkPolicy:
+  enabled: true
+  # only the WSO2 Integration Service pods may call the API
+  allowFrom:
+    - podSelector:
+        matchLabels: {integration.aroya/layer: process}
+  allowMetricsFromNamespace: monitoring
+
+migration:
+  enabled: true                   # helm pre-install/pre-upgrade hook Job: alembic upgrade head
+  backoffLimit: 1
+  activeDeadlineSeconds: 600

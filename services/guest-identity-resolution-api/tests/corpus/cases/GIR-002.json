@@ -1,0 +1,68 @@
+{
+  "caseId": "GIR-002",
+  "title": "CERTAIN email, blank phone",
+  "plan21_4": 2,
+  "provenance": "SYNTHETIC",
+  "ruleVersion": "1.0",
+  "existing": [
+    {
+      "snapshot": {
+        "schemaVersion": "1.0",
+        "eventId": "E-C2A",
+        "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+        "correlationId": "CORR-C2A",
+        "sourceSystem": "SEAWARE",
+        "sourceRecordId": "S-C2A",
+        "crmGuestRecordId": "C2A",
+        "crmModifiedTime": "2026-11-16T10:00:00Z",
+        "firstName": "Zztest",
+        "lastName": "Fakeperson",
+        "dateOfBirth": "1984-04-04",
+        "phone": null,
+        "email": "zz.fake@gir-synthetic.invalid",
+        "sourceCode": "MOBAPP",
+        "agencyName": "AROYA CRUISES MAIN OFFICE"
+      },
+      "commit": true
+    }
+  ],
+  "input": {
+    "schemaVersion": "1.0",
+    "eventId": "E-C2B",
+    "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+    "correlationId": "CORR-C2B",
+    "sourceSystem": "SEAWARE",
+    "sourceRecordId": "S-C2B",
+    "crmGuestRecordId": "C2B",
+    "crmModifiedTime": "2026-11-16T10:00:00Z",
+    "firstName": "Zztest",
+    "lastName": "Fakeperson",
+    "dateOfBirth": "1984-04-04",
+    "phone": null,
+    "email": "zz.fake@gir-synthetic.invalid",
+    "sourceCode": "MOBAPP",
+    "agencyName": "AROYA CRUISES MAIN OFFICE"
+  },
+  "expectedNormalization": {
+    "firstName": "zztest",
+    "lastName": "fakeperson",
+    "dob": "1984-04-04",
+    "phoneE164": null,
+    "phoneConfidence": "MISSING",
+    "email": "zz.fake@gir-synthetic.invalid"
+  },
+  "expected": {
+    "decision": "REUSE_EXISTING_IDENTITY",
+    "decisionType": "CERTAIN_EMAIL",
+    "reasonCodesInclude": [
+      "PERSONAL_EMAIL_MATCH"
+    ],
+    "reviewRequired": false,
+    "reusesExistingNumber": 0,
+    "crmPatch": {
+      "identityStatus": "IDENTITY_REUSED_CERTAIN",
+      "identityDecisionType": "CERTAIN_EMAIL"
+    },
+    "finalState": "COMMITTED"
+  }
+}

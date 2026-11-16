@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Guest identity test-corpus case (plan 21.7)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["caseId", "title", "provenance", "ruleVersion", "existing", "input", "expectedNormalization", "expected"],
+  "properties": {
+    "caseId": {"type": "string", "pattern": "^GIR-[0-9]{3}$"},
+    "title": {"type": "string"},
+    "plan21_4": {"type": ["integer", "null"], "description": "Number of the 21.4 acceptance case covered, if any."},
+    "provenance": {"enum": ["SYNTHETIC", "MASKED_PRODUCTION"], "description": "MASKED_PRODUCTION only after client approval; values must be masked."},
+    "ruleVersion": {"type": "string"},
+    "existing": {"type": "array", "description": "Guests evaluated (and committed) before the input, in order.",
+                 "items": {"type": "object", "required": ["snapshot"], "properties": {
+                   "snapshot": {"type": "object"}, "commit": {"type": "boolean", "default": true}}}},
+    "input": {"type": "object", "description": "GuestIdentityEvent snapshot (contracts/events)."},
+    "expectedNormalization": {"type": "object", "properties": {
+      "firstName": {"type": ["string", "null"]}, "lastName": {"type": ["string", "null"]},
+      "dob": {"type": ["string", "null"]}, "phoneE164": {"type": ["string", "null"]},
+      "phoneConfidence": {"type": "string"}, "email": {"type": ["string", "null"]}}},
+    "expected": {"type": "object", "additionalProperties": false,
+                 "required": ["decision", "decisionType", "reasonCodesInclude", "reviewRequired", "crmPatch", "finalState"],
+                 "properties": {
+                   "decision": {"type": "string"}, "decisionType": {"type": "string"},
+                   "reasonCodesInclude": {"type": "array", "items": {"type": "string"}},
+                   "reviewRequired": {"type": "boolean"},
+                   "reusesExistingNumber": {"type": ["integer", "null"], "description": "Index into existing whose pair is reused."},
+                   "crmPatch": {"type": "object", "description": "Fields Integration writes on the CRM Guest."},
+                   "finalState": {"type": "string"}}},
+    "evidence": {"type": "object", "description": "Filled by the runner: rule/build/migration version, correlation id, timings, CRM call count (always 0 in Python)."}
+  }
+}

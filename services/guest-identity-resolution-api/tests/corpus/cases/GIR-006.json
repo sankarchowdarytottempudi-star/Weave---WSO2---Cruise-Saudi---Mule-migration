@@ -1,0 +1,44 @@
+{
+  "caseId": "GIR-006",
+  "title": "Out of direct scope (INT-AGENT)",
+  "plan21_4": null,
+  "provenance": "SYNTHETIC",
+  "ruleVersion": "1.0",
+  "existing": [],
+  "input": {
+    "schemaVersion": "1.0",
+    "eventId": "E-C6A",
+    "eventType": "GUEST_IDENTITY_EVALUATION_REQUESTED",
+    "correlationId": "CORR-C6A",
+    "sourceSystem": "SEAWARE",
+    "sourceRecordId": "S-C6A",
+    "crmGuestRecordId": "C6A",
+    "crmModifiedTime": "2026-11-16T10:00:00Z",
+    "firstName": "Zztest",
+    "lastName": "Fakeperson",
+    "dateOfBirth": "1984-04-04",
+    "phone": "+1 202 555 0177",
+    "email": "zz.fake@gir-synthetic.invalid",
+    "sourceCode": "INT-AGENT",
+    "agencyName": "AROYA CRUISES MAIN OFFICE"
+  },
+  "expectedNormalization": {
+    "firstName": "zztest",
+    "lastName": "fakeperson",
+    "dob": "1984-04-04",
+    "phoneE164": "+12025550177",
+    "phoneConfidence": "HIGH_E164",
+    "email": "zz.fake@gir-synthetic.invalid"
+  },
+  "expected": {
+    "decision": "EXCLUDED_NON_DIRECT",
+    "decisionType": "NONE",
+    "reasonCodesInclude": [
+      "EXCLUDED_NON_DIRECT"
+    ],
+    "reviewRequired": false,
+    "reusesExistingNumber": null,
+    "crmPatch": {},
+    "finalState": "COMMITTED"
+  }
+}

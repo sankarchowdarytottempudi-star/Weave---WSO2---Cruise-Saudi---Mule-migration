@@ -1,0 +1,115 @@
+# Zoho CRM configuration spec - Direct Guest Identity Resolution, Phase 1 (iteration 0 deliverable).
+# Ready to apply in iteration 3 (by us, via the Zoho CRM Settings UI or the Metadata API
+# POST /crm/v8/settings/fields?module=..., /settings/modules, /settings/workflow_rules).
+# EXISTING fields were read from the current Mule guest-identity-proc-api (Contacts module, API v2/v6/v8);
+# they are reused, not recreated. NEW fields use the custom suffix-less API names below - Zoho
+# will confirm the final API name on creation; record any rename in this file.
+version: "1.0"
+crm_api_version: v8
+
+modules:
+  Contacts:                          # the CRM "Guest" (existing)
+    role: Guest record; one row per source Guest
+    existing_fields_used:
+      First_Name: {type: text, identity_field: true}
+      Last_Name: {type: text, identity_field: true}
+      Date_of_Birth: {type: date, identity_field: true}
+      Mobile: {type: phone, identity_field: true, note: "Personal phone; Phone/Other_Phone are not identity evidence in Phase 1."}
+      Email: {type: email, identity_field: true}
+      Country: {type: text, note: "Phone context #2 (countryCode, ISO alpha-2 mapping in Integration)."}
+      Nationality: {type: picklist, note: "Phone context #3 (citizenshipCode)."}
+      Source_System: {type: text}
+      Lead_Source: {type: picklist, note: "Carries the source code (INT-ASSC, INT-CON, ...) - CONFIRM which field holds it."}
+      Account_Name: {type: lookup(Accounts), note: "Agency; agencyName = Account_Name.name - CONFIRM."}
+      Global_Guest_ID: {type: text(50), note: "Existing; ULID. Becomes READ-ONLY for users (written only by Integration)."}
+      Aroya_Loyalty_ID: {type: text(20), note: "Existing; 12 + 7 digits + check digit. Read-only for users."}
+      Household_ID: {type: text, note: "Existing; used for CONFIRM_HOUSEHOLD."}
+      Modified_Time: {type: system, note: "crmModifiedTime - the freshness version."}
+    new_fields:
+      Guest_Identity:            {type: lookup, lookup_module: Guest_Identities, read_only_for_users: true}
+      Identity_Status:
+        type: picklist
+        values: [PENDING_IDENTITY, IDENTITY_REUSED_CERTAIN, NEW_IDENTITY_CREATED, NEW_IDENTITY_PENDING_REVIEW,
+                 MULTIPLE_IDENTITY_CONFLICT, PAIR_REPAIR_REQUIRED, REVIEW_DECISION_PREPARED, REVIEW_DATA_CHANGED,
+                 CONFIRMED_SAME_PERSON, CONFIRMED_DIFFERENT_PERSON, HOUSEHOLD_RELATIONSHIP, EXCLUDED_NON_DIRECT,
+                 IDENTITY_PROCESSING_FAILED]
+        default: PENDING_IDENTITY
+        read_only_for_users: true
+      Identity_Decision_Type:
+        type: picklist
+        values: [CERTAIN_PHONE, CERTAIN_EMAIL, FOUR_FIELD, NEW, MULTIPLE_IDENTITY, PAIR_REPAIR, MANUAL, GUARDRAIL, NONE]
+        read_only_for_users: true
+      Identity_Decision_ID:      {type: text(40), read_only_for_users: true}
+      Identity_Review_Case_ID:   {type: text(40), read_only_for_users: true}
+      Identity_Rule_Version:     {type: text(20), read_only_for_users: true}
+      Identity_Reason_Codes:     {type: multiline(2000), read_only_for_users: true}
+      Identity_Provisional:      {type: boolean, read_only_for_users: true}
+      Identity_Last_Evaluated:   {type: datetime, read_only_for_users: true}
+      Direct_Scope:              {type: boolean, read_only_for_users: true}
+
+  Guest_Identities:                  # NEW custom module (plan 7.2 "Guest Identity")
+    singular: Guest Identity
+    plural: Guest Identities
+    record_name_field: {api_name: Name, value: "Global ID (ULID)"}
+    fields:
+      Global_ID:              {type: text(50), unique: true, required: true}
+      Loyalty_ID:             {type: text(20), unique: true, required: true}
+      Identity_Lifecycle:     {type: picklist, values: [ACTIVE, PROVISIONAL, RETIRED, ALIAS, BLOCKED], default: ACTIVE}
+      Pair_Integrity:         {type: picklist, values: [COMPLETE, INCOMPLETE, CONFLICT]}
+      Surviving_Identity:     {type: lookup, lookup_module: Guest_Identities, note: "Set when ALIAS"}
+      Created_By_Process:     {type: picklist, values: [BASELINE, CERTAIN, NEW, REVIEW, MANUAL]}
+      Rule_Version:           {type: text(20)}
+      Household_ID:           {type: text(50)}
+      Decision_ID:            {type: text(40), note: "Reserving decision; idempotency for the create call."}
+    related_lists: [Contacts (via Guest_Identity), Identity_Review_Cases]
+
+  Identity_Review_Cases:             # NEW custom module - audit mirror only; source of truth is PostgreSQL
+    fields:
+      Case_ID:              {type: text(40), unique: true}
+      Guest:                {type: lookup, lookup_module: Contacts}
+      Provisional_Identity: {type: lookup, lookup_module: Guest_Identities}
+      Case_Kind:            {type: picklist, values: [MULTIPLE_IDENTITY_CONFLICT, FOUR_FIELD_REVIEW, PAIR_REPAIR, REEVALUATION_CONFLICT, GUARDRAIL]}
+      Priority:             {type: picklist, values: [HIGH, NORMAL]}
+      Case_Status:          {type: picklist, values: [REVIEW_OPEN, REVIEW_DECISION_PREPARED, REVIEW_DATA_CHANGED, REVIEW_CRM_UPDATE_PENDING, REVIEW_COMMITTED, REVIEW_FAILED]}
+      Last_Action:          {type: picklist, values: [CONFIRM_SAME_PERSON, CONFIRM_DIFFERENT_PEOPLE, CONFIRM_HOUSEHOLD, DEFER, REVERSE_DECISION]}
+      Reviewer:             {type: userlookup}
+      Follow_Up_Date:       {type: date}
+      SLA_Due:              {type: datetime, note: "1 business day conflicts / 2 business days four-field (ASSUMPTION)"}
+      Workbench_Link:       {type: url}
+
+workflows:
+  - name: GIR - Identity field changed
+    module: Contacts
+    trigger: on edit, when any of First_Name, Last_Name, Date_of_Birth, Mobile, Email is modified
+    condition: Direct_Scope = true AND Guest_Identity is not empty
+    action: webhook -> Integration Service (re-evaluation ingress), body = full snapshot incl. Modified_Time
+    note: "Plan 14.3. Must NOT fire on Integration's own writes of the Identity_* fields (exclude the integration user)."
+  - name: GIR - CRM direct guest created
+    module: Contacts
+    trigger: on create (users, not the integration user)
+    action: set Identity_Status = PENDING_IDENTITY; webhook -> Integration Service (evaluation ingress), sourceSystem = CRM_DIRECT
+    note: "Gated by crm_direct_event_enabled (plan 12.1)."
+  - name: GIR - Review SLA escalation
+    module: Identity_Review_Cases
+    trigger: scheduled, SLA_Due passed AND Case_Status in (REVIEW_OPEN, REVIEW_DATA_CHANGED)
+    action: email + task to the Identity Supervisor role
+  - name: GIR - Pending identity reconciliation alert
+    module: Contacts
+    trigger: scheduled daily, Identity_Status = PENDING_IDENTITY for > 1 hour
+    action: notify operations (reconciliation job in Integration replays)
+
+roles_and_profiles:                  # plan 15.3 (ASSUMPTION for the mapping to CRM profiles)
+  Identity Reviewer:   {profile: GIR Reviewer, permissions: [view Guest_Identities, view Identity_Review_Cases, Web Tab access], identity_fields: read_only}
+  Identity Supervisor: {profile: GIR Supervisor, permissions: [Reviewer permissions, reassign cases, reverse decisions], identity_fields: read_only}
+  CRM Administrator:   {profile: Administrator, permissions: [configure fields, permissions and Web Tab], business_decisions: false}
+  Audit and Reporting: {profile: GIR Audit, permissions: [read-only Guest_Identities, Identity_Review_Cases, reports]}
+  Integration user:    {profile: GIR Integration (API only), permissions: [write Identity_* fields, create Guest_Identities, update Identity_Review_Cases], note: "Only principal allowed to write Global/Loyalty IDs."}
+
+field_level_security:
+  - "Global_Guest_ID, Aroya_Loyalty_ID, Guest_Identity, Identity_*: read-only for every profile except GIR Integration."
+
+workbench:
+  decision: deferred (not this iteration)
+  recommended: "Weave-hosted page embedded as a Zoho CRM Web Tab (available without widget/marketplace licensing), authenticated through the Integration Service; it calls only the Integration Review API."
+
+apply_order: [Guest_Identities module, Identity_Review_Cases module, Contacts new fields, field-level security, profiles, workflows (disabled), Web Tab]
