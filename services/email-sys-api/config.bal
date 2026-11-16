@@ -78,9 +78,12 @@ configurable string codeMailVia = "smtp";
 #
 # + url - API address; empty = taken from smtpZepto.host ("smtp." becomes "api."), over https
 # + timeoutSeconds - Time the provider gets to take the message
+# + token - ZeptoMail "Send Mail token" for the API (a secret: never logged, never answered);
+#   empty = the SMTP password is used, as before
 public type ZeptoApiSettings record {|
     string url = "";
     decimal timeoutSeconds = 15;
+    string token = "";
 |};
 
 configurable ZeptoApiSettings zeptoApi = {};

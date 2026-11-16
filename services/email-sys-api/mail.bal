@@ -155,7 +155,7 @@ isolated function viaZeptoApi(http:Client api, core:Mail mail, string correlatio
     int recipients = mail.to.length() + mail.cc.length();
     http:Request request = new;
     request.setJsonPayload(core:zeptoApiBody(smtpZepto.fromAddress, mail));
-    request.setHeader("Authorization", "Zoho-enczapikey " + smtpZepto.password);
+    request.setHeader("Authorization", core:zeptoAuthorization(zeptoApi.token, smtpZepto.password));
     request.setHeader("Accept", "application/json");
     http:Response|http:ClientError reply = api->post("/v1.1/email", request);
     if reply is http:ClientError {

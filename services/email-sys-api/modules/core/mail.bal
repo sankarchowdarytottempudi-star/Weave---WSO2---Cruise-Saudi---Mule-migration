@@ -204,3 +204,15 @@ public isolated function zeptoErrorCode(json answer) returns string {
     string out = code is () ? "" : code.toString();
     return sub is () ? out : out + "/" + sub.toString();
 }
+
+
+# The Authorization header for ZeptoMail's send API: the API's own Send Mail token when it is set,
+# otherwise the SMTP password (the old behaviour). The value is a secret and never logged.
+#
+# + token - zeptoApi.token
+# + smtpPassword - smtpZepto.password
+# + return - Header value
+public isolated function zeptoAuthorization(string token, string smtpPassword) returns string {
+    string t = token.trim();
+    return "Zoho-enczapikey " + (t != "" ? t : smtpPassword);
+}

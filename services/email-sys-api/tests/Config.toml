@@ -16,3 +16,4 @@ fromAddress = "noreply@example.invalid"
 [aroya.email_sys_api.zeptoApi]
 url = "http://127.0.0.2:18964"
 timeoutSeconds = 3
+token = "stand-in-api-token"

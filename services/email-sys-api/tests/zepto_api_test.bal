@@ -68,7 +68,7 @@ function codeMailTakenByTheApiAnswersEmailSent() returns error? {
         "htmlbody": "<!DOCTYPE html><html><body><p>123456</p></body></html>"});
     string auth;
     lock { auth = lastAuth; }
-    test:assertEquals(auth, "Zoho-enczapikey stand-in-send-mail-token");
+    test:assertEquals(auth, "Zoho-enczapikey stand-in-api-token");
 }
 
 @test:Config {}
@@ -82,6 +82,8 @@ function refusedByTheApiAnswersTheOldError() returns error? {
     test:assertTrue(text.includes("The mail server did not accept the message"), text);
     test:assertTrue(text.includes("TM_3201"), text);
     test:assertFalse(text.includes("guest@example.invalid"), text);
+    test:assertFalse(text.includes("stand-in-api-token"), text);
+    test:assertFalse(text.includes("stand-in-send-mail-token"), text);
 }
 
 @test:Config {}
@@ -89,4 +91,12 @@ function badRequestStillRefusedBeforeTheProvider() returns error? {
     http:Response res = check emailSys->post("/email-sys-api/v1/send-email-notification",
         {"to": "guest@example.invalid", "body": "x"}, {"provider": "exchange"});
     test:assertEquals(res.statusCode, 400);
+}
+
+
+@test:Config {}
+function apiTokenWinsAndSmtpPasswordIsTheFallback() {
+    test:assertEquals(core:zeptoAuthorization("api-tok", "smtp-pw"), "Zoho-enczapikey api-tok");
+    test:assertEquals(core:zeptoAuthorization("  ", "smtp-pw"), "Zoho-enczapikey smtp-pw");
+    test:assertEquals(core:zeptoAuthorization("", "smtp-pw"), "Zoho-enczapikey smtp-pw");
 }
