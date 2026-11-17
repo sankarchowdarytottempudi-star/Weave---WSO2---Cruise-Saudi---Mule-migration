@@ -40,7 +40,8 @@ type Memory record {|
 
 isolated Memory memory = {copies: {}, bytes: 0};
 final decimal coalesceWaitSeconds = strapi.timeoutSeconds + 5d;
-isolated map<boolean> inFlight = {};
+// key -> when (epoch seconds) its fetch started; a mark older than the wait time is treated as abandoned
+isolated map<int> inFlight = {};
 isolated map<boolean> refreshing = {};
 
 # A content answer through the cache.
@@ -66,10 +67,16 @@ isolated function cachedRelay(string key, isolated function () returns http:Resp
         }
     }
     boolean leader = false;
+    int started = time:utcNow()[0];
+    int waitLimit = <int>coalesceWaitSeconds;
     lock {
-        if !inFlight.hasKey(key) {
-            inFlight[key] = true;
+        int? since = inFlight[key];
+        if since is () || started - since > waitLimit {
+            // nobody fetching, or the previous fetch never let go: this request fetches
+            inFlight[key] = started;
             leader = true;
+        } else {
+            started = since;
         }
     }
     if !leader {
@@ -80,7 +87,8 @@ isolated function cachedRelay(string key, isolated function () returns http:Resp
             waited += 0.02d;
             boolean busy = true;
             lock {
-                busy = inFlight.hasKey(key);
+                int? since = inFlight[key];
+                busy = since is int && since == started;
             }
             if !busy {
                 break;
@@ -93,9 +101,13 @@ isolated function cachedRelay(string key, isolated function () returns http:Resp
         return relay(fetcher(), correlationId, backend);
     }
     http:Response out = relay(fetcher(), correlationId, backend);
+    // kept first so the waiters find the answer; a mark that is never cleared expires after the wait time
     keepIfOk(key, out);
     lock {
-        _ = inFlight.removeIfHasKey(key);
+        int? since = inFlight[key];
+        if since is int && since == started {
+            _ = inFlight.removeIfHasKey(key);
+        }
     }
     return out;
 }
@@ -118,7 +130,8 @@ isolated function keepIfOk(string key, http:Response out) {
     if body !is byte[] || body.length() == 0 || ctype !is string {
         return;
     }
-    Kept & readonly kept = {at: time:utcNow()[0], contentType: ctype, body: body.cloneReadOnly()};
+    Kept fresh = {at: time:utcNow()[0], contentType: ctype, body: body};
+    Kept & readonly kept = fresh.cloneReadOnly();
     remember(key, kept);
     string|error text = string:fromBytes(body);
     if text is error {
@@ -161,8 +174,10 @@ isolated function keptOf(string key) returns Kept? {
     if at is error {
         return ();
     }
-    Kept & readonly kept = {at, contentType: raw.substring(first + 1, second),
-        body: raw.substring(second + 1).toBytes().cloneReadOnly()};
+    // built as a plain record and then made read-only: the read-only record literal here crashed
+    // the request handler (NullPointerException in the runtime) and left the caller without an answer
+    Kept parsed = {at: at, contentType: raw.substring(first + 1, second), body: raw.substring(second + 1).toBytes()};
+    Kept & readonly kept = parsed.cloneReadOnly();
     lock {
         (Kept & readonly)? mine = memory.copies[key];
         if mine is Kept && mine.at >= kept.at {

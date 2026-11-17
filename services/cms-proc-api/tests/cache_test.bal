@@ -123,3 +123,48 @@ function identicalMissesShareOneFetch() returns error? {
     }
     test:assertEquals(callCount(), 1, "6 identical concurrent misses must make one call to the source");
 }
+
+// Another copy of the service fetched the answer: this copy has nothing in memory and reads it
+// back from the shared store (the path that crashed and left callers hanging, 2026-11-17).
+@test:Config {}
+function answerKeptByAnotherCopyIsServed() returns error? {
+    setSource(200, "{\"a\":\"shared\"}");
+    _ = cachedRelay("t:shared", fakeSource, "c1", "The content source");
+    lock {
+        memory.copies.removeAll();
+        memory.bytes = 0;
+    }
+    http:Response two = cachedRelay("t:shared", fakeSource, "c2", "The content source");
+    test:assertEquals(two.statusCode, 200);
+    test:assertEquals(bodyOf(two), "{\"a\":\"shared\"}");
+    test:assertEquals(callCount(), 1, "served from the shared store, not fetched again");
+}
+
+// Five identical requests at the same moment: one fetch, every caller gets the answer quickly.
+@test:Config {}
+function fiveIdenticalParallelRequestsAllAnswered() returns error? {
+    setSource(200, "{\"a\":\"burst\"}", 0.5);
+    future<http:Response>[] calls = [];
+    foreach int i in 0 ..< 5 {
+        future<http:Response> f = start cachedRelay("t:burst5", fakeSource, "c" + i.toString(), "The content source");
+        calls.push(f);
+    }
+    foreach future<http:Response> f in calls {
+        http:Response r = check wait f;
+        test:assertEquals(r.statusCode, 200);
+        test:assertEquals(bodyOf(r), "{\"a\":\"burst\"}");
+    }
+    test:assertEquals(callCount(), 1, "one fetch shared by all five");
+}
+
+// A fetch mark that was never cleared (its request died) must not hold later requests.
+@test:Config {}
+function abandonedMarkDoesNotHoldRequests() returns error? {
+    setSource(200, "{\"a\":\"after\"}");
+    lock {
+        inFlight["t:abandoned"] = 0;
+    }
+    http:Response r = cachedRelay("t:abandoned", fakeSource, "c1", "The content source");
+    test:assertEquals(r.statusCode, 200);
+    test:assertEquals(bodyOf(r), "{\"a\":\"after\"}");
+}
