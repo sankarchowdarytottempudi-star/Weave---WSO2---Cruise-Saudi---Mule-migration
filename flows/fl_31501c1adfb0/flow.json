@@ -1,7 +1,7 @@
 {
  "createdAt": "2026-11-17T07:11:36.114Z",
  "deployment": {
-  "deployedAt": "2026-11-17T07:40:30.022Z",
+  "deployedAt": "2026-11-17T07:56:36.107Z",
   "deployedBy": "wso2-user",
   "gateway": {
    "apiId": "34f05871-9b49-4a6b-b5a8-0d673f019a09",
@@ -10,7 +10,7 @@
    "url": "https://13.140.56.229:30243/newsletter-subscription/v1",
    "version": "v1"
   },
-  "revision": 2,
+  "revision": 5,
   "runtimeUrl": "http://127.0.0.1:8790/run/newsletter-subscription/v1",
   "status": "deployed"
  },
@@ -194,15 +194,9 @@
        "target": "firstName"
       },
       {
-       "compiled": {
-        "confidence": "exact",
-        "engine": "rules",
-        "explanation": "Look at mobile: \"WEB\" becomes \"Web\", \"AGENT_BOOKING\" becomes \"Agent\", \"AGENCY\" becomes \"Agency\". Any other value is kept as it is.",
-        "expr": "( $v := $string(mobile); $v = \"WEB\" ? \"Web\" : $v = \"AGENT_BOOKING\" ? \"Agent\" : $v = \"AGENCY\" ? \"Agency\" : mobile )"
-       },
+       "expr": "( $v := $uppercase($string($request.headers.\"x-channel\"));\n  $v = \"WEB\" ? \"Web\" :\n  $v = \"MOBILE\" ? \"Mobile App\" :\n  $v = \"AGENT_BOOKING\" ? \"Agent Booking\" :\n  $v = \"AGENCY\" ? \"Agency\" : \"\" )",
        "id": "r4",
-       "instruction": "WEB means Web, MOBILE means Mobile App, AGENT_BOOKING means Agent Booking, AGENCY means Agency (header x-channel)",
-       "kind": "instruction",
+       "kind": "expr",
        "target": "channel"
       },
       {
@@ -267,11 +261,30 @@
   {
    "config": {
     "body": {
-     "channel": "{{ channel }}",
-     "email": "{{ email }}",
-     "firstName": "{{ firstName }}",
-     "lastName": "{{ lastName }}",
-     "mobile": "{{ mobile }}"
+     "data": [
+      {
+       "Company": "Individual Guest",
+       "Description": "Newsletter subscription via {{ channel }}",
+       "Email": "{{ email }}",
+       "First_Name": "{{ firstName }}",
+       "Last_Name": "{{ lastName }}",
+       "Lead_Source": "Newsletter",
+       "Marketing_Opt_In": true,
+       "Mobile": "{{ mobile }}",
+       "Submission_Channel": "{{ channel }}",
+       "Tag": [
+        {
+         "name": "Newsletter"
+        }
+       ]
+      }
+     ],
+     "duplicate_check_fields": [
+      "Email"
+     ],
+     "trigger": [
+      "workflow"
+     ]
     },
     "bodyMode": "json",
     "connection": "cx_5fe246d8ca85",
@@ -327,7 +340,7 @@
   },
   {
    "config": {
-    "body": "{ \"lead\": lead }",
+    "body": "( $d := $request.body.data;\n  { \"data\": {\n      \"Email\": $d.Email,\n      \"First_Name\": $d.First_Name,\n      \"Last_Name\": $d.Last_Name,\n      \"Mobile\": $d.countryCode & \" \" & $d.contact,\n      \"Industry\": $d.Industry,\n      \"Lead_Source\": $d.Lead_Source,\n      \"No_of_Employees\": $d.No_of_Employees,\n      \"Country\": $d.Country,\n      \"Currency\": $d.Currency\n  } } )",
     "headers": [],
     "status": "200"
    },
@@ -344,7 +357,7 @@
   "kind": "blank",
   "ref": "described"
  },
- "revision": 2,
+ "revision": 5,
  "settings": {
   "basePath": "/newsletter-subscription/v1",
   "gateway": {
@@ -358,6 +371,6 @@
  },
  "slug": "newsletter-subscription",
  "tags": [],
- "updatedAt": "2026-11-17T07:13:49.608Z",
+ "updatedAt": "2026-11-17T07:52:05.217Z",
  "updatedBy": "wso2-user"
 }
