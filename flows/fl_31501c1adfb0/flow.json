@@ -1,0 +1,363 @@
+{
+ "createdAt": "2026-11-17T07:11:36.114Z",
+ "deployment": {
+  "deployedAt": "2026-11-17T07:40:30.022Z",
+  "deployedBy": "wso2-user",
+  "gateway": {
+   "apiId": "34f05871-9b49-4a6b-b5a8-0d673f019a09",
+   "context": "/newsletter-subscription",
+   "status": "published",
+   "url": "https://13.140.56.229:30243/newsletter-subscription/v1",
+   "version": "v1"
+  },
+  "revision": 2,
+  "runtimeUrl": "http://127.0.0.1:8790/run/newsletter-subscription/v1",
+  "status": "deployed"
+ },
+ "edges": [
+  {
+   "from": "n_d01",
+   "fromPort": "out",
+   "id": "e_d01",
+   "to": "n_d02"
+  },
+  {
+   "from": "n_d02",
+   "fromPort": "out",
+   "id": "e_d02",
+   "to": "n_d03"
+  },
+  {
+   "from": "n_d03",
+   "fromPort": "out",
+   "id": "e_d03",
+   "to": "n_d04"
+  },
+  {
+   "from": "n_d04",
+   "fromPort": "out",
+   "id": "e_d04",
+   "to": "n_d05"
+  },
+  {
+   "from": "n_d05",
+   "fromPort": "out",
+   "id": "e_d05",
+   "to": "n_d06"
+  },
+  {
+   "from": "n_d06",
+   "fromPort": "error",
+   "id": "e_d06",
+   "to": "n_d07"
+  },
+  {
+   "from": "n_d06",
+   "fromPort": "out",
+   "id": "e_d07",
+   "to": "n_d08"
+  },
+  {
+   "from": "n_d08",
+   "fromPort": "out",
+   "id": "e_d08",
+   "to": "n_d09"
+  }
+ ],
+ "id": "fl_31501c1adfb0",
+ "name": "Newsletter subscription",
+ "nodes": [
+  {
+   "config": {
+    "methods": [
+     "POST"
+    ],
+    "path": "/newsletter/v1/subscribe",
+    "sampleRequest": {
+     "body": {
+      "channel": "sample",
+      "concatenate": "sample",
+      "data": {
+       "Email": "jane.doe@example.invalid",
+       "First_Name": "Jane",
+       "Last_Name": "Doe",
+       "contact": "sample",
+       "countryCode": "sample"
+      },
+      "email": "jane.doe@example.invalid",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "lead": "sample",
+      "mobile": "sample"
+     },
+     "method": "POST",
+     "path": "/newsletter/v1/subscribe"
+    },
+    "summary": "Newsletter v1 subscribe"
+   },
+   "id": "n_d01",
+   "name": "POST /newsletter/v1/subscribe",
+   "position": {
+    "x": 60,
+    "y": 60
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "rules": [
+     {
+      "expr": "$not($isEmpty($request.headers.\"x-channel\"))",
+      "id": "v1",
+      "label": "The header x-channel is empty"
+     }
+    ],
+    "status": 400
+   },
+   "id": "n_d02",
+   "name": "Reject if the header x-channel is empty",
+   "position": {
+    "x": 360,
+    "y": 60
+   },
+   "type": "logic.validate"
+  },
+  {
+   "config": {
+    "rules": [
+     {
+      "expr": "$not($isEmpty(data.Email))",
+      "id": "v1",
+      "label": "data.Email is required"
+     },
+     {
+      "expr": "$not($isEmpty(data.Last_Name))",
+      "id": "v2",
+      "label": "data.Last_Name is required"
+     },
+     {
+      "expr": "$not($isEmpty(data.contact))",
+      "id": "v3",
+      "label": "data.contact is required"
+     }
+    ],
+    "status": 400
+   },
+   "id": "n_d03",
+   "name": "Require data.Email, data.Last_Name, data.contact",
+   "position": {
+    "x": 624,
+    "y": 61
+   },
+   "type": "logic.validate"
+  },
+  {
+   "config": {
+    "input": "$",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Take data.Email and convert it to lower case",
+        "expr": "$lowercase(data.Email)"
+       },
+       "id": "r1",
+       "instruction": "data.Email in lowercase",
+       "kind": "instruction",
+       "target": "email"
+      },
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Take data.Last_Name and remove the spaces around it",
+        "expr": "$trim(data.Last_Name)"
+       },
+       "id": "r2",
+       "instruction": "trim data.Last_Name",
+       "kind": "instruction",
+       "target": "lastName"
+      },
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Take data.First_Name and remove the spaces around it",
+        "expr": "$trim(data.First_Name)"
+       },
+       "id": "r3",
+       "instruction": "trim data.First_Name",
+       "kind": "instruction",
+       "target": "firstName"
+      },
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Look at mobile: \"WEB\" becomes \"Web\", \"AGENT_BOOKING\" becomes \"Agent\", \"AGENCY\" becomes \"Agency\". Any other value is kept as it is.",
+        "expr": "( $v := $string(mobile); $v = \"WEB\" ? \"Web\" : $v = \"AGENT_BOOKING\" ? \"Agent\" : $v = \"AGENCY\" ? \"Agency\" : mobile )"
+       },
+       "id": "r4",
+       "instruction": "WEB means Web, MOBILE means Mobile App, AGENT_BOOKING means Agent Booking, AGENCY means Agency (header x-channel)",
+       "kind": "instruction",
+       "target": "channel"
+      },
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Join data.countryCode and data.contact together",
+        "expr": "data.countryCode & data.contact"
+       },
+       "id": "r5",
+       "instruction": "concatenate data.countryCode and data.contact",
+       "kind": "instruction",
+       "target": "mobile"
+      }
+     ],
+     "sampleSource": {
+      "channel": "sample",
+      "concatenate": "sample",
+      "data": {
+       "Email": "jane.doe@example.invalid",
+       "First_Name": "Jane",
+       "Last_Name": "Doe",
+       "contact": "sample",
+       "countryCode": "sample"
+      },
+      "email": "jane.doe@example.invalid",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "lead": "sample",
+      "mobile": "sample"
+     }
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_d04",
+   "name": "Map fields",
+   "position": {
+    "x": 960,
+    "y": 60
+   },
+   "type": "transform.map"
+  },
+  {
+   "config": {
+    "rules": [
+     {
+      "expr": "$not($isEmpty(channel))",
+      "id": "v1",
+      "label": "The channel is empty"
+     }
+    ],
+    "status": 400
+   },
+   "id": "n_d05",
+   "name": "Reject if the channel is empty",
+   "position": {
+    "x": 1260,
+    "y": 60
+   },
+   "type": "logic.validate"
+  },
+  {
+   "config": {
+    "body": {
+     "channel": "{{ channel }}",
+     "email": "{{ email }}",
+     "firstName": "{{ firstName }}",
+     "lastName": "{{ lastName }}",
+     "mobile": "{{ mobile }}"
+    },
+    "bodyMode": "json",
+    "connection": "cx_5fe246d8ca85",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [],
+    "method": "POST",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "variable",
+    "resultVar": "zohoResult",
+    "retries": 2,
+    "retryDelayMs": 3000,
+    "timeoutMs": 10000,
+    "url": "/crm/v8/Leads/upsert"
+   },
+   "id": "n_d06",
+   "name": "POST /crm/v8/Leads/upsert on Zoho",
+   "position": {
+    "x": 1560,
+    "y": 60
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "body": "{ \"message\": \"CRM_ERROR\" }",
+    "headers": [],
+    "status": "502"
+   },
+   "id": "n_d07",
+   "name": "Answer 502",
+   "position": {
+    "x": 1860,
+    "y": 210
+   },
+   "type": "respond"
+  },
+  {
+   "config": {
+    "includePayload": false,
+    "level": "info",
+    "message": "newsletter subscription via {{ channel }}"
+   },
+   "id": "n_d08",
+   "name": "Log newsletter subscription via \u2026",
+   "position": {
+    "x": 1860,
+    "y": 60
+   },
+   "type": "log"
+  },
+  {
+   "config": {
+    "body": "{ \"lead\": lead }",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_d09",
+   "name": "Answer 200",
+   "position": {
+    "x": 2160,
+    "y": 60
+   },
+   "type": "respond"
+  }
+ ],
+ "origin": {
+  "kind": "blank",
+  "ref": "described"
+ },
+ "revision": 2,
+ "settings": {
+  "basePath": "/newsletter-subscription/v1",
+  "gateway": {
+   "publish": true,
+   "security": "oauth2",
+   "throttlingPolicy": "Unlimited",
+   "version": "v1"
+  },
+  "logPayloads": true,
+  "timeoutMs": 60000
+ },
+ "slug": "newsletter-subscription",
+ "tags": [],
+ "updatedAt": "2026-11-17T07:13:49.608Z",
+ "updatedBy": "wso2-user"
+}
