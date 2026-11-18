@@ -1,7 +1,7 @@
 {
  "createdAt": "2026-11-17T07:11:36.114Z",
  "deployment": {
-  "deployedAt": "2026-11-18T06:39:15.103Z",
+  "deployedAt": "2026-11-18T08:34:37.610Z",
   "deployedBy": "wso2-user",
   "gateway": {
    "apiId": "34f05871-9b49-4a6b-b5a8-0d673f019a09",
@@ -10,7 +10,7 @@
    "url": "https://13.140.56.229:30243/newsletter-subscription/v1",
    "version": "v1"
   },
-  "revision": 5,
+  "revision": 6,
   "runtimeUrl": "http://127.0.0.1:8790/run/newsletter-subscription/v1",
   "status": "deployed"
  },
@@ -194,9 +194,15 @@
        "target": "firstName"
       },
       {
-       "expr": "( $v := $uppercase($string($request.headers.\"x-channel\"));\n  $v = \"WEB\" ? \"Web\" :\n  $v = \"MOBILE\" ? \"Mobile App\" :\n  $v = \"AGENT_BOOKING\" ? \"Agent Booking\" :\n  $v = \"AGENCY\" ? \"Agency\" : \"\" )",
+       "compiled": {
+        "confidence": "guessed",
+        "engine": "rules",
+        "explanation": "Write data.channel, then request.headers with a space in between. Write it in capital letters.",
+        "expr": "$uppercase($string($trim(data.channel & \" \" & request.headers)))"
+       },
        "id": "r4",
-       "kind": "expr",
+       "instruction": "use the following for data.channel ( $v := $uppercase($string($request.headers.\"x-channel\"));\n  $v = \"WEB\" ? \"Web\" :\n  $v = \"MOBILE\" ? \"Mobile App\" :\n  $v = \"AGENT_BOOKING\" ? \"Agent Booking\" :\n  $v = \"AGENCY\" ? \"Agency\" : \"\" )",
+       "kind": "instruction",
        "target": "channel"
       },
       {
@@ -213,20 +219,14 @@
       }
      ],
      "sampleSource": {
-      "channel": "sample",
-      "concatenate": "sample",
       "data": {
        "Email": "jane.doe@example.invalid",
        "First_Name": "Jane",
        "Last_Name": "Doe",
+       "channel": "sample",
        "contact": "sample",
        "countryCode": "sample"
-      },
-      "email": "jane.doe@example.invalid",
-      "firstName": "Jane",
-      "lastName": "Doe",
-      "lead": "sample",
-      "mobile": "sample"
+      }
      }
     },
     "resultTarget": "payload"
@@ -357,7 +357,7 @@
   "kind": "blank",
   "ref": "described"
  },
- "revision": 5,
+ "revision": 6,
  "settings": {
   "basePath": "/newsletter-subscription/v1",
   "gateway": {
@@ -371,6 +371,6 @@
  },
  "slug": "newsletter-subscription",
  "tags": [],
- "updatedAt": "2026-11-17T07:52:05.217Z",
+ "updatedAt": "2026-11-18T08:11:10.563Z",
  "updatedBy": "wso2-user"
 }
