@@ -202,8 +202,9 @@ public isolated function reservationErrors(Chunk c) returns map<json>[] {
 # What is sent to the guest service for one reservation: one entry per guest.
 #
 # + node - The reservation
+# + scopeFields - Add the booking source code and agency name (Guest Identity Resolution)
 # + return - Request body
-public isolated function guestRequest(json node) returns json[] {
+public isolated function guestRequest(json node, boolean scopeFields = false) returns json[] {
     json[] out = [];
     foreach json g in guestsOf(node) {
         json person = f(g, "client");
@@ -236,6 +237,11 @@ public isolated function guestRequest(json node) returns json[] {
             "mailingCity": city,
             "accountName": f(node, "id")
         });
+        if scopeFields {
+            map<json> last = <map<json>>out[out.length() - 1];
+            last["sourceCode"] = f(node, "sourceCode");
+            last["agencyName"] = f(node, "agency", "name");
+        }
     }
     return out;
 }

@@ -297,6 +297,17 @@ function guestRequestHasOneEntryPerGuest() {
 }
 
 @test:Config {}
+function guestRequestAddsScopeFieldsOnlyWhenAsked() {
+    json[] plain = guestRequest(f(sampleEdge("R100"), "node"), false);
+    test:assertEquals(plain, guestRequest(f(sampleEdge("R100"), "node")));
+    test:assertFalse((<map<json>>plain[0]).hasKey("sourceCode"));
+    json[] scoped = guestRequest(f(sampleEdge("R100"), "node"), true);
+    test:assertEquals(scoped.length(), 2);
+    test:assertEquals(f(scoped[0], "sourceCode"), f(sampleEdge("R100"), "node", "sourceCode"));
+    test:assertEquals(f(scoped[1], "agencyName"), f(sampleEdge("R100"), "node", "agency", "name"));
+}
+
+@test:Config {}
 function guestRefusalAnswersForEveryGuest() {
     json[] unreadable = guestRefusal({status: 502, unreadable: true, failure: "HTTP 502"}, 2);
     test:assertEquals(unreadable, [{"status": "error", "errorCode": 500, "message": "HTTP 502"},

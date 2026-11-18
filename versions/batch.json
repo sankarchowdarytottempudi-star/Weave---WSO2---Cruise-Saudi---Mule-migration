@@ -1,7 +1,35 @@
 {
  "api": "batch",
- "by": "initial import (agent AD)",
- "what": "first version: what is deployed now",
- "version": 1,
- "at": "2026-11-16T10:14:15Z"
+ "by": "deploy in the tool",
+ "what": "deployed",
+ "results": {
+  "parity": {
+   "status": "pending",
+   "detail": ""
+  },
+  "unit_run": {
+   "status": "done",
+   "detail": "unit tests passed"
+  },
+  "e2e": {
+   "status": "done",
+   "detail": "started with its deployment settings in 4 s; 1 of 1 operation request answered; active-MQFlow (starts from a message queue): needs a system the closed trial doe"
+  },
+  "coverage": {
+   "status": "action_required",
+   "detail": "66.8% of the lines run by the unit tests (target 80%); least covered: batch 0%, batch.core 70%. Does not stop Deployment."
+  }
+ },
+ "image": "sha256:2541a8dd6b0c962ec30aea1fcc789ba84819d4accfa74453e09d32dabc3e0d1a",
+ "version": 2,
+ "at": "2026-11-18T11:02:07Z",
+ "summary": {
+  "files": 4,
+  "changed": [
+   "services/batch/modules/core/job.bal",
+   "services/batch/modules/core/steps.bal",
+   "services/batch/modules/core/tests/core_test.bal",
+   "services/batch/modules/core/types.bal"
+  ]
+ }
 }
