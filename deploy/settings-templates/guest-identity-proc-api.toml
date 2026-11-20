@@ -13,6 +13,8 @@ appHomeUrl = "<kept on the server>"
 tripsCacheSeconds = "<kept on the server>"
 seawareSharedSessionSeconds = "<kept on the server>"
 otpEmailAfterAnswer = "<kept on the server>"
+tripsDeadlineSeconds = "<kept on the server>"
+warmTripsAtSignIn = "<kept on the server>"
 contactSearchFields = "<kept on the server>"
 
 [aroya.guest_identity_proc_api.reservationProcApi]

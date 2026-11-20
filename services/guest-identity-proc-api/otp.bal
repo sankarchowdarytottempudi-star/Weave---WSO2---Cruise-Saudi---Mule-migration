@@ -135,9 +135,9 @@ isolated function otpVerify(http:Request request, string correlationId) returns 
             correlationId);
     future<json|Stop> storedRead = start dbRun(core:otpLookupOf(verify).cloneReadOnly(), "password lookup",
             correlationId);
-    future<boolean|Stop>? crmRead = ();
+    future<json[]|Stop>? crmRead = ();
     if login {
-        crmRead = start crmKnows(criteria, correlationId);
+        crmRead = start crmContacts(criteria, correlationId);
     }
 
     int retryAfter = core:retryAfterOf(check settled(lockRead, "lock check", correlationId));
@@ -145,8 +145,16 @@ isolated function otpVerify(http:Request request, string correlationId) returns 
         return lockStop(retryAfter);
     }
     json registered = check settled(userRead, "registered check", correlationId);
-    if login && (core:rowsOf(registered).length() == 0 || crmRead is () || !check crmSettled(crmRead, correlationId)) {
-        return stopOf(core:RAISED_STATUS, core:notRegistered());
+    // the CRM contacts of a login (the check is the same as before: registered and known to the CRM)
+    json[] contacts = [];
+    if login {
+        if core:rowsOf(registered).length() == 0 || crmRead is () {
+            return stopOf(core:RAISED_STATUS, core:notRegistered());
+        }
+        contacts = check contactsSettled(crmRead, correlationId);
+        if contacts.length() == 0 {
+            return stopOf(core:RAISED_STATUS, core:notRegistered());
+        }
     }
 
     map<json>? stored = core:firstRowOf(check settled(storedRead, "password lookup", correlationId));
@@ -177,6 +185,8 @@ isolated function otpVerify(http:Request request, string correlationId) returns 
         if token is error {
             return stopWith(commons:INTERNAL_SERVER_ERROR, "The access token could not be signed", correlationId);
         }
+        // the guest's trips are read in the background; the answer does not wait for them
+        warmTripsAtLogin(contacts, correlationId);
         return jsonAnswer(200, core:verifiedAnswerOf(context, token, uuid:createType4AsString()), correlationId);
     }
     // Performance: the welcome text is read while the code is marked used; the mark is still looked

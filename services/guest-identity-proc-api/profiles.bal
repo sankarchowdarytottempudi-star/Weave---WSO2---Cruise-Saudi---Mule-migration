@@ -75,8 +75,13 @@ isolated function trips(http:Request request, string clientId, string correlatio
                         commons:headerOf(request, "source-system") ?: "mobile", clientId).cloneReadOnly(),
                 "device link", correlationId);
     }
-    json answer = check tripsOf(clientId, correlationId);
+    json|Stop|TripsPending found = tripsInTime(clientId, correlationId);
     string today = time:utcToString(time:utcNow()).substring(0, 10);
+    if found is TripsPending {
+        // the shape of a guest without trips; the header tells "still loading" from "no trips"
+        return jsonAnswer(200, core:tripsAnswerOf((), clientId, today), correlationId, {"X-Trips-Pending": "true"});
+    }
+    json answer = check found;
     return jsonAnswer(200, core:tripsAnswerOf(answer, clientId, today), correlationId);
 }
 

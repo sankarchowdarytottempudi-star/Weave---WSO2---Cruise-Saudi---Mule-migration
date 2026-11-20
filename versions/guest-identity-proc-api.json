@@ -3,24 +3,21 @@
  "by": "deploy_one.sh on the server",
  "what": "deployed",
  "results": {},
- "image": "sha256:718126d9a72168c00f22792d1df505c5057c8e373226d0bf5f18787ba5a20bea",
- "version": 5,
- "at": "2026-11-20T07:13:41Z",
+ "image": "sha256:dac5e8456de73e15e8b79fbba671a0eecea73c34406a53a051124de9a33d7114",
+ "version": 6,
+ "at": "2026-11-20T09:49:05Z",
  "summary": {
-  "files": 12,
+  "files": 9,
   "changed": [
    "deploy/settings-templates/guest-identity-proc-api.toml",
-   "services/guest-identity-proc-api/Dependencies.toml",
    "services/guest-identity-proc-api/config.bal",
    "services/guest-identity-proc-api/downstream.bal",
-   "services/guest-identity-proc-api/identity.bal",
-   "services/guest-identity-proc-api/modules/core/resolution.bal",
-   "services/guest-identity-proc-api/modules/core/tests/resolution_test.bal",
+   "services/guest-identity-proc-api/otp.bal",
    "services/guest-identity-proc-api/profiles.bal",
-   "services/guest-identity-proc-api/resolution.bal",
    "services/guest-identity-proc-api/service.bal",
    "services/guest-identity-proc-api/tests/Config.toml",
-   "services/guest-identity-proc-api/tests/service_test.bal"
+   "services/guest-identity-proc-api/tests/service_test.bal",
+   "services/guest-identity-proc-api/tests/standin_test.bal"
   ]
  }
 }

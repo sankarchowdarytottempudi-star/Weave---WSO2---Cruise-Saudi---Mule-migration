@@ -91,6 +91,18 @@ configurable int seawareSharedSessionSeconds = 600;
 # (every request asks Seaware). With a value, a booking made in that time shows up that much later.
 configurable int tripsCacheSeconds = 0;
 
+# Seconds POST /guest-profiles/{guestId} waits for Seaware's reservations. When they are not there by
+# then, the guest's answer goes out without trips (the shape of a guest with no trips) and with the
+# header X-Trips-Pending: true; the lookup is not cancelled: it finishes in the background and its
+# answer goes into the trips cache (tripsCacheSeconds), so the next call gets it. 0 = wait as long
+# as Seaware takes (as before).
+configurable decimal tripsDeadlineSeconds = 8;
+
+# True: right after a verified login (POST /otp/verify) the reservations of the guest's CRM profiles
+# (the contacts the login check found) are read in the background into the trips cache, so the first
+# POST /guest-profiles/{guestId} after the sign-in is answered from it. The answer does not wait.
+configurable boolean warmTripsAtSignIn = true;
+
 # True: the one-time password e-mail is handed over after the answer was sent. Faster, but an
 # e-mail the provider refuses is then only logged - the caller has already got 202.
 configurable boolean otpEmailAfterAnswer = false;

@@ -12,6 +12,8 @@ seawareSessionMaxAgeSeconds = 3
 seawareSessionPoolSize = 4
 seawareSharedSessionSeconds = 3
 tripsCacheSeconds = 2
+tripsDeadlineSeconds = 1.5
+warmTripsAtSignIn = true
 otpEmailAfterAnswer = false
 
 [aroya.guest_identity_proc_api.reservationProcApi]

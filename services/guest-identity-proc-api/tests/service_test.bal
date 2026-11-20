@@ -3,6 +3,7 @@
 import ballerina/http;
 import ballerina/lang.runtime;
 import ballerina/test;
+import ballerina/time;
 
 final http:Client svc = check new ("http://localhost:19781/guest-identity-proc-api/v1", {timeout: 60});
 
@@ -216,6 +217,8 @@ function verifyRefusesBadInputAndDownStore() returns error? {
 
 @test:Config {}
 function tripsWithCabins() returns error? {
+    // a verified login just before warms client 1001 into the 2 s trips cache: let that expire
+    runtime:sleep(2.2);
     useScenario("");
     Answer a = check call("POST", "/guest-profiles/1001", {}, {"device_id": "test-device", "source-system": "mobile"});
     test:assertEquals(a.status, 200);
@@ -470,4 +473,72 @@ function healthAnswers() returns error? {
     test:assertEquals(live.statusCode, 200);
     http:Response ready = check health->get("/health/ready");
     test:assertEquals(ready.statusCode, 200);
+}
+
+// ------------------------------------------------------------------ trips deadline and sign-in warm-up
+
+function callTrips(string guestId) returns [int, string, string, decimal]|error {
+    decimal began = time:monotonicNow();
+    http:Response response = check svc->post("/guest-profiles/" + guestId, {});
+    string|http:ClientError text = response.getTextPayload();
+    string|http:HeaderNotFoundError pending = response.getHeader("X-Trips-Pending");
+    return [response.statusCode, text is string ? text : "", pending is string ? pending : "",
+        time:monotonicNow() - began];
+}
+
+// Seaware slower than the deadline: the answer comes at the deadline without trips (the no-trips shape
+// and X-Trips-Pending: true), the lookup finishes in the background into the cache, and the next call
+// is answered from it with the trips.
+@test:Config {dependsOn: [tripsErrorsAreNeverKept]}
+function slowTripsAnswerAtTheDeadlineThenFromTheCache() returns error? {
+    runtime:sleep(2.2);
+    useScenario("");
+    setSeawareDelay(2.5);
+    [int, string, string, decimal] [status, body, pending, took] = check callTrips("1001");
+    test:assertEquals(status, 200);
+    test:assertEquals(pending, "true");
+    test:assertTrue(took >= 1.4d && took < 2.3d, "answered at the deadline: " + took.toString());
+    test:assertTrue(body.includes("\"Current Trips\":[]") && body.includes("\"familyAndFriends\":[]"), body);
+    test:assertEquals(countOf("seaware reservations"), 0, "Seaware has not answered yet");
+    runtime:sleep(1.5);
+    test:assertEquals(countOf("seaware reservations"), 1, "the lookup finished in the background");
+    [int, string, string, decimal] [status2, body2, pending2, took2] = check callTrips("1001");
+    test:assertEquals(status2, 200);
+    test:assertEquals(pending2, "", "a cached answer is complete");
+    test:assertTrue(body2.includes("\"number\":\"8012\""), body2);
+    test:assertTrue(took2 < 1d, "served from the cache: " + took2.toString());
+    test:assertEquals(countOf("seaware reservations"), 1, "the next call made no Seaware call");
+}
+
+// A Seaware error that comes before the deadline is answered as before, never as "pending".
+@test:Config {dependsOn: [slowTripsAnswerAtTheDeadlineThenFromTheCache]}
+function tripsErrorBeforeTheDeadlineIsAnError() returns error? {
+    useScenario("seaware error");
+    [int, string, string, decimal] [status, _, pending, _] = check callTrips("1204");
+    test:assertEquals(status, 502);
+    test:assertEquals(pending, "");
+}
+
+// A verified login answers as fast as before and warms the guest's trips (CRM contact Client_ID 1001)
+// in the background; the next POST /guest-profiles/1001 is answered from the cache.
+@test:Config {dependsOn: [tripsErrorBeforeTheDeadlineIsAnError]}
+function signInWarmsTheTrips() returns error? {
+    runtime:sleep(2.2);
+    useScenario("otp ok");
+    setSeawareDelay(3);
+    decimal began = time:monotonicNow();
+    Answer a = check call("POST", "/otp/verify", {identifier: "guest@example.invalid", channel: "email", context: "login",
+        otpCode: OTP_CODE});
+    decimal took = time:monotonicNow() - began;
+    test:assertEquals(a.status, 200);
+    has(a, "\"status\":\"VERIFIED\"", "accessToken");
+    test:assertTrue(took < 1.5d, "verify does not wait for the trips: " + took.toString());
+    runtime:sleep(3.3);
+    test:assertEquals(countOf("seaware reservations"), 1, "the trips were read in the background");
+    [int, string, string, decimal] [status, body, pending, took2] = check callTrips("1001");
+    test:assertEquals(status, 200);
+    test:assertEquals(pending, "");
+    test:assertTrue(body.includes("\"number\":\"8012\""), body);
+    test:assertTrue(took2 < 1d, "served from the cache: " + took2.toString());
+    test:assertEquals(countOf("seaware reservations"), 1, "no second Seaware read");
 }

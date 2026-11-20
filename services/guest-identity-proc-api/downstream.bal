@@ -783,6 +783,101 @@ isolated function tripsOf(string clientId, string correlationId) returns json|St
     return answer;
 }
 
+# The lookup did not finish within tripsDeadlineSeconds (it goes on in the background).
+type TripsPending distinct error;
+
+# A finished lookup, as a plain value for the race with the deadline.
+#
+# + answer - Seaware's answer
+type TripsDone record {|
+    json answer;
+|};
+
+# A lookup that ended the operation, as a plain value for the race with the deadline.
+#
+# + status - HTTP status
+# + body - Answer body
+# + headers - Extra answer headers
+type TripsFailed record {|
+    int status;
+    json body;
+    map<string> headers;
+|};
+
+isolated function tripsOutcome(string clientId, string correlationId) returns TripsDone|TripsFailed {
+    json|Stop answer = tripsOf(clientId, correlationId);
+    if answer is Stop {
+        StopDetail detail = answer.detail();
+        return {status: detail.status, body: detail.body, headers: detail.headers};
+    }
+    return {answer};
+}
+
+isolated function deadlinePassed(decimal seconds) returns boolean {
+    runtime:sleep(seconds);
+    return true;
+}
+
+# The guest id in logs: the last two characters only.
+#
+# + clientId - Seaware client id
+# + return - Masked id
+isolated function maskedGuest(string clientId) returns string =>
+    clientId.length() > 4 ? "***" + clientId.substring(clientId.length() - 2) : "***";
+
+# Seaware's reservations of a guest, waiting at most tripsDeadlineSeconds. The lookup is never
+# cancelled: when the deadline comes first it finishes in the background and its answer goes into
+# the trips cache (only a good answer; errors are never kept), where the next call finds it.
+#
+# + clientId - Seaware client id
+# + correlationId - The request's correlation id
+# + return - Seaware's answer, the answer that ends the operation, or TripsPending
+isolated function tripsInTime(string clientId, string correlationId) returns json|Stop|TripsPending {
+    if tripsDeadlineSeconds <= 0d {
+        return tripsOf(clientId, correlationId);
+    }
+    decimal began = time:monotonicNow();
+    future<TripsDone|TripsFailed> lookup = start tripsOutcome(clientId, correlationId);
+    future<boolean> deadline = start deadlinePassed(tripsDeadlineSeconds);
+    TripsDone|TripsFailed|boolean|error first = wait lookup | deadline;
+    if first is TripsDone {
+        return first.answer;
+    }
+    if first is TripsFailed {
+        return stopOf(first.status, first.body, first.headers);
+    }
+    log:printWarn("Trips not ready in time, answering without them", correlationId = correlationId,
+            guest = maskedGuest(clientId), durationMs = millisSince(began));
+    return error TripsPending("trips pending");
+}
+
+const MAX_WARMED_GUESTS = 10;
+
+# Reads, in the background, the reservations of the guests of a verified login (the CRM contacts the
+# login check found, by Client_ID) into the trips cache, with the keys POST /guest-profiles/{guestId}
+# uses. Identical lookups running at the same time are shared. Returns at once.
+#
+# + contacts - CRM contacts of the login
+# + correlationId - The login's correlation id
+isolated function warmTripsAtLogin(json[] contacts, string correlationId) {
+    if !warmTripsAtSignIn || tripsCacheSeconds <= 0 || !isSet(RESERVATION) || seawareAgent.userName.trim() == "" {
+        return;
+    }
+    string[] ids = [];
+    foreach json contact in contacts {
+        string id = core:textOf(core:fieldOf(contact, "Client_ID")).trim();
+        if id != "" && ids.indexOf(id) is () && ids.length() < MAX_WARMED_GUESTS {
+            ids.push(id);
+        }
+    }
+    foreach string id in ids {
+        future<json|Stop> _ = start tripsOf(id, correlationId);
+    }
+    if ids.length() > 0 {
+        log:printInfo("Trips lookup started at sign-in", correlationId = correlationId, guests = ids.length());
+    }
+}
+
 isolated function tripsForget(string clientId) {
     tripsCache.remove(tripsKey(clientId));
 }
@@ -829,6 +924,31 @@ isolated function settled(future<json|Stop> pending, string step, string correla
     if result is error {
         log:printError("Guest store statement did not finish", correlationId = correlationId, step = step);
         return stopWith(commons:INTERNAL_SERVER_ERROR, "The guest store call did not finish: " + step, correlationId);
+    }
+    return result;
+}
+
+# The contacts a CRM search finds.
+#
+# + criteria - Zoho search criteria
+# + correlationId - The request's correlation id
+# + return - The contacts (empty when none), or the answer when the search failed
+isolated function crmContacts(string criteria, string correlationId) returns json[]|Stop {
+    json found = check zohoSearch(criteria, (), correlationId);
+    return core:listOf(core:fieldOf(found, "data"));
+}
+
+# + pending - The running CRM search
+# + correlationId - The request's correlation id
+# + return - The contacts it found, or the answer when the search failed
+isolated function contactsSettled(future<json[]|Stop> pending, string correlationId) returns json[]|Stop {
+    json[]|error result = wait pending;
+    if result is Stop {
+        return result;
+    }
+    if result is error {
+        log:printError("CRM search did not finish", correlationId = correlationId);
+        return stopWith(commons:INTERNAL_SERVER_ERROR, "The CRM search did not finish", correlationId);
     }
     return result;
 }

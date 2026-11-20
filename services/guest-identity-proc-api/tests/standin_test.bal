@@ -3,6 +3,7 @@
 // Made-up data only. A test sets the scenario; every call is recorded as a tag.
 import ballerina/crypto;
 import ballerina/http;
+import ballerina/lang.runtime;
 
 const int STANDIN_PORT = 19771;
 const string OTP_CODE = "246810";
@@ -11,6 +12,14 @@ const string SALT = "trial-salt";
 isolated string scenario = "";
 isolated string[] tags = [];
 isolated int sessionErrorsLeft = 0;
+// seconds the stand-in Seaware takes for a reservations query (a slow lookup)
+isolated decimal seawareDelay = 0;
+
+isolated function setSeawareDelay(decimal seconds) {
+    lock {
+        seawareDelay = seconds;
+    }
+}
 
 isolated function useScenario(string name, int sessionErrors = 0) {
     lock {
@@ -21,6 +30,8 @@ isolated function useScenario(string name, int sessionErrors = 0) {
     }
     lock {
         sessionErrorsLeft = sessionErrors;
+    }    lock {
+        seawareDelay = 0;
     }
 }
 
@@ -197,6 +208,15 @@ isolated function zohoReply(string sc, string method, string zohoPath) returns [
 isolated function seawareReply(string sc, string q) returns [int, json, string] {
     if sc == "seaware down" {
         return [503, {message: "stand-in: Seaware down"}, "seaware (refused)"];
+    }
+    if q.includes("reservations(") {
+        decimal delay;
+        lock {
+            delay = seawareDelay;
+        }
+        if delay > 0d {
+            runtime:sleep(delay);
+        }
     }
     if q.includes("mutation Login") {
         return [200, {data: {login: {token: "stand-in-token"}}}, "seaware sign-in"];
