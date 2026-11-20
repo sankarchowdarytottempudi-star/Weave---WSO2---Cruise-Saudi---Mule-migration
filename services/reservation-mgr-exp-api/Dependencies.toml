@@ -13,6 +13,7 @@ name = "reservation_mgr_exp_api"
 version = "1.0.0"
 dependencies = [
 	{org = "aroya", name = "integration_commons"},
+	{org = "ballerina", name = "crypto"},
 	{org = "ballerina", name = "http"},
 	{org = "ballerina", name = "lang.regexp"},
 	{org = "ballerina", name = "lang.runtime"},
@@ -75,6 +76,9 @@ version = "2.12.2"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "time"}
+]
+modules = [
+	{org = "ballerina", packageName = "crypto", moduleName = "crypto"}
 ]
 
 [[package]]
@@ -431,7 +435,7 @@ modules = [
 [[package]]
 org = "ballerinax"
 name = "redis"
-version = "3.4.1"
+version = "3.4.2"
 dependencies = [
 	{org = "ballerina", name = "crypto"},
 	{org = "ballerina", name = "jballerina.java"}

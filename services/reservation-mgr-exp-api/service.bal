@@ -20,7 +20,8 @@ function init() returns error? {
     check httpListener.attach(expService, basePath);
     log:printInfo("reservation-mgr-exp-api starting", env = env, deploymentTarget = deploymentTarget,
             basePath = basePath, commonProc = commonProc.url, circuitBreaker = circuitBreaker.enabled,
-            mappedOperations = operations.length() + staticOperations.length());
+            mappedOperations = operations.length() + staticOperations.length(),
+            availabilityCache = availabilityCache.describe());
     // which Mule producer connection is used and whether records are on; never its address
     log:printInfo("Kafka records", state = audit.auditEnabled || audit.errorEnabled ? "on" : "off",
             producer = kafkaProducer, muleEnv = env, deploymentTarget = deploymentTarget,

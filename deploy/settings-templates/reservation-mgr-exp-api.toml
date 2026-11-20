@@ -6,6 +6,7 @@ httpPort = "<kept on the server>"
 basePath = "<kept on the server>"
 commonProcPaymentPath = "<kept on the server>"
 dbSysApiPath = "<kept on the server>"
+availabilityCacheSeconds = "<kept on the server>"
 
 [aroya.reservation_mgr_exp_api.commonProc]
 url = "<kept on the server>"
@@ -25,6 +26,11 @@ openDurationSeconds = "<kept on the server>"
 failureWindowSeconds = "<kept on the server>"
 
 [aroya.reservation_mgr_exp_api.breakerRedis]
+enabled = "<kept on the server>"
+host = "<kept on the server>"
+port = "<kept on the server>"
+
+[aroya.reservation_mgr_exp_api.stateRedis]
 enabled = "<kept on the server>"
 host = "<kept on the server>"
 port = "<kept on the server>"

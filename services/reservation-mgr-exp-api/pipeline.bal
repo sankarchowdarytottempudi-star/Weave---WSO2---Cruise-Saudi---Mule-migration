@@ -94,7 +94,9 @@ isolated function handleIntegrationTask(http:Caller caller, http:Request request
         return acceptAsync(ctx);
     }
     // The answer is only read here to audit it; with auditing off it goes back as it arrived.
-    Outcome outcome = processRequest(ctx, !audit.auditEnabled);
+    // Availability / price lookups: identical requests share one backend call and a short cache.
+    Outcome outcome = availabilityCached(ctx) ? processAvailability(ctx, !audit.auditEnabled)
+        : processRequest(ctx, !audit.auditEnabled);
     return respond(ctx, outcome);
 }
 

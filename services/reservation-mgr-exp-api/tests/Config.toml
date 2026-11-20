@@ -1,0 +1,16 @@
+# Test settings: reservation-common-proc-api is the stand-in in tests/availability_test.bal. Made-up values only.
+[aroya.reservation_mgr_exp_api]
+env = "test"
+httpPort = 19881
+availabilityCacheSeconds = 60
+
+[aroya.reservation_mgr_exp_api.commonProc]
+url = "http://127.0.0.1:19882"
+timeoutSeconds = 5
+
+[aroya.reservation_mgr_exp_api.operationMapping]
+availableCabins = "/reservation-common-api"
+reservation = "/reservation-common-api"
+
+[aroya.reservation_mgr_exp_api.staticOperationMapping]
+availableCabinCategories = "/reservation-common-api"
