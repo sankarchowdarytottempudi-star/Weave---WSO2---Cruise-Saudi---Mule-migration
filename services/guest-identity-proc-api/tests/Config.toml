@@ -10,7 +10,8 @@ httpRetryCount = 1
 httpRetryFrequencySeconds = 0.1
 seawareSessionMaxAgeSeconds = 3
 seawareSessionPoolSize = 4
-tripsCacheSeconds = 0
+seawareSharedSessionSeconds = 3
+tripsCacheSeconds = 2
 otpEmailAfterAnswer = false
 
 [aroya.guest_identity_proc_api.reservationProcApi]

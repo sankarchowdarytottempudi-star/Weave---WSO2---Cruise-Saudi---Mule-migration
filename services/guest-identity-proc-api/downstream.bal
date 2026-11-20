@@ -3,6 +3,7 @@
 
 import guest_identity_proc_api.core;
 
+import ballerina/crypto;
 import ballerina/http;
 import ballerina/lang.runtime;
 import ballerina/log;
@@ -611,6 +612,85 @@ isolated function closeKeptSessions() returns error? {
     return ();
 }
 
+// ---------------------------------------------------------------------------------------------
+// One Seaware read session shared by every read request (seawareSharedSessionSeconds)
+// ---------------------------------------------------------------------------------------------
+
+// The session is the agent account's (seawareAgent), not a guest's: the same for every guest, so
+// sharing it shares no guest data. It is kept in Redis (stateRedis) so every copy uses the same one,
+// with a memory copy per service copy. Opening it is coalesced: one sign-in, the other requests wait
+// for it (and are released when the sign-in fails or takes too long).
+final commons:SharedCache readSessions = check commons:newSharedCache(stateRedis, "guest-identity-proc-api:seaware-read-session:",
+        seawareSharedSessionSeconds, reservationProcApi.timeoutSeconds + 5, 100000);
+
+isolated function readSessionKey() returns string =>
+    "agent:" + crypto:hashSha256(seawareAgent.userName.toBytes()).toBase16().substring(0, 16);
+
+// The shared token this copy used last: when it changes, the old session is closed a little later
+// (after any read still running in it has finished).
+isolated string lastSharedToken = "";
+
+isolated function sharedSessionToken(string correlationId) returns string|Stop {
+    final string corr = correlationId;
+    commons:CacheAnswer|error got = readSessions.getOrFetch(readSessionKey(),
+            isolated function () returns commons:CacheFill|error {
+        string token = check seawareLogin(corr);
+        return {value: token};
+    });
+    if got is Stop {
+        return got;
+    }
+    if got is error {
+        return stopWith(commons:BAD_GATEWAY, "Seaware did not open a session", correlationId);
+    }
+    string old = "";
+    lock {
+        if lastSharedToken != got.value {
+            old = lastSharedToken;
+            lastSharedToken = got.value;
+        }
+    }
+    if old != "" {
+        future<()> _ = start closeLater(old);
+    }
+    return got.value;
+}
+
+isolated function closeLater(string token) {
+    runtime:sleep(reservationProcApi.timeoutSeconds * 2 + 30);
+    seawareLogout(token, "shared-session-renewal");
+}
+
+isolated function seawareReadShared(map<json> body, string step, string correlationId) returns json|Stop {
+    string token = check sharedSessionToken(correlationId);
+    json|Stop answer = seawareCall(token, body, step, correlationId);
+    if answer is Stop {
+        int status = answer.detail().status;
+        if status == 401 || status == 403 {
+            _ = readSessions.removeIfValue(readSessionKey(), token);
+        }
+        return answer;
+    }
+    string? message = core:firstSeawareError(answer);
+    if message is string && core:isSessionError(message) {
+        log:printWarn("Seaware session was not usable, the request is sent again", correlationId = correlationId,
+                step = step);
+        _ = readSessions.removeIfValue(readSessionKey(), token);
+        string again = check sharedSessionToken(correlationId);
+        json repeated = check seawareCall(again, body, step, correlationId);
+        message = core:firstSeawareError(repeated);
+        if message is string && core:isSessionError(message) {
+            _ = readSessions.removeIfValue(readSessionKey(), again);
+            return stopOf(500, core:plainErrorOf("GUEST-IDENTITY:CUSTOM-EERROR", message));
+        }
+        answer = repeated;
+    }
+    if message is string {
+        log:printWarn("Seaware answered with an error", correlationId = correlationId, step = step);
+    }
+    return answer;
+}
+
 # Runs one Seaware read request. The session is taken from the kept ones (a new one when none is
 # free) and kept for the next read, so a read costs one Seaware request instead of three. A
 # session Seaware no longer knows is replaced and the request sent once more, as `seawareIn` does.
@@ -621,6 +701,9 @@ isolated function closeKeptSessions() returns error? {
 # + correlationId - The request's correlation id
 # + return - Seaware's answer
 isolated function seawareRead(map<json> body, string step, string correlationId) returns json|Stop {
+    if seawareSharedSessionSeconds > 0 {
+        return seawareReadShared(body, step, correlationId);
+    }
     if seawareSessionPoolSize <= 0 {
         return seawareRun(body, step, correlationId);
     }
@@ -657,48 +740,51 @@ isolated function seawareRead(map<json> body, string step, string correlationId)
 // Reservations of a guest, kept for a short time (off unless tripsCacheSeconds is set)
 // ---------------------------------------------------------------------------------------------
 
-const MAX_KEPT_TRIPS = 500;
+// Kept in Redis (stateRedis) so every copy shares it, with a memory copy per service copy. The key
+// is the guest and the exact query asked; only answers without Seaware errors are kept. Identical
+// requests at the same time share one Seaware read; a waiter is always released (the leader's mark
+// expires after the longest time a read can take) and then reads for itself.
+final commons:SharedCache tripsCache = check commons:newSharedCache(stateRedis, "guest-identity-proc-api:trips:", tripsCacheSeconds,
+        reservationProcApi.timeoutSeconds * 2 + 10, 16000000);
 
-# Seaware's answer to a reservations query.
+isolated function tripsKey(string clientId) returns string =>
+    crypto:hashSha256((clientId + "\n" + core:reservationsQueryOf(clientId).toJsonString()).toBytes()).toBase16();
+
+# Seaware's reservations of a guest: kept, shared with an identical request, or read now.
 #
-# + answer - The answer
-# + at - Monotonic clock reading when it was read
-type KeptTrips readonly & record {|
-    json answer;
-    decimal at;
-|};
-
-isolated map<KeptTrips> keptTrips = {};
-
-isolated function tripsKept(string clientId) returns KeptTrips? {
-    if tripsCacheSeconds <= 0 {
-        return ();
-    }
-    lock {
-        KeptTrips? kept = keptTrips[clientId];
-        return kept is KeptTrips && time:monotonicNow() - kept.at < <decimal>tripsCacheSeconds ? kept : ();
-    }
-}
-
-isolated function tripsKeep(string clientId, json answer) {
-    if tripsCacheSeconds <= 0 {
-        return;
-    }
-    KeptTrips entry = {answer: answer.cloneReadOnly(), at: time:monotonicNow()};
-    lock {
-        if keptTrips.length() >= MAX_KEPT_TRIPS {
-            keptTrips.removeAll();
+# + clientId - Seaware client id
+# + correlationId - The request's correlation id
+# + return - Seaware's answer, or the answer that ends the operation
+isolated function tripsOf(string clientId, string correlationId) returns json|Stop {
+    final string cid = clientId;
+    final string corr = correlationId;
+    commons:CacheAnswer|error got = tripsCache.getOrFetch(tripsKey(clientId),
+            isolated function () returns commons:CacheFill|error {
+        json answer = check seawareRead(core:reservationsQueryOf(cid), "reservations", corr);
+        string? problem = core:firstSeawareError(answer);
+        if problem is string {
+            return stopOf(502, {"status": "error", "message": problem});
         }
-        keptTrips[clientId] = entry;
+        return {value: answer.toJsonString()};
+    });
+    if got is Stop {
+        return got;
     }
+    if got is error {
+        return stopWith(commons:INTERNAL_SERVER_ERROR, "The reservations could not be read", correlationId);
+    }
+    if got.origin != "fetched" {
+        log:printInfo("Reservations answered from the cache", correlationId = correlationId, origin = got.origin);
+    }
+    json|error answer = got.value.fromJsonString();
+    if answer is error {
+        return stopWith(commons:INTERNAL_SERVER_ERROR, "The reservations could not be read", correlationId);
+    }
+    return answer;
 }
 
 isolated function tripsForget(string clientId) {
-    lock {
-        if keptTrips.hasKey(clientId) {
-            _ = keptTrips.remove(clientId);
-        }
-    }
+    tripsCache.remove(tripsKey(clientId));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -769,7 +855,10 @@ isolated function crmSettled(future<boolean|Stop> pending, string correlationId)
 isolated function emailLater(map<json> & readonly message, string correlationId) {
     Stop? failed = emailSend(message, correlationId);
     if failed is Stop {
+        StopDetail detail = failed.detail();
         log:printError("E-mail was not handed over after the answer", correlationId = correlationId,
-                status = failed.detail().status);
+                status = detail.status);
+        // the same error e-mail a failed e-mail produced when it was sent inside the request
+        mailError("POST /otp/generate", detail.status, detail.body, correlationId);
     }
 }

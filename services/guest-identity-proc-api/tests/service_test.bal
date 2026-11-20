@@ -225,6 +225,8 @@ function tripsWithCabins() returns error? {
 
 @test:Config {}
 function tripsWithManyReservations() returns error? {
+    // the stand-in reservations belong to client 1001; wait out the 2 s trips cache of tripsWithCabins
+    runtime:sleep(2.2);
     useScenario("many:50");
     Answer a = check call("POST", "/guest-profiles/1001", {});
     test:assertEquals(a.status, 200);
@@ -247,7 +249,7 @@ function seawareSessionIsReusedThenRenewedAfterItsAge() returns error? {
 @test:Config {dependsOn: [seawareSessionIsReusedThenRenewedAfterItsAge]}
 function seawareSessionGoneIsRenewedAndSentAgain() returns error? {
     useScenario("", 1);
-    Answer a = check call("POST", "/guest-profiles/1001", {});
+    Answer a = check call("POST", "/guest-profiles/1005", {});
     test:assertEquals(a.status, 200);
     test:assertEquals(countOf("seaware session gone"), 1);
     test:assertTrue(countOf("seaware sign-in") >= 1);
@@ -257,7 +259,7 @@ function seawareSessionGoneIsRenewedAndSentAgain() returns error? {
 @test:Config {dependsOn: [seawareSessionGoneIsRenewedAndSentAgain]}
 function seawareSessionGoneTwiceIsAnError() returns error? {
     useScenario("", 2);
-    Answer a = check call("POST", "/guest-profiles/1001", {});
+    Answer a = check call("POST", "/guest-profiles/1006", {});
     test:assertEquals(a.status, 500);
 }
 
@@ -265,10 +267,10 @@ function seawareSessionGoneTwiceIsAnError() returns error? {
 function concurrentTripsShareFewSignIns() returns error? {
     runtime:sleep(4);
     useScenario("");
-    future<Answer|error> a = start call("POST", "/guest-profiles/1001", {});
-    future<Answer|error> b = start call("POST", "/guest-profiles/1001", {});
-    future<Answer|error> c = start call("POST", "/guest-profiles/1001", {});
-    future<Answer|error> d = start call("POST", "/guest-profiles/1001", {});
+    future<Answer|error> a = start call("POST", "/guest-profiles/1007", {});
+    future<Answer|error> b = start call("POST", "/guest-profiles/1007", {});
+    future<Answer|error> c = start call("POST", "/guest-profiles/1007", {});
+    future<Answer|error> d = start call("POST", "/guest-profiles/1007", {});
     Answer|error ra = wait a;
     Answer|error rb = wait b;
     Answer|error rc = wait c;
@@ -277,6 +279,72 @@ function concurrentTripsShareFewSignIns() returns error? {
         test:assertTrue(r is Answer && r.status == 200);
     }
     test:assertTrue(countOf("seaware sign-in") <= 4, "at most one sign-in per kept session");
+}
+
+// Ten travellers of one booking at the same time (the booking front end does this): one Seaware
+// sign-in for all of them, each guest's own reservations read once.
+@test:Config {dependsOn: [concurrentTripsShareFewSignIns]}
+function tenGuestsAtOnceShareOneSignIn() returns error? {
+    runtime:sleep(4);
+    useScenario("");
+    future<Answer|error>[] calls = [];
+    foreach int i in 1 ... 10 {
+        future<Answer|error> f = start call("POST", "/guest-profiles/11" + (i < 10 ? "0" : "") + i.toString(), {});
+        calls.push(f);
+    }
+    foreach future<Answer|error> f in calls {
+        Answer|error r = wait f;
+        test:assertTrue(r is Answer && r.status == 200);
+    }
+    test:assertEquals(countOf("seaware sign-in"), 1, "one shared sign-in for ten guests at the same time");
+    test:assertEquals(countOf("seaware reservations"), 10, "each guest's own reservations are read");
+}
+
+// The same guest asked several times at once: one Seaware read, then kept for tripsCacheSeconds.
+@test:Config {dependsOn: [tenGuestsAtOnceShareOneSignIn]}
+function oneGuestAskedAtOnceIsReadOnceAndKept() returns error? {
+    useScenario("");
+    future<Answer|error>[] calls = [];
+    foreach int i in 0 ..< 5 {
+        future<Answer|error> f = start call("POST", "/guest-profiles/1201", {});
+        calls.push(f);
+    }
+    string first = "";
+    foreach future<Answer|error> f in calls {
+        Answer|error r = wait f;
+        if r is Answer {
+            test:assertEquals(r.status, 200);
+            if first == "" {
+                first = r.body;
+            }
+            test:assertEquals(r.body, first);
+        } else {
+            test:assertFail("no answer");
+        }
+    }
+    Answer again = check call("POST", "/guest-profiles/1201", {});
+    test:assertEquals(again.body, first);
+    test:assertEquals(countOf("seaware reservations"), 1, "five identical requests and one more: one Seaware read");
+    // another guest is never answered from this guest's entry
+    Answer other = check call("POST", "/guest-profiles/1202", {});
+    test:assertEquals(other.status, 200);
+    test:assertEquals(countOf("seaware reservations"), 2);
+    runtime:sleep(2.2);
+    _ = check call("POST", "/guest-profiles/1201", {});
+    test:assertEquals(countOf("seaware reservations"), 3, "read again after tripsCacheSeconds");
+}
+
+@test:Config {dependsOn: [oneGuestAskedAtOnceIsReadOnceAndKept]}
+function tripsErrorsAreNeverKept() returns error? {
+    useScenario("seaware error");
+    Answer one = check call("POST", "/guest-profiles/1203", {});
+    Answer two = check call("POST", "/guest-profiles/1203", {});
+    test:assertEquals(one.status, 502);
+    test:assertEquals(two.status, 502);
+    test:assertEquals(countOf("seaware error"), 2, "a Seaware error is never kept");
+    useScenario("");
+    Answer ok = check call("POST", "/guest-profiles/1203", {});
+    test:assertEquals(ok.status, 200);
 }
 
 @test:Config {}

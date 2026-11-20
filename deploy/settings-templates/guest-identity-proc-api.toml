@@ -11,6 +11,8 @@ sessionSigningKey = "<kept on the server>"
 emailLogoUrl = "<kept on the server>"
 appHomeUrl = "<kept on the server>"
 tripsCacheSeconds = "<kept on the server>"
+seawareSharedSessionSeconds = "<kept on the server>"
+otpEmailAfterAnswer = "<kept on the server>"
 contactSearchFields = "<kept on the server>"
 
 [aroya.guest_identity_proc_api.reservationProcApi]

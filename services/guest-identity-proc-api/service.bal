@@ -44,7 +44,8 @@ function init() returns error? {
     log:printInfo("guest-identity-proc-api starting", env = env, basePath = basePath,
             deploymentTarget = deploymentTarget, addressesNotSet = addressesNotSet(),
             seawareAgentSet = seawareAgent.userName.trim() != "", sessionSigningKeySet = sessionSigningKey != "",
-            seawareSessionPoolSize = seawareSessionPoolSize, tripsCacheSeconds = tripsCacheSeconds,
+            seawareSessionPoolSize = seawareSessionPoolSize, sharedReadSession = readSessions.describe(),
+            tripsCache = tripsCache.describe(),
             otpEmailAfterAnswer = otpEmailAfterAnswer, warmUpAtStart = warmUpAtStart);
     runtime:onGracefulStop(closeKeptSessions);
     if warmUpAtStart {

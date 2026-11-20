@@ -75,18 +75,7 @@ isolated function trips(http:Request request, string clientId, string correlatio
                         commons:headerOf(request, "source-system") ?: "mobile", clientId).cloneReadOnly(),
                 "device link", correlationId);
     }
-    KeptTrips? kept = tripsKept(clientId);
-    json answer;
-    if kept is KeptTrips {
-        answer = kept.answer;
-    } else {
-        answer = check seawareRead(core:reservationsQueryOf(clientId), "reservations", correlationId);
-        string? problem = core:firstSeawareError(answer);
-        if problem is string {
-            return stopOf(502, {"status": "error", "message": problem});
-        }
-        tripsKeep(clientId, answer);
-    }
+    json answer = check tripsOf(clientId, correlationId);
     string today = time:utcToString(time:utcNow()).substring(0, 10);
     return jsonAnswer(200, core:tripsAnswerOf(answer, clientId, today), correlationId);
 }
