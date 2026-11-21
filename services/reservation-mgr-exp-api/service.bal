@@ -19,7 +19,7 @@ listener http:Listener httpListener = new (httpPort);
 function init() returns error? {
     check httpListener.attach(expService, basePath);
     log:printInfo("reservation-mgr-exp-api starting", env = env, deploymentTarget = deploymentTarget,
-            basePath = basePath, commonProc = commonProc.url, circuitBreaker = circuitBreaker.enabled,
+            basePath = basePath, commonProc = commonProc.url, circuitBreaker = breaker.describe(),
             mappedOperations = operations.length() + staticOperations.length(),
             availabilityCache = availabilityCache.describe());
     // which Mule producer connection is used and whether records are on; never its address

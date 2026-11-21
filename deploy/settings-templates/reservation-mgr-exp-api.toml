@@ -24,6 +24,9 @@ dependencyName = "<kept on the server>"
 failureThreshold = "<kept on the server>"
 openDurationSeconds = "<kept on the server>"
 failureWindowSeconds = "<kept on the server>"
+mode = "<kept on the server>"
+openSeconds = "<kept on the server>"
+halfOpenTrialSeconds = "<kept on the server>"
 
 [aroya.reservation_mgr_exp_api.breakerRedis]
 enabled = "<kept on the server>"

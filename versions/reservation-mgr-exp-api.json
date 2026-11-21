@@ -3,22 +3,14 @@
  "by": "deploy_one.sh on the server",
  "what": "deployed",
  "results": {},
- "image": "sha256:5a1de0d3c184536b35f6cce88bd7e20e13d557557810deee0f84510b650edcda",
- "version": 3,
- "at": "2026-11-20T06:50:43Z",
+ "image": "sha256:fe1cea8e96a1c3ff293fcee44eab52e12c73f00f42f595d09e1aad132d3424e2",
+ "version": 4,
+ "at": "2026-11-21T06:54:23Z",
  "summary": {
-  "files": 10,
+  "files": 2,
   "changed": [
    "deploy/settings-templates/reservation-mgr-exp-api.toml",
-   "framework/integration-commons/Dependencies.toml",
-   "framework/integration-commons/shared_cache.bal",
-   "framework/integration-commons/tests/shared_cache_test.bal",
-   "services/reservation-mgr-exp-api/Dependencies.toml",
-   "services/reservation-mgr-exp-api/availability.bal",
-   "services/reservation-mgr-exp-api/pipeline.bal",
-   "services/reservation-mgr-exp-api/service.bal",
-   "services/reservation-mgr-exp-api/tests/Config.toml",
-   "services/reservation-mgr-exp-api/tests/availability_test.bal"
+   "services/reservation-mgr-exp-api/service.bal"
   ]
  }
 }
