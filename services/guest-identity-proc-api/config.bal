@@ -86,6 +86,15 @@ configurable int seawareSessionMaxAgeSeconds = 600;
 # session at a time).
 configurable int seawareSharedSessionSeconds = 600;
 
+# Most Seaware calls running at the same time on the shared read session, per copy of the service
+# (2026-11-21: ten lookups at once during a Seaware stall all timed out). Further calls wait in
+# first-come-first-served order. 0 = no limit.
+configurable int seawareSharedSessionMaxParallel = 4;
+
+# Longest a call waits in that queue; then it ends with 503 (never kept in a cache). The caller of
+# POST /guest-profiles/{guestId} is answered at tripsDeadlineSeconds anyway, while the lookup waits.
+configurable decimal seawareQueueWaitSeconds = 20;
+
 # Seconds the reservations of a guest are kept for POST /guest-profiles/{guestId}, shared by every
 # copy through stateRedis; identical requests at the same time share one Seaware read. 0 = never kept
 # (every request asks Seaware). With a value, a booking made in that time shows up that much later.

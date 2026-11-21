@@ -11,6 +11,7 @@ httpRetryFrequencySeconds = 0.1
 seawareSessionMaxAgeSeconds = 3
 seawareSessionPoolSize = 4
 seawareSharedSessionSeconds = 3
+seawareSharedSessionMaxParallel = 3
 tripsCacheSeconds = 2
 tripsDeadlineSeconds = 1.5
 warmTripsAtSignIn = true

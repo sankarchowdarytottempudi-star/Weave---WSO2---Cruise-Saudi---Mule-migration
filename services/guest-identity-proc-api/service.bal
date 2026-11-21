@@ -45,6 +45,7 @@ function init() returns error? {
             deploymentTarget = deploymentTarget, addressesNotSet = addressesNotSet(),
             seawareAgentSet = seawareAgent.userName.trim() != "", sessionSigningKeySet = sessionSigningKey != "",
             seawareSessionPoolSize = seawareSessionPoolSize, sharedReadSession = readSessions.describe(),
+            seawareMaxParallel = seawareSharedSessionMaxParallel,
             tripsCache = tripsCache.describe(), tripsDeadlineSeconds = tripsDeadlineSeconds,
             warmTripsAtSignIn = warmTripsAtSignIn,
             otpEmailAfterAnswer = otpEmailAfterAnswer, warmUpAtStart = warmUpAtStart);

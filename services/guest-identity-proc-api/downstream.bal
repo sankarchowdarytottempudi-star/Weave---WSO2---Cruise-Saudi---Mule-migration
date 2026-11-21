@@ -661,9 +661,97 @@ isolated function closeLater(string token) {
     seawareLogout(token, "shared-session-renewal");
 }
 
+// At most seawareSharedSessionMaxParallel Seaware calls at once on the shared session (this copy of
+// the service); the others wait in arrival order, at most seawareQueueWaitSeconds.
+type SeawareGate record {|
+    int active;
+    int nextTicket;
+    int[] queue;
+|};
+
+isolated SeawareGate seawareGate = {active: 0, nextTicket: 0, queue: []};
+
+# Waits for a place among the Seaware calls running at the same time.
+#
+# + step - What the call is for, for the log
+# + correlationId - The request's correlation id
+# + return - True with a place (give it back with gateLeave); false when the wait was too long
+isolated function gateEnter(string step, string correlationId) returns boolean {
+    int cap = seawareSharedSessionMaxParallel;
+    if cap <= 0 {
+        return true;
+    }
+    int ticket;
+    int ahead;
+    lock {
+        if seawareGate.queue.length() == 0 && seawareGate.active < cap {
+            seawareGate.active += 1;
+            return true;
+        }
+        ticket = seawareGate.nextTicket;
+        seawareGate.nextTicket += 1;
+        ahead = seawareGate.queue.length();
+        seawareGate.queue.push(ticket);
+    }
+    decimal began = time:monotonicNow();
+    while true {
+        runtime:sleep(0.01);
+        boolean entered = false;
+        boolean gaveUp = false;
+        lock {
+            if seawareGate.queue.length() > 0 && seawareGate.queue[0] == ticket && seawareGate.active < cap {
+                _ = seawareGate.queue.shift();
+                seawareGate.active += 1;
+                entered = true;
+            } else if time:monotonicNow() - began >= seawareQueueWaitSeconds {
+                int? at = seawareGate.queue.indexOf(ticket);
+                if at is int {
+                    _ = seawareGate.queue.remove(at);
+                }
+                gaveUp = true;
+            }
+        }
+        if entered {
+            log:printInfo("Seaware call queued", correlationId = correlationId, step = step, queued = ahead + 1,
+                    waitMs = millisSince(began));
+            return true;
+        }
+        if gaveUp {
+            log:printWarn("Seaware call waited too long in the queue", correlationId = correlationId, step = step,
+                    queued = ahead + 1, waitMs = millisSince(began));
+            return false;
+        }
+    }
+}
+
+isolated function gateLeave() {
+    if seawareSharedSessionMaxParallel <= 0 {
+        return;
+    }
+    lock {
+        seawareGate.active -= 1;
+    }
+}
+
+# One Seaware call on the shared session, within the limit of calls at the same time.
+#
+# + token - Session token
+# + body - GraphQL request
+# + step - What the call is for, for the log
+# + correlationId - The request's correlation id
+# + return - Seaware's answer
+isolated function seawareCallGated(string token, map<json> body, string step, string correlationId) returns json|Stop {
+    if !gateEnter(step, correlationId) {
+        return stopWith(commons:SERVICE_UNAVAILABLE, "Seaware is busy; please try again", correlationId);
+    }
+    json|Stop answer = seawareCall(token, body, step, correlationId);
+    gateLeave();
+    return answer;
+}
+
 isolated function seawareReadShared(map<json> body, string step, string correlationId) returns json|Stop {
     string token = check sharedSessionToken(correlationId);
-    json|Stop answer = seawareCall(token, body, step, correlationId);
+    json|Stop answer = seawareCallGated(token, body, step, correlationId);
     if answer is Stop {
         int status = answer.detail().status;
         if status == 401 || status == 403 {
@@ -677,7 +765,7 @@ isolated function seawareReadShared(map<json> body, string step, string correlat
                 step = step);
         _ = readSessions.removeIfValue(readSessionKey(), token);
         string again = check sharedSessionToken(correlationId);
-        json repeated = check seawareCall(again, body, step, correlationId);
+        json repeated = check seawareCallGated(again, body, step, correlationId);
         message = core:firstSeawareError(repeated);
         if message is string && core:isSessionError(message) {
             _ = readSessions.removeIfValue(readSessionKey(), again);

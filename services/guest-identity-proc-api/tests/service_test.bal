@@ -299,7 +299,11 @@ function tenGuestsAtOnceShareOneSignIn() returns error? {
         Answer|error r = wait f;
         test:assertTrue(r is Answer && r.status == 200);
     }
-    test:assertEquals(countOf("seaware sign-in"), 1, "one shared sign-in for ten guests at the same time");
+    // one shared sign-in; the test session lives only 3 s, so a queued burst on a busy machine may
+    // outlive it once (production: 600 s)
+    test:assertTrue(countOf("seaware sign-in") <= 2, "shared sign-in, not one per guest: " + countOf("seaware sign-in").toString());
+    // with the parallel limit some reads may still be finishing in the background
+    waitFor("seaware reservations", 10);
     test:assertEquals(countOf("seaware reservations"), 10, "each guest's own reservations are read");
 }
 
@@ -541,4 +545,61 @@ function signInWarmsTheTrips() returns error? {
     test:assertTrue(body.includes("\"number\":\"8012\""), body);
     test:assertTrue(took2 < 1d, "served from the cache: " + took2.toString());
     test:assertEquals(countOf("seaware reservations"), 1, "no second Seaware read");
+}
+
+// ------------------------------------------------------------------ at most N Seaware calls at once
+
+function burstOfTrips(int first, int n) returns [int, string, string, decimal][]|error {
+    future<[int, string, string, decimal]|error>[] calls = [];
+    foreach int i in 0 ..< n {
+        future<[int, string, string, decimal]|error> f = start callTrips((first + i).toString());
+        calls.push(f);
+    }
+    [int, string, string, decimal][] answers = [];
+    foreach future<[int, string, string, decimal]|error> f in calls {
+        [int, string, string, decimal] a = check wait f;
+        answers.push(a);
+    }
+    return answers;
+}
+
+// Ten travellers at once: never more than 3 (the test limit) Seaware queries at the same time on the
+// shared session, and every one is answered.
+@test:Config {dependsOn: [signInWarmsTheTrips]}
+function tenTravellersNeverExceedTheParallelLimit() returns error? {
+    runtime:sleep(2.2);
+    useScenario("");
+    setSeawareDelay(0.2);
+    resetConcurrency();
+    [int, string, string, decimal][] answers = check burstOfTrips(1501, 10);
+    foreach [int, string, string, decimal] a in answers {
+        test:assertEquals(a[0], 200);
+    }
+    waitFor("seaware reservations", 10);
+    test:assertEquals(countOf("seaware reservations"), 10, "every lookup completes");
+    test:assertTrue(mostConcurrentQueries() <= 3, "at most 3 at once: " + mostConcurrentQueries().toString());
+    test:assertTrue(mostConcurrentQueries() >= 2, "still in parallel: " + mostConcurrentQueries().toString());
+}
+
+// Slow Seaware and a queue: callers are still answered at the deadline (the ones not ready with
+// X-Trips-Pending), the limit holds, and every queued lookup still finishes in the background.
+@test:Config {dependsOn: [tenTravellersNeverExceedTheParallelLimit]}
+function queuedLookupsKeepTheDeadline() returns error? {
+    useScenario("");
+    setSeawareDelay(1);
+    resetConcurrency();
+    [int, string, string, decimal][] answers = check burstOfTrips(1601, 10);
+    int pending = 0;
+    foreach [int, string, string, decimal] a in answers {
+        test:assertEquals(a[0], 200);
+        // deadline 1.5 s plus overhead on a busy test machine; without the deadline the queue takes 4 s or more
+        test:assertTrue(a[3] < 3d, "answered by the deadline: " + a[3].toString());
+        if a[2] == "true" {
+            pending += 1;
+        }
+    }
+    test:assertTrue(pending >= 4, "the queued ones are pending: " + pending.toString());
+    runtime:sleep(3.5);
+    test:assertEquals(countOf("seaware reservations"), 10, "every queued lookup finished in the background");
+    test:assertTrue(mostConcurrentQueries() <= 3, "at most 3 at once: " + mostConcurrentQueries().toString());
 }

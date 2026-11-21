@@ -15,6 +15,42 @@ isolated int sessionErrorsLeft = 0;
 // seconds the stand-in Seaware takes for a reservations query (a slow lookup)
 isolated decimal seawareDelay = 0;
 
+// reservations queries running at the same time, per session token, and the most seen
+type QueryCount record {|
+    map<int> running;
+    int most;
+|};
+
+isolated QueryCount queryCount = {running: {}, most: 0};
+
+isolated function enterQuery(string token) {
+    lock {
+        int now = (queryCount.running[token] ?: 0) + 1;
+        queryCount.running[token] = now;
+        if now > queryCount.most {
+            queryCount.most = now;
+        }
+    }
+}
+
+isolated function leaveQuery(string token) {
+    lock {
+        queryCount.running[token] = (queryCount.running[token] ?: 1) - 1;
+    }
+}
+
+isolated function mostConcurrentQueries() returns int {
+    lock {
+        return queryCount.most;
+    }
+}
+
+isolated function resetConcurrency() {
+    lock {
+        queryCount.most = 0;
+    }
+}
+
 isolated function setSeawareDelay(decimal seconds) {
     lock {
         seawareDelay = seconds;
@@ -288,7 +324,15 @@ service / on standinListener {
         json|http:ClientError payload = request.getJsonPayload();
         string|http:HeaderNotFoundError zp = request.getHeader("zohoPath");
         string zohoPath = zp is string ? zp : "";
+        string|http:HeaderNotFoundError auth = request.getHeader("Authorization");
+        boolean query = backend == "reservationProcApi" && payload is json && payload.toJsonString().includes("reservations(");
+        if query {
+            enterQuery(auth is string ? auth : "");
+        }
         [int, json, string] [status, out, tag] = replyOf(backend, request.method, zohoPath, payload is json ? payload : ());
+        if query {
+            leaveQuery(auth is string ? auth : "");
+        }
         noteCall(tag);
         http:Response response = new;
         response.statusCode = status;
