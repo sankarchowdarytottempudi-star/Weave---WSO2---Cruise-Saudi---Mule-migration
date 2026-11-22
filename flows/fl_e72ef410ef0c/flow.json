@@ -1,0 +1,268 @@
+{
+ "createdAt": "2026-11-22T18:09:31.870Z",
+ "deployment": {
+  "deployedAt": "2026-11-22T18:09:47.217Z",
+  "deployedBy": "dev-tester",
+  "gateway": {
+   "status": "skipped"
+  },
+  "revision": 2,
+  "runtimeUrl": "http://127.0.0.1:8790/run/e2e-1122180910-common-cache/v1",
+  "status": "deployed"
+ },
+ "description": "Created by the end-to-end check. Safe to delete.",
+ "edges": [
+  {
+   "from": "n_qqflsz",
+   "fromPort": "out",
+   "id": "e_2f38f6",
+   "to": "n_vt9bco"
+  },
+  {
+   "from": "n_vt9bco",
+   "fromPort": "case:c1",
+   "id": "e_2bxutv",
+   "to": "n_v4s65l"
+  },
+  {
+   "from": "n_v4s65l",
+   "fromPort": "out",
+   "id": "e_xrytyx",
+   "to": "n_txxzz5"
+  },
+  {
+   "from": "n_txxzz5",
+   "fromPort": "out",
+   "id": "e_u24a4d",
+   "to": "n_9utg2s"
+  },
+  {
+   "from": "n_vt9bco",
+   "fromPort": "otherwise",
+   "id": "e_wye25f",
+   "to": "n_bv5sr5"
+  },
+  {
+   "from": "n_bv5sr5",
+   "fromPort": "out",
+   "id": "e_dakgm8",
+   "to": "n_sv3u88"
+  },
+  {
+   "from": "n_sv3u88",
+   "fromPort": "out",
+   "id": "e_5ajcli",
+   "to": "n_9utg2s"
+  }
+ ],
+ "id": "fl_e72ef410ef0c",
+ "name": "e2e-1122180910-common-cache",
+ "nodes": [
+  {
+   "config": {
+    "methods": [
+     "GET"
+    ],
+    "path": "/reference/:kind"
+   },
+   "id": "n_qqflsz",
+   "name": "Get reference list",
+   "position": {
+    "x": 60,
+    "y": 60
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "conditions": [
+     {
+      "expr": "$request.params.kind in [\"languages\", \"countries\"]",
+      "id": "c1",
+      "label": "Kept in the cache"
+     }
+    ]
+   },
+   "id": "n_vt9bco",
+   "name": "Cached kind",
+   "position": {
+    "x": 360,
+    "y": 60
+   },
+   "type": "logic.choice"
+  },
+  {
+   "config": {
+    "background": false,
+    "bodyMode": "none",
+    "cacheSeconds": 0,
+    "connection": "cx_1938f11684b8",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [
+     {
+      "key": "operationName",
+      "value": "{{ $request.params.kind }}"
+     }
+    ],
+    "method": "GET",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "payload",
+    "retries": 2,
+    "retryDelayMs": 500,
+    "retryDelaysMs": "1000, 3000",
+    "retryUnsafe": false,
+    "reuseSession": false,
+    "sessionSeconds": 240,
+    "shareIdentical": false,
+    "timeoutMs": 20000,
+    "url": "/seaware-cache-proc-api/v1/cache"
+   },
+   "id": "n_v4s65l",
+   "name": "Read the cache",
+   "position": {
+    "x": 660,
+    "y": 60
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "input": "$",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "expr": "$request.params.kind",
+       "id": "r_ww686m",
+       "kind": "expr",
+       "target": "kind"
+      },
+      {
+       "expr": "[$lookup(data, $request.params.kind).{ \"code\": key, \"name\": name }]",
+       "id": "r_o2mi7s",
+       "kind": "expr",
+       "target": "items"
+      },
+      {
+       "expr": "$count($lookup(data, $request.params.kind))",
+       "id": "r_smmhah",
+       "kind": "expr",
+       "target": "count"
+      },
+      {
+       "id": "r_bjmi0v",
+       "kind": "const",
+       "target": "source",
+       "value": "cache"
+      }
+     ]
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_txxzz5",
+   "name": "Shape cached list",
+   "position": {
+    "x": 960,
+    "y": 60
+   },
+   "type": "transform.map"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_9utg2s",
+   "name": "Answer",
+   "position": {
+    "x": 1260,
+    "y": 60
+   },
+   "type": "respond"
+  },
+  {
+   "config": {
+    "entry": "http",
+    "flow": "fl_aabc810b09af",
+    "input": "$",
+    "request": {
+     "method": "GET",
+     "path": "/reference/{{ $request.params.kind }}"
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_bv5sr5",
+   "name": "Ask the system flow",
+   "position": {
+    "x": 660,
+    "y": 189
+   },
+   "type": "flow.call"
+  },
+  {
+   "config": {
+    "input": "$",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "id": "r_hxg0z1",
+       "kind": "direct",
+       "source": "kind",
+       "target": "kind"
+      },
+      {
+       "id": "r_oh7dmc",
+       "kind": "direct",
+       "source": "items",
+       "target": "items"
+      },
+      {
+       "id": "r_ktuol1",
+       "kind": "direct",
+       "source": "count",
+       "target": "count"
+      },
+      {
+       "id": "r_8c24am",
+       "kind": "const",
+       "target": "source",
+       "value": "system"
+      }
+     ]
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_sv3u88",
+   "name": "Shape system list",
+   "position": {
+    "x": 960,
+    "y": 189
+   },
+   "type": "transform.map"
+  }
+ ],
+ "origin": {
+  "kind": "blank"
+ },
+ "revision": 2,
+ "settings": {
+  "basePath": "/e2e-1122180910-common-cache/v1",
+  "gateway": {
+   "publish": true,
+   "security": "oauth2",
+   "throttlingPolicy": "Unlimited",
+   "version": "v1"
+  },
+  "logPayloads": true,
+  "timeoutMs": 60000
+ },
+ "slug": "e2e-1122180910-common-cache",
+ "tags": [],
+ "updatedAt": "2026-11-22T18:09:45.087Z",
+ "updatedBy": "dev-tester"
+}
