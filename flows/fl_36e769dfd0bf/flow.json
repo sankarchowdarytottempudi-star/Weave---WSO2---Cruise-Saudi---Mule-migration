@@ -1,0 +1,258 @@
+{
+ "createdAt": "2026-11-22T18:09:49.205Z",
+ "deployment": {
+  "deployedAt": "2026-11-22T18:10:14.640Z",
+  "deployedBy": "dev-tester",
+  "gateway": {
+   "apiId": "cd30f40c-77b7-4602-b8ef-86b9326d0cf4",
+   "context": "/e2e-1122180910-reservation-manager",
+   "status": "published",
+   "url": "https://13.140.56.229:30243/e2e-1122180910-reservation-manager/v1",
+   "version": "v1"
+  },
+  "revision": 3,
+  "runtimeUrl": "http://127.0.0.1:8790/run/e2e-1122180910-reservation-manager/v1",
+  "status": "deployed"
+ },
+ "description": "Created by the end-to-end check. Safe to delete.",
+ "edges": [
+  {
+   "from": "n_ozd0t4",
+   "fromPort": "out",
+   "id": "e_9m8fjn",
+   "to": "n_mnav24"
+  },
+  {
+   "from": "n_mnav24",
+   "fromPort": "out",
+   "id": "e_7enzhk",
+   "to": "n_dvnrhf"
+  },
+  {
+   "from": "n_dvnrhf",
+   "fromPort": "out",
+   "id": "e_7hag6t",
+   "to": "n_gma72o"
+  },
+  {
+   "from": "n_3c8034",
+   "fromPort": "out",
+   "id": "e_l54uci",
+   "to": "n_g5ddbw"
+  },
+  {
+   "from": "n_g5ddbw",
+   "fromPort": "out",
+   "id": "e_zwvgsf",
+   "to": "n_mpjd0k"
+  }
+ ],
+ "id": "fl_36e769dfd0bf",
+ "name": "e2e-1122180910-reservation-manager",
+ "nodes": [
+  {
+   "config": {
+    "methods": [
+     "GET"
+    ],
+    "path": "/catalog/:kind"
+   },
+   "id": "n_ozd0t4",
+   "name": "Catalog list",
+   "position": {
+    "x": 60,
+    "y": 60
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "background": false,
+    "bodyMode": "none",
+    "cacheSeconds": 0,
+    "connection": "cx_9b1d0a1ef97a",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [],
+    "method": "GET",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "payload",
+    "retries": 2,
+    "retryDelayMs": 500,
+    "retryDelaysMs": "1000, 3000",
+    "retryUnsafe": false,
+    "reuseSession": false,
+    "sessionSeconds": 240,
+    "shareIdentical": false,
+    "timeoutMs": 20000,
+    "url": "/e2e-1122180910-common-cache/v1/reference/{{ $request.params.kind }}"
+   },
+   "id": "n_mnav24",
+   "name": "Ask the process layer",
+   "position": {
+    "x": 360,
+    "y": 60
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "input": "$",
+    "mapping": {
+     "passthrough": false,
+     "rules": [
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Take kind and write it in title case",
+        "expr": "$titleCase(kind)"
+       },
+       "id": "r_rxr8ga",
+       "instruction": "kind in title case",
+       "kind": "instruction",
+       "target": "title"
+      },
+      {
+       "compiled": {
+        "confidence": "exact",
+        "engine": "rules",
+        "explanation": "Take kind and convert it to upper case",
+        "expr": "$uppercase(kind)"
+       },
+       "id": "r_ly3q78",
+       "instruction": "kind in upper case",
+       "kind": "instruction",
+       "target": "code"
+      },
+      {
+       "id": "r_1uyz78",
+       "kind": "direct",
+       "source": "count",
+       "target": "total"
+      },
+      {
+       "id": "r_qmaxb2",
+       "kind": "direct",
+       "source": "source",
+       "target": "servedFrom"
+      },
+      {
+       "expr": "[items.{ \"id\": code, \"label\": name }]",
+       "id": "r_ovv188",
+       "kind": "expr",
+       "target": "options"
+      }
+     ]
+    },
+    "resultTarget": "payload"
+   },
+   "id": "n_dvnrhf",
+   "name": "Screen ready list",
+   "position": {
+    "x": 660,
+    "y": 60
+   },
+   "type": "transform.map"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_gma72o",
+   "name": "Answer catalog",
+   "position": {
+    "x": 960,
+    "y": 60
+   },
+   "type": "respond"
+  },
+  {
+   "config": {
+    "methods": [
+     "POST"
+    ],
+    "path": "/integration-tasks"
+   },
+   "id": "n_3c8034",
+   "name": "Run a read query",
+   "position": {
+    "x": 60,
+    "y": 189
+   },
+   "type": "trigger.http"
+  },
+  {
+   "config": {
+    "background": false,
+    "body": {
+     "query": "{{ $request.body.query }}"
+    },
+    "bodyMode": "json",
+    "cacheSeconds": 0,
+    "connection": "cx_9b1d0a1ef97a",
+    "failOnStatus": true,
+    "forwardHeaders": [],
+    "headers": [],
+    "method": "POST",
+    "output": "body",
+    "query": [],
+    "responseMode": "auto",
+    "resultTarget": "payload",
+    "retries": 2,
+    "retryDelayMs": 500,
+    "retryDelaysMs": "1000, 3000",
+    "retryUnsafe": false,
+    "reuseSession": false,
+    "sessionSeconds": 240,
+    "shareIdentical": false,
+    "timeoutMs": 20000,
+    "url": "/e2e-1122180910-seaware-system/v1/integration-tasks"
+   },
+   "id": "n_g5ddbw",
+   "name": "Ask the system layer",
+   "position": {
+    "x": 360,
+    "y": 189
+   },
+   "type": "http.request"
+  },
+  {
+   "config": {
+    "body": "$",
+    "headers": [],
+    "status": "200"
+   },
+   "id": "n_mpjd0k",
+   "name": "Answer query",
+   "position": {
+    "x": 660,
+    "y": 189
+   },
+   "type": "respond"
+  }
+ ],
+ "origin": {
+  "kind": "blank"
+ },
+ "revision": 3,
+ "settings": {
+  "basePath": "/e2e-1122180910-reservation-manager/v1",
+  "gateway": {
+   "publish": true,
+   "security": "oauth2",
+   "throttlingPolicy": "Unlimited",
+   "version": "v1"
+  },
+  "logPayloads": true,
+  "timeoutMs": 60000
+ },
+ "slug": "e2e-1122180910-reservation-manager",
+ "tags": [],
+ "updatedAt": "2026-11-22T18:10:10.585Z",
+ "updatedBy": "dev-tester"
+}
