@@ -1,9 +1,8 @@
 [package]
 org = "aroya"
-name = "integration_commons"
+name = "weave_e2e_sample_sys_api"
 version = "0.1.0"
 distribution = "2201.13.4"
-readme = "README.md"
 
 [build-options]
 observabilityIncluded = true

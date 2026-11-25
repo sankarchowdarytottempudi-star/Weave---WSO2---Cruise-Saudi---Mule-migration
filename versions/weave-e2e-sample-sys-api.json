@@ -1,0 +1,62 @@
+{
+ "api": "weave-e2e-sample-sys-api",
+ "by": "deploy in the tool",
+ "what": "deployed",
+ "results": {
+  "parity": {
+   "status": "pending",
+   "detail": ""
+  },
+  "unit_run": {
+   "status": "pending",
+   "detail": ""
+  },
+  "e2e": {
+   "status": "pending",
+   "detail": ""
+  },
+  "coverage": {
+   "status": "pending",
+   "detail": ""
+  }
+ },
+ "image": "sha256:d67e4bfd3d1c10bfd65932e04a0478350497da3d06b653071952fe2758850691",
+ "version": 1,
+ "at": "2026-11-25T09:42:58Z",
+ "summary": {
+  "files": 31,
+  "changed": [
+   "deploy/settings-templates/weave-e2e-sample-sys-api.toml",
+   "deploy/values/weave-e2e-sample-sys-api/common.yaml",
+   "deploy/vm/values/weave-e2e-sample-sys-api.yaml",
+   "framework/integration-commons/README.md",
+   "framework/integration-commons/audit.bal",
+   "framework/integration-commons/circuit_breaker.bal",
+   "framework/integration-commons/correlation.bal",
+   "framework/integration-commons/downstream.bal",
+   "framework/integration-commons/errors.bal",
+   "framework/integration-commons/graphql.bal",
+   "framework/integration-commons/headers.bal",
+   "framework/integration-commons/kafka_errors.bal",
+   "framework/integration-commons/notify.bal",
+   "framework/integration-commons/redis.bal",
+   "framework/integration-commons/retry.bal",
+   "framework/integration-commons/routed.bal",
+   "framework/integration-commons/shared_cache.bal",
+   "framework/integration-commons/tests/breaker_window_test.bal",
+   "framework/integration-commons/tests/graphql_test.bal",
+   "framework/integration-commons/tests/kafka_errors_test.bal",
+   "framework/integration-commons/tests/resilience_test.bal",
+   "framework/integration-commons/tests/routed_test.bal",
+   "framework/integration-commons/tests/shared_cache_test.bal",
+   "framework/integration-commons/tests/wiring_test.bal",
+   "services/weave-e2e-sample-sys-api/.migration-decisions.json",
+   "framework/integration-commons/Ballerina.toml\tservices/weave-e2e-sample-sys-api/Ballerina.toml",
+   "framework/integration-commons/Dependencies.toml\tservices/weave-e2e-sample-sys-api/Dependencies.toml",
+   "services/weave-e2e-sample-sys-api/config.bal",
+   "services/weave-e2e-sample-sys-api/modules/core/tests/transforms_test.bal",
+   "services/weave-e2e-sample-sys-api/modules/core/transforms.bal",
+   "services/weave-e2e-sample-sys-api/service.bal"
+  ]
+ }
+}

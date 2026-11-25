@@ -9,23 +9,19 @@ distribution-version = "2201.13.4"
 
 [[package]]
 org = "aroya"
-name = "integration_commons"
+name = "weave_e2e_sample_sys_api"
 version = "0.1.0"
 dependencies = [
-	{org = "ballerina", name = "crypto"},
+	{org = "aroya", name = "integration_commons"},
 	{org = "ballerina", name = "http"},
-	{org = "ballerina", name = "lang.regexp"},
-	{org = "ballerina", name = "lang.runtime"},
 	{org = "ballerina", name = "log"},
 	{org = "ballerina", name = "test"},
-	{org = "ballerina", name = "time"},
-	{org = "ballerina", name = "uuid"},
 	{org = "ballerinai", name = "observe"},
-	{org = "ballerinax", name = "kafka"},
-	{org = "ballerinax", name = "redis"}
+	{org = "ballerinax", name = "prometheus"}
 ]
 modules = [
-	{org = "aroya", packageName = "integration_commons", moduleName = "integration_commons"}
+	{org = "aroya", packageName = "weave_e2e_sample_sys_api", moduleName = "weave_e2e_sample_sys_api"},
+	{org = "aroya", packageName = "weave_e2e_sample_sys_api", moduleName = "weave_e2e_sample_sys_api.core"}
 ]
 
 [[package]]
@@ -74,9 +70,6 @@ version = "2.12.2"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "time"}
-]
-modules = [
-	{org = "ballerina", packageName = "crypto", moduleName = "crypto"}
 ]
 
 [[package]]
@@ -191,7 +184,6 @@ dependencies = [
 org = "ballerina"
 name = "lang.error"
 version = "0.0.0"
-scope = "testOnly"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
@@ -218,9 +210,6 @@ version = "0.0.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
-modules = [
-	{org = "ballerina", packageName = "lang.regexp", moduleName = "lang.regexp"}
-]
 
 [[package]]
 org = "ballerina"
@@ -228,9 +217,6 @@ name = "lang.runtime"
 version = "0.0.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
-]
-modules = [
-	{org = "ballerina", packageName = "lang.runtime", moduleName = "lang.runtime"}
 ]
 
 [[package]]
@@ -308,17 +294,17 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "task"
-version = "2.7.0"
+version = "2.11.4"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "time"}
+	{org = "ballerina", name = "time"},
+	{org = "ballerina", name = "uuid"}
 ]
 
 [[package]]
 org = "ballerina"
 name = "test"
 version = "0.0.0"
-scope = "testOnly"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.array"},
@@ -334,9 +320,6 @@ name = "time"
 version = "2.8.4"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
-]
-modules = [
-	{org = "ballerina", packageName = "time", moduleName = "time"}
 ]
 
 [[package]]
@@ -356,9 +339,6 @@ dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.int"},
 	{org = "ballerina", name = "time"}
-]
-modules = [
-	{org = "ballerina", packageName = "uuid", moduleName = "uuid"}
 ]
 
 [[package]]
@@ -405,19 +385,27 @@ dependencies = [
 	{org = "ballerinax", name = "confluent.cavroserdes"},
 	{org = "ballerinax", name = "confluent.cregistry"}
 ]
+
+[[package]]
+org = "ballerinax"
+name = "prometheus"
+version = "1.0.1"
+dependencies = [
+	{org = "ballerina", name = "http"},
+	{org = "ballerina", name = "io"},
+	{org = "ballerina", name = "lang.string"},
+	{org = "ballerina", name = "observe"}
+]
 modules = [
-	{org = "ballerinax", packageName = "kafka", moduleName = "kafka"}
+	{org = "ballerinax", packageName = "prometheus", moduleName = "prometheus"}
 ]
 
 [[package]]
 org = "ballerinax"
 name = "redis"
-version = "3.4.2"
+version = "3.4.1"
 dependencies = [
 	{org = "ballerina", name = "crypto"},
 	{org = "ballerina", name = "jballerina.java"}
-]
-modules = [
-	{org = "ballerinax", packageName = "redis", moduleName = "redis"}
 ]
 
