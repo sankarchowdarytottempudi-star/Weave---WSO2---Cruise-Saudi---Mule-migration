@@ -1,5 +1,0 @@
-name: weave-e2e-sample-sys-api
-layer: system
-image:
-  repository: REGISTRY/weave-e2e-sample-sys-api
-port: 8081
